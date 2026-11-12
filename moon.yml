@@ -1,0 +1,17 @@
+# Root project: workspace-level tasks (docs/repository/01, section 9.1)
+language: 'rust'
+tasks:
+  schemas:
+    command: 'cargo xtask schemas --check'
+  arch:
+    command: 'cargo xtask arch'
+  deny:
+    command: 'cargo deny check'
+  e2e:
+    command: 'cargo nextest run -p checkmate-e2e'
+  docs-check:
+    command: 'cargo xtask docs-check'
+  skills-lint:
+    command: 'cargo xtask skills-lint'
+  release-plan:
+    command: 'dist plan'

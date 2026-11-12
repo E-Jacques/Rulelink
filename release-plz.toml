@@ -1,0 +1,12 @@
+# See docs/repository/02-release-lifecycle.md
+[workspace]
+changelog_update = true
+git_release_enable = false
+
+[[package]]
+name = "xtask"
+release = false
+
+[[package]]
+name = "checkmate-e2e"
+release = false

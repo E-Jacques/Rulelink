@@ -1,0 +1,24 @@
+# Layout assumes moon v2; verify keys at implementation time.
+projects:
+  globs:
+    - 'crates/*'
+    - 'adapters/*'
+    - 'editors/*'
+    - 'sdks/*'
+    - 'ci/*'
+    - 'skills'
+  sources:
+    root: '.'
+    xtask: 'xtask'
+    e2e: 'tests/e2e'
+vcs:
+  client: 'git'
+  defaultBranch: 'main'
+constraints:
+  enforceLayerRelationships: false
+  tagRelationships:
+    layer-domain: ['layer-domain', 'layer-contract']
+    layer-contract: ['layer-contract']
+    layer-adapter: ['layer-adapter', 'layer-contract']
+    layer-application: ['layer-application', 'layer-domain', 'layer-contract', 'layer-adapter']
+    layer-entrypoint: ['layer-entrypoint', 'layer-application']

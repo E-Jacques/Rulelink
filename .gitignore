@@ -1,0 +1,64 @@
+# ---- Rust ----
+/target/
+**/*.rs.bk
+*.pdb
+
+# ---- moon ----
+/.moon/cache/
+/.moon/docker/
+
+# ---- Node / pnpm (V1: VS Code extension, TypeScript SDK, web client) ----
+node_modules/
+.pnpm-store/
+*.tsbuildinfo
+dist/
+out/
+*.vsix
+npm-debug.log*
+pnpm-debug.log*
+
+# ---- Python (V1: adapter SDK) ----
+__pycache__/
+*.py[cod]
+.venv/
+.pytest_cache/
+.ruff_cache/
+.mypy_cache/
+*.egg-info/
+
+# ---- Gradle / JVM (V2: IntelliJ plugin) ----
+.gradle/
+build/
+!editors/intellij/gradle/wrapper/gradle-wrapper.jar
+
+# ---- Docs (mdBook) ----
+/docs/book/book/
+
+# ---- Tests and coverage ----
+*.profraw
+*.profdata
+lcov.info
+/coverage/
+*.sarif
+
+# ---- Secrets and local environment ----
+.env
+.env.*
+!.env.example
+
+# ---- Editors and IDEs ----
+.idea/
+*.iml
+.vscode/*
+!.vscode/extensions.json
+!.vscode/settings.json
+*.swp
+*~
+
+# ---- OS ----
+.DS_Store
+Thumbs.db
+
+# ---- AI agents (personal settings only; shared config stays tracked) ----
+.claude/settings.local.json
+CLAUDE.local.md

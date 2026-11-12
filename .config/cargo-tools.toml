@@ -1,0 +1,6 @@
+# Cargo tools installed by `moon setup` through `cargo binstall`
+[tools]
+cargo-nextest = "*"
+cargo-deny = "*"
+release-plz = "*"
+cargo-dist = "*"

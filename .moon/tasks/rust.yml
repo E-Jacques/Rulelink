@@ -1,0 +1,16 @@
+$schema: 'https://moonrepo.dev/schemas/tasks.json'
+fileGroups:
+  sources: ['src/**/*', 'tests/**/*', 'Cargo.toml']
+tasks:
+  format:
+    command: 'cargo fmt --check -p $project'
+    inputs: ['@group(sources)']
+  lint:
+    command: 'cargo clippy -p $project --all-targets -- -D warnings'
+    inputs: ['@group(sources)']
+  test:
+    command: 'cargo nextest run -p $project --no-tests=pass'
+    inputs: ['@group(sources)']
+  build:
+    command: 'cargo build -p $project'
+    inputs: ['@group(sources)']

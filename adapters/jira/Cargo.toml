@@ -1,0 +1,16 @@
+[package]
+name = "checkmate-adapter-jira"
+description = "Jira adapter (V1)."
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+repository.workspace = true
+readme = "README.md"
+
+[lints]
+workspace = true
+
+[dependencies]
+thiserror.workspace = true
+checkmate-adapter-sdk.workspace = true

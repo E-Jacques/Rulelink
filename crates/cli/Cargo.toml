@@ -1,0 +1,25 @@
+[package]
+name = "checkmate-cli"
+description = "Checkmate command line: the only executable of the product."
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+repository.workspace = true
+readme = "README.md"
+
+[[bin]]
+name = "checkmate"
+path = "src/main.rs"
+
+[features]
+default = ["lsp"]
+lsp = ["dep:checkmate-lsp"]
+
+[lints]
+workspace = true
+
+[dependencies]
+checkmate-app.workspace = true
+checkmate-lsp = { workspace = true, optional = true }
+tokio = { workspace = true, features = ["rt", "macros"] }

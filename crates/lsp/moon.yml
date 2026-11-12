@@ -1,0 +1,3 @@
+language: 'rust'
+layer: 'library'
+tags: ['layer-entrypoint']

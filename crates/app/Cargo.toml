@@ -1,0 +1,23 @@
+[package]
+name = "checkmate-app"
+description = "Application layer: use cases, wiring and process runtime skeleton."
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+repository.workspace = true
+readme = "README.md"
+
+[lints]
+workspace = true
+
+[dependencies]
+thiserror.workspace = true
+checkmate-check.workspace = true
+checkmate-import.workspace = true
+checkmate-publish.workspace = true
+checkmate-config.workspace = true
+checkmate-adapter-json.workspace = true
+checkmate-adapter-scan-fs.workspace = true
+checkmate-adapter-git.workspace = true
+checkmate-adapter-external.workspace = true

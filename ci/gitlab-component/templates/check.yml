@@ -1,0 +1,9 @@
+spec:
+  inputs:
+    stage:
+      default: test
+---
+checkmate:
+  stage: $[[ inputs.stage ]]
+  script:
+    - checkmate check

@@ -1,0 +1,51 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Rule",
+  "description": "A business rule.",
+  "type": "object",
+  "properties": {
+    "id": {
+      "description": "Identifier.",
+      "$ref": "#/$defs/RuleId"
+    },
+    "status": {
+      "description": "Lifecycle status.",
+      "$ref": "#/$defs/RuleStatus"
+    },
+    "title": {
+      "description": "Short title.",
+      "type": "string"
+    }
+  },
+  "required": [
+    "id",
+    "title",
+    "status"
+  ],
+  "$defs": {
+    "RuleId": {
+      "description": "Stable identifier of a rule.",
+      "type": "string"
+    },
+    "RuleStatus": {
+      "description": "Lifecycle status of a rule.",
+      "oneOf": [
+        {
+          "description": "Proposed, awaiting human validation.",
+          "type": "string",
+          "const": "proposed"
+        },
+        {
+          "description": "Validated by a human.",
+          "type": "string",
+          "const": "validated"
+        },
+        {
+          "description": "No longer applicable.",
+          "type": "string",
+          "const": "obsolete"
+        }
+      ]
+    }
+  }
+}

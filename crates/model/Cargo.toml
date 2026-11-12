@@ -1,0 +1,24 @@
+[package]
+name = "checkmate-model"
+description = "Core domain model of Checkmate: rules, identifiers, statuses and links."
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+repository.workspace = true
+readme = "README.md"
+
+[features]
+default = []
+schema = ["dep:schemars"]
+
+[lints]
+workspace = true
+
+[dependencies]
+serde.workspace = true
+thiserror.workspace = true
+schemars = { workspace = true, optional = true }
+
+[dev-dependencies]
+serde_json.workspace = true

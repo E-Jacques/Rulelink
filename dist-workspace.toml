@@ -1,0 +1,11 @@
+# See docs/repository/02-release-lifecycle.md
+[workspace]
+members = ["cargo:."]
+
+[dist]
+cargo-dist-version = "0.28.0"
+ci = "github"
+installers = ["shell", "powershell", "homebrew"]
+tap = "E-Jacques/homebrew-tap"
+publish-jobs = ["homebrew"]
+targets = ["aarch64-apple-darwin", "x86_64-apple-darwin", "x86_64-unknown-linux-gnu", "aarch64-unknown-linux-gnu", "x86_64-pc-windows-msvc"]

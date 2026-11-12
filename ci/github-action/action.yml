@@ -1,0 +1,7 @@
+name: Checkmate
+description: Run `checkmate check` in CI.
+runs:
+  using: composite
+  steps:
+    - shell: bash
+      run: checkmate check

@@ -1,0 +1,16 @@
+[package]
+name = "checkmate-lsp"
+description = "Language server loop, mounted by the CLI as the lsp subcommand."
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+repository.workspace = true
+readme = "README.md"
+
+[lints]
+workspace = true
+
+[dependencies]
+thiserror.workspace = true
+checkmate-app.workspace = true

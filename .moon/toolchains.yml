@@ -1,0 +1,6 @@
+# Node and pnpm are only needed from V1 (VS Code extension, TypeScript SDK).
+node:
+  version: '22'
+  packageManager: 'pnpm'
+pnpm:
+  version: '10'
