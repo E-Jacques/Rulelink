@@ -2,7 +2,9 @@
 #[derive(Debug, thiserror::Error)]
 #[non_exhaustive]
 pub enum Error {
-    /// The requested capability is not implemented yet.
-    #[error("not implemented: {0}")]
-    NotImplemented(&'static str),
+    /// The Identifier prefix is malformed.
+    #[error(
+        "invalid Identifier prefix `{0}`: use upper-case letters, digits and `_`, starting with a letter"
+    )]
+    InvalidIdPrefix(String),
 }

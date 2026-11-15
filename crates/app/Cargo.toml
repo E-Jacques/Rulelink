@@ -17,6 +17,7 @@ checkmate-check.workspace = true
 checkmate-import.workspace = true
 checkmate-publish.workspace = true
 checkmate-config.workspace = true
+checkmate-model.workspace = true
 checkmate-adapter-json.workspace = true
 checkmate-adapter-scan-fs.workspace = true
 checkmate-adapter-git.workspace = true
