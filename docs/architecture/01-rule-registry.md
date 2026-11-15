@@ -9,7 +9,7 @@
 **Responsibilities**
 
 - Define the rule model and the public, versioned file format, with its JSON Schema.
-- Enforce the `proposed` → `validated` → `obsolete` lifecycle and reject forbidden transitions.
+- Enforce the `proposed` → `validated` → `obsolete` lifecycle, with `proposed` → `rejected` for declined proposals and reject forbidden transitions.
 - Allocate stable identifiers and guarantee they are never reused.
 - Validate the integrity of a rule set: schema, duplicates, unknown `related` references, identifier pattern.
 - Search and filter rules (keyword, status, application, module, label).
@@ -27,6 +27,7 @@
 | Model v1: the brief's fields + `labels`, `superseded_by`, `extensions` | ● | | |
 | Generated and published JSON Schema | ● | | |
 | Lifecycle (State) and `approve`, `obsolete`, `reject` commands | ● | | |
+| `rules format`: rewrite the source in canonical form (repairs a hand-merged file) | ● | | |
 | Sequence-based ID allocation, list of retired IDs | ● | | |
 | ID policies: extracted from the source, ticket key | | ● | |
 | Basic search (substring, accent- and case-insensitive) | ● | | |
@@ -39,21 +40,21 @@
 
 - `checkmate-model` depends only on `serde`, `serde_json`, `schemars` and `thiserror`. It is published on crates.io so it can be reused without the rest of the tool.
 - `checkmate-registry` is synchronous, performs no I/O and knows no adapter.
-- Every collection is ordered: rules sorted by identifier in **natural order** (`RG-2` before `RG-10`), JSON keys in a fixed order.
+- Every collection is ordered: rules sorted by identifier in **natural order** (`RULE-2` before `RULE-10`), JSON keys in a fixed order. The serialised file is **line-oriented** (see 02, canonical writes).
 - The model accepts unknown fields prefixed with `x-` under `extensions`, preserved on round trips. An adapter can therefore carry its own metadata without breaking the format.
 - Search: Unicode NFKD normalisation, diacritics removed, case ignored. "Énoncé" matches "enonce".
 
 ## 4. Rule model
 
-### 4.1 Mapping to the brief (ADR-003, to be validated)
+### 4.1 Mapping to the brief (ADR-003, accepted)
 
 | Brief field | JSON key | Type | Required | Note |
 |---|---|---|:-:|---|
 | `id` | `id` | `RuleId` | Yes | Matches the configured pattern, never reused |
 | `titre` | `title` | string, 1 to 120 characters | Yes | |
 | `énoncé` | `statement` | string, restricted Markdown | Yes | |
-| `statut` | `status` | `proposed`, `validated`, `obsolete` | Yes | Display labels are localised (en, fr) |
-| `application` | `application` | string | No | |
+| `statut` | `status` | `proposed`, `validated`, `obsolete`, `rejected` | Yes | |
+| `application` | `applications` | list of strings | No | Names declared in `[applications]` of `checkmate.toml` (09). Empty or absent: the rule applies to the whole project |
 | `module` | `module` | string | No | |
 | `périmètre` | `scope` | `{ covered: [], excluded: [] }` | No | Covered and excluded cases, as required by the brief |
 | `origine` | `origin` | `{ kind, ref?, url? }` | No | `kind`: `jira`, `github`, `gitlab`, `url`, `retrodoc`, `manual`, `spec`, or an adapter name |
@@ -62,7 +63,7 @@
 | *(addition)* | `superseded_by` | `RuleId` | No | For an `obsolete` rule that has been replaced |
 | *(addition)* | `extensions` | `x-*` object | No | Free-form adapter metadata |
 
-If the team prefers to keep the brief's French keys, only the serialised key names change (`#[serde(rename)]`); the design stays the same. The decision must be made before the first public release, because the format is a contract.
+All keys are English (ADR-003, accepted). The tool does not localise anything. Values such as `title` and `statement` can be written in any language; they are data and are never validated beyond their length and Markdown subset.
 
 ### 4.2 Rules file
 
@@ -70,22 +71,22 @@ If the team prefers to keep the brief's French keys, only the serialised key nam
 {
   "$schema": "https://checkmate.dev/schemas/rules/v1.json",
   "format": 1,
-  "sequences": { "RG": 43 },
-  "retired": ["RG-007"],
+  "sequences": { "RULE": 43 },
+  "retired": ["RULE-007"],
   "rules": [
     {
-      "id": "RG-042",
+      "id": "RULE-042",
       "title": "Line-level VAT rounding",
       "statement": "VAT is calculated and rounded to the cent on each invoice line, then summed.",
       "status": "validated",
-      "application": "Billing",
+      "applications": ["billing"],
       "module": "VAT calculation",
       "scope": {
         "covered": ["B2B invoices", "Credit notes"],
         "excluded": ["Non-EU export invoices"]
       },
       "origin": { "kind": "jira", "ref": "FAC-1289", "url": "https://acme.atlassian.net/browse/FAC-1289" },
-      "related": ["RG-017"],
+      "related": ["RULE-017"],
       "labels": ["vat", "rounding"]
     }
   ]
@@ -111,7 +112,7 @@ classDiagram
         +title: String
         +statement: String
         +status: RuleStatus
-        +application: Option~String~
+        +applications: Vec~String~
         +module: Option~String~
         +scope: Option~Scope~
         +origin: Option~Origin~
@@ -163,7 +164,8 @@ classDiagram
 stateDiagram-v2
     [*] --> Proposed : add / import / retrodoc
     Proposed --> Validated : approve
-    Proposed --> [*] : reject (ID retired)
+    Proposed --> Rejected : reject (ID retired)
+    Rejected --> [*]
     Validated --> Obsolete : obsolete [superseded_by?]
     Validated --> Proposed : edit(statement) if revalidate_on_change
     Validated --> Validated : edit(title, labels, scope...)
@@ -223,7 +225,7 @@ The states hold no data: three shared static instances are enough.
 
 ### 5.2 Identifier allocation — **Strategy** pattern
 
-**Problem.** The brief accepts several conventions: an in-house sequence (`RG-042`), a code extracted from a ticket (`RG-FACT_3`), a Jira ticket key. The choice belongs to the team.
+**Problem.** The brief accepts several conventions: an in-house sequence (`RULE-042`), a code extracted from a ticket (`RULE-FACT_3`), a Jira ticket key. The choice belongs to the team.
 
 ```mermaid
 classDiagram
@@ -257,13 +259,13 @@ classDiagram
 
 | Strategy | Example | Use |
 |---|---|---|
-| `sequential` (default) | `RG-043` after `sequences.RG = 42` | Rules created locally, retro-documentation |
-| `extracted` | `RG-{code}` → `RG-FACT_3` | Jira import with the "RG XXXX_N : ..." pattern |
+| `sequential` (default) | `RULE-043` after `sequences.RULE = 42` | Rules created locally, retro-documentation |
+| `extracted` | `RULE-{code}` → `RULE-FACT_3` | Jira import with the "RULE XXXX_N : ..." pattern |
 | `ticket-key` | `FAC-1289`, then `FAC-1289.2` if the ticket holds several rules | Teams whose standard is the Jira key |
 
 Invariants, whatever the strategy:
 
-1. The identifier matches `rules.id_pattern` (default: `RG-[A-Z0-9_]+`).
+1. The identifier matches `rules.id_pattern` (default: `RULE-[A-Z0-9_]+`).
 2. It belongs neither to `rules[*].id` nor to `retired`.
 3. For a sequential prefix, `sequences[prefix]` never decreases.
 
@@ -309,6 +311,7 @@ classDiagram
 | `UnknownRelatedValidator` | `CM103` unknown related rule | Warning | MVP |
 | `SupersessionValidator` | `CM104` supersession to an unknown or obsolete rule, or in a cycle | Warning | V1 |
 | `RequiredFieldsValidator` | `CM105` empty required field | Error | MVP |
+| `CanonicalFormatValidator` | `CM106` source file not in canonical form (fix with `checkmate rules format`) | Warning | MVP |
 
 The `sink` collects findings: validation does not stop at the first error.
 
@@ -385,7 +388,7 @@ pub struct ChangeSet {
 pub enum RuleChange {
     Add(Rule),
     Update { id: RuleId, patch: RulePatch, transition: Option<Transition> },
-    Remove { id: RuleId, reason: RemovalReason }, // only a rejected proposed rule
+    Remove { id: RuleId, reason: RemovalReason }, // not used by `reject`: a rejected rule stays in the source with status `rejected`
 }
 ```
 
@@ -427,7 +430,8 @@ The `plan_*` methods change nothing: they return a `ChangeSet`. Application-laye
 | `checkmate rules edit <ID>` | same fields as `add`, `--keep-validated`, `--dry-run` | Edits; may revert to `proposed` (V1) | MVP |
 | `checkmate rules approve <ID>...` | `--all-proposed`, `--dry-run` | `proposed` → `validated` | MVP |
 | `checkmate rules obsolete <ID>` | `--superseded-by <ID>`, `--dry-run` | `validated` → `obsolete` | MVP |
-| `checkmate rules reject <ID>...` | `--reason <TXT>`, `--dry-run` | Removes a `proposed` rule, retires its ID | MVP |
+| `checkmate rules format` | `--check` | Rewrites the source in canonical form; with `--check`, exits 1 if it is not canonical | MVP |
+| `checkmate rules reject <ID>...` | `--reason <TXT>`, `--dry-run` | `proposed` → `rejected`: the rule stays in the source, its ID is retired, a later import of the same candidate is reported as previously rejected | MVP |
 | `checkmate rules next-id` | `--count <N>`, `--hint <CODE>` | Shows the next IDs, without reserving them | MVP |
 | `checkmate rules lint` | `--format` | Runs only the validators from section 5.3 | MVP |
 | `checkmate labels list` | `--format` | Labels in use, with their rule count | V1 |
@@ -435,21 +439,21 @@ The `plan_*` methods change nothing: they return a `ChangeSet`. Application-laye
 | `checkmate labels remove <ID> <LABEL>...` | `--dry-run` | Removes labels | V1 |
 | `checkmate schema rules` | `--output <FILE>` | Writes the JSON Schema of the current format | MVP |
 
-Example output of `checkmate rules show RG-042 --format json`:
+Example output of `checkmate rules show RULE-042 --format json`:
 
 ```json
 {
   "schema": "checkmate/rule-show/v1",
   "rules": [
     {
-      "id": "RG-042",
+      "id": "RULE-042",
       "title": "Line-level VAT rounding",
       "status": "validated",
       "statement": "VAT is calculated and rounded to the cent on each invoice line, then summed.",
-      "application": "Billing",
+      "applications": ["billing"],
       "module": "VAT calculation",
       "scope": { "covered": ["B2B invoices", "Credit notes"], "excluded": ["Non-EU export invoices"] },
-      "related": ["RG-017"],
+      "related": ["RULE-017"],
       "labels": ["vat", "rounding"],
       "locations": [
         { "path": "src/billing/vat.rs", "line": 88, "kind": "impl" },
@@ -484,5 +488,4 @@ flowchart LR
 
 ## 9. Open points
 
-- ADR-003: English or French keys.
-- Should there be a visible `rejected` status rather than removal with a retired ID? Removal keeps the file readable for the PO; the trace remains in Git.
+No open points remain.

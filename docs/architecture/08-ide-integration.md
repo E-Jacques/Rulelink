@@ -121,9 +121,9 @@ When `rules.json` changes (on disk or in a buffer), `CachedSource` (02) reloads 
 | `definition` on an identifier | Opens `rules.json` at the rule's line (positions from 02) | 02 |
 | `references` on an identifier, or on the `id` in `rules.json` | Every location (`where`) | 03 |
 | `publishDiagnostics` | CM001, CM002, CM005, CM006, CM009 in the code; CM003, CM004, CM1xx in `rules.json` | 04 |
-| `codeLens` | Above an annotation: "RG-042 · validated · 3 locations". In `rules.json`: "3 locations · 1 test" or "no code" | 01, 03 |
+| `codeLens` | Above an annotation: "RULE-042 · validated · 3 locations". In `rules.json`: "3 locations · 1 test" or "no code" | 01, 03 |
 | `inlayHint` | Short title after the identifier, can be disabled | 01 |
-| `codeAction` | "Annotate with a rule…", "Replace RG-007 (obsolete) with RG-042", "Add an unknown identifier as a proposed rule" | 03, 01 |
+| `codeAction` | "Annotate with a rule…", "Replace RULE-007 (obsolete) with RULE-042", "Add an unknown identifier as a proposed rule" | 03, 01 |
 | `workspace/symbol` | Rule search by identifier or title | 01 |
 | `documentSymbol` in `rules.json` | File outline by application, module, rule | 01 |
 
@@ -229,4 +229,6 @@ flowchart LR
 
 ## 8. Open points
 
-- Renaming a rule identifier (`textDocument/rename`) in the code and in `rules.json`: technically simple, but contrary to the "stable identifier" rule. Proposal: do not offer it, and offer "make obsolete and replace" instead.
+No open points remain. One option was considered and rejected.
+
+- **Renaming a rule identifier (`textDocument/rename`)**: rejected. An identifier is immutable once committed, and a rename would break the references of other branches and of published exports. To change a rule, the IDE offers "make obsolete and replace" instead. A reference to a `rejected` or `obsolete` rule left in the code is reported as an error (`CM009` and `CM002`, see [04](04-checks.md)).

@@ -15,11 +15,11 @@ Rules live in a source of truth (a JSON file in the MVP):
 
 ```json
 {
-  "id": "RG-042",
+  "id": "RULE-042",
   "title": "Line-level VAT rounding",
   "statement": "VAT is calculated and rounded to the cent on each invoice line, then summed.",
   "status": "validated",
-  "application": "Billing",
+  "applications": ["billing"],
   "module": "VAT calculation"
 }
 ```
@@ -27,7 +27,7 @@ Rules live in a source of truth (a JSON file in the MVP):
 Code points to them with a comment, in any language:
 
 ```rust
-// @rule RG-042 -- rounding applied before the sum
+// @rule RULE-042 -- rounding applied before the sum
 fn line_vat(line: &InvoiceLine) -> Money { ... }
 ```
 

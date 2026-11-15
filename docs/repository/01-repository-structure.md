@@ -31,9 +31,8 @@
 | pnpm workspace (VS Code extension, TypeScript adapter SDK) | | ● | |
 | Python adapter SDK (uv) | | ● | |
 | `cargo-semver-checks` on published crates, `cargo-hack` feature matrix | | ● | |
-| Mirror repositories for the GitHub Action and the GitLab CI component | ● | | |
+| Mirror repositories for the GitHub Action and the GitLab CI component | | | ● |
 | Gradle build for the IntelliJ plugin | | | ● |
-| Remote task cache | | | ● |
 
 ## 3. Technical constraints
 
@@ -102,8 +101,7 @@ checkmate/
 │   └── cli/                    # checkmate-cli, binary "checkmate" (published)
 ├── adapters/                   # one crate per adapter family
 │   ├── json/  scan-fs/  git/  external/
-│   ├── jira/  confluence/  csv/  github/  gitlab/      # V1
-│   └── sql/                                           # V2
+│   └── jira/  confluence/  csv/  github/  gitlab/      # V1
 ├── editors/
 │   ├── vscode/                 # V1, pnpm package
 │   └── intellij/               # V2, Gradle build
@@ -210,7 +208,7 @@ A Rust package is a **library** when it has a `src/lib.rs` only, and an **applic
 | `checkmate-adapter-sdk` | 02 | Library | None | crates.io | MVP |
 | `checkmate-config` | 09 | Library | None | crates.io | MVP |
 | `checkmate-app` | 09 | Library | None (hosts the `Entrypoint` trait and `Bootstrap`, see below) | crates.io | MVP |
-| `checkmate-adapter-*` (`json`, `scan-fs`, `git`, `external`, `jira`, `confluence`, `csv`, `github`, `gitlab`, `sql`) | 02 to 06 | Library, one per adapter family | None | crates.io | MVP to V2 |
+| `checkmate-adapter-*` (`json`, `scan-fs`, `git`, `external`, `jira`, `confluence`, `csv`, `github`, `gitlab`) | 02 to 06 | Library, one per adapter family | None | crates.io | MVP to V2 |
 | `checkmate-lsp` | 08 | Library (server loop) | None: mounted by `checkmate lsp` | crates.io | V1 |
 | `checkmate-cli` | 09 | **Application**, binary `checkmate` | **`src/main.rs`** | crates.io, binaries | MVP |
 | `xtask` | Tooling | Application, run by `cargo xtask` | `src/main.rs` (maintainer tool, never distributed) | No | MVP |
@@ -321,8 +319,8 @@ Test conventions:
 | Python adapter SDK | `sdks/python` | uv | moon task wrapping `uv run pytest` | V1 |
 | IntelliJ plugin | `editors/intellij` | Gradle wrapper, IntelliJ Platform Gradle Plugin | moon task wrapping `./gradlew` | V2 |
 | Skills | `skills/<name>/SKILL.md` | `cargo xtask skills-lint` (front matter, links, minimum CLI version) | moon task | MVP |
-| GitHub Action | `ci/github-action` | Composite action, no build | Mirror job (section 10) | MVP |
-| GitLab CI component | `ci/gitlab-component/templates` | YAML | Mirror job (section 10) | MVP |
+| GitHub Action | `ci/github-action` | Composite action, no build | Mirror job (section 10) | V2 |
+| GitLab CI component | `ci/gitlab-component/templates` | YAML | Mirror job (section 10) | V2 |
 
 ## 9. Tasks and CI
 
@@ -395,4 +393,6 @@ Mirror repositories are read-only for humans; their README points to the monorep
 
 ## 13. Open points
 
-- Remote task cache (V2): moon can share its cache, but a solo developer gains little before several contributors appear. Proposal: revisit when CI time exceeds the target.
+No open points remain.
+
+- **Remote task cache**: not introduced. The local moon cache is enough. If CI time becomes a pain point, the build tooling itself can be reconsidered, not only the cache.

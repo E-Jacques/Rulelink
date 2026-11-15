@@ -27,6 +27,7 @@
 | Import of a JSON proposals file (format from 01, or a list of drafts) | ● | | |
 | Preview (`--dry-run`) and interactive confirmation | ● | | |
 | Reconciliation by identifier and by title similarity | ● | | |
+| Candidates matching a `rejected` rule: skipped, listed in the preview as "previously rejected", overridable with an explicit flag | ● | | |
 | Jira Cloud (REST v3, ADF) and Data Center (REST v2, wiki markup) import | | ● | |
 | Configurable regex extraction, several rules per issue | | ● | |
 | Mapping of Jira fields to application, module, labels | | ● | |
@@ -104,7 +105,7 @@ The cursor is saved only after a successful `apply`. An interrupted import there
 
 | Strategy | Input | Output | Use |
 |---|---|---|---|
-| `RegexExtractor` | Issue text converted to plain text | 0 to n candidates per item | Jira, issues: "RG XXXX_N : my business rule" pattern |
+| `RegexExtractor` | Issue text converted to plain text | 0 to n candidates per item | Jira, issues: "RULE XXXX_N : my business rule" pattern |
 | `FieldExtractor` | Structured fields | 1 candidate per item | CSV, a custom Jira "Business rule" field |
 | `PassthroughExtractor` | Drafts already in Checkmate format | 1 candidate per draft | Proposals file (retro-documentation, skills) |
 
@@ -113,8 +114,8 @@ Default pattern, taken from the brief's decisions, with named groups:
 ```toml
 [import.jira.extract]
 strategy = "regex"
-pattern = '(?m)^\s*RG\s*(?P<code>[A-Z0-9]+_\d+)\s*:\s*(?P<title>.+)$'
-id_template = "RG-{code}"          # → RG-FACT_3
+pattern = '(?m)^\s*RULE\s*(?P<code>[A-Z0-9]+_\d+)\s*:\s*(?P<title>.+)$'
+id_template = "RULE-{code}"          # → RULE-FACT_3
 statement = "title"                # or "following-paragraph": the next paragraph becomes the statement
 ```
 
@@ -287,11 +288,11 @@ Example preview:
 ```
 Import jira · project = FAC AND updated >= -7d · 23 issues read
 
-  + RG-FACT_12  Prorated subscription on cancellation                FAC-1402
-  + RG-FACT_13  No proration within 7 days                           FAC-1402
-  ~ RG-FACT_09  (proposed) statement changed                         FAC-1377
-  ! RG-FACT_02  validated, different content: not modified           FAC-1290
-  ? "Loyalty discount cap" resembles RG-031: ignored                 FAC-1388
+  + RULE-FACT_12  Prorated subscription on cancellation                FAC-1402
+  + RULE-FACT_13  No proration within 7 days                           FAC-1402
+  ~ RULE-FACT_09  (proposed) statement changed                         FAC-1377
+  ! RULE-FACT_02  validated, different content: not modified           FAC-1290
+  ? "Loyalty discount cap" resembles RULE-031: ignored                 FAC-1388
 
 2 additions · 1 update · 1 conflict · 1 likely duplicate
 Apply? [y/N]
@@ -349,4 +350,6 @@ sequenceDiagram
 
 ## 8. Open points
 
-- Should issue comments, where rules are sometimes clarified, be imported? Proposal: an `--include-comments` option in V1, disabled by default, because noise increases sharply.
+No open points remain. One option was considered and rejected.
+
+- **Importing issue comments**: rejected. A rule clarified in a comment must be folded back into the ticket description, which is the only text the importer reads. Comments add noise (discussion, acknowledgements) and per-tracker parsing cost, and they would hide incomplete tickets.

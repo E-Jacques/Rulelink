@@ -136,7 +136,7 @@ classDiagram
 | `CsvRenderer` | One row per rule, configurable columns; ignores sections |
 | `JsonRenderer` | Full document, schema `checkmate/publication/v1`, for external adapters |
 
-Labels ("Scope", "Excluded cases") come from a translation catalogue (`en` and `fr`, selected per project) and can be overridden by a template.
+Labels ("Scope", "Excluded cases") are fixed English strings and can be overridden by a template. There is no translation catalogue (ADR-003).
 
 ### 4.3 Transport — **Bridge** between renderer and target
 
@@ -258,7 +258,6 @@ auth = { email = "${env:CONFLUENCE_EMAIL}", token = "${env:CHECKMATE_CONFLUENCE_
 group_by = ["application", "module"]
 include_obsolete = true
 service_account = "checkmate-bot@acme.com"
-locale = "fr"
 
 [repo]
 web_url = "https://github.com/acme/billing"
@@ -304,4 +303,6 @@ flowchart LR
 
 ## 8. Open points
 
-- The PO may want to comment on the page. Confluence comments survive body updates: this is acceptable.
+No open points remain.
+
+- **PO comments on the published page**: supported. Confluence comments survive body updates, so republishing does not lose them.

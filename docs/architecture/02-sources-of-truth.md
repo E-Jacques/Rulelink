@@ -1,7 +1,7 @@
 # 02 — Sources of truth and adapter contract
 
 > This component connects business rules to persistence mechanisms, as the Adapter pattern did in the original design. It also publishes the **adapter contract**, which covers all three roles: source, import, publishing.
-> Crates: `checkmate-adapter-sdk` (public contract), `adapters/json`, `adapters/external`, then `adapters/jira-source` and `adapters/sql` in V2.
+> Crates: `checkmate-adapter-sdk` (public contract), `adapters/json`, `adapters/external`, then `adapters/jira-source` in V2.
 > See also: [01 Registry](01-rule-registry.md), [05 Import](05-import.md), [06 Publishing](06-publishing-export.md).
 
 ## 1. Role and scope
@@ -33,7 +33,7 @@ The brief replaces "9 interfaces at the same level" with three roles. One tool c
 | Confluence Cloud / Data Center | | | V1 |
 | GitHub Issues, GitLab Issues | | V1 | |
 | Markdown, HTML | | | V1 / V2 |
-| SQL database | V2 | | |
+| SQL database | via external adapter | | |
 | External adapter | V1 | V1 | V1 |
 
 ## 3. Release frame
@@ -41,7 +41,7 @@ The brief replaces "9 interfaces at the same level" with three roles. One tool c
 | Feature | MVP | V1 | V2 |
 |---|:-:|:-:|:-:|
 | `RuleSource` port, single-file JSON source | ● | | |
-| Canonical, atomic writes with lock and fingerprint | ● | | |
+| Canonical, line-oriented, atomic writes with lock and fingerprint | ● | | |
 | Rule positions in the file | ● | | |
 | Published `checkmate-adapter-sdk` contract (native traits) | ● | | |
 | Adapter registry (Factory Method, Abstract Factory) | ● | | |
@@ -50,14 +50,14 @@ The brief replaces "9 interfaces at the same level" with three roles. One tool c
 | Conformance kit, reference external adapter in Python | | ● | |
 | `source migrate` (JSON → directory...) | | ● | |
 | `CachedSource`, `ReadOnlySource` decorators | ● read-only | ● cache | |
-| Remote sources: Jira, SQL | | | ● |
+| Remote sources: Jira | | | ● |
 | Offline snapshot `.checkmate/source.lock.json` | | | ● |
 | Several repositories sharing one source | | | ● |
 
 ## 4. Technical constraints
 
 - `checkmate-adapter-sdk` depends only on `checkmate-model`, `serde`, `thiserror` and `async-trait` (or native `async fn` in traits, with boxed futures for `dyn`). Its public API is stable within a major version.
-- **Canonical writes** for the JSON source: rules in natural order, keys in schema order, 2-space indentation, LF line endings, trailing newline. Two writes of the same content produce the same bytes, so Git diffs stay short and conflicts rare.
+- **Canonical writes** for the JSON source: rules in natural order, keys in schema order, 2-space indentation, LF line endings, trailing newline. Formatting is **line-oriented**, so that two people editing different things touch different lines: every object property on its own line, every array element on its own line (never `["a", "b"]` on one line), every `sequences` and `retired` entry on its own line, no alignment padding, no trailing whitespace. Two writes of the same content produce the same bytes. A merge conflict then lands on the few lines that really differ and can be resolved by hand; `checkmate rules format` rewrites the file canonically afterwards, and `check` reports a file that is not canonical.
 - **Atomicity**: write to a temporary file in the same directory, `fsync`, then rename. Advisory lock (`fd-lock`) held through the read → fingerprint comparison → write sequence.
 - **Fingerprint**: SHA-256 of the content read. If the fingerprint changed since it was read, the write fails (code 5) and the command can be retried.
 - **Positions**: the JSON loader keeps the range (line, column) of each rule and field. The LSP uses it for "go to definition", and schema diagnostics point to the right line.
@@ -348,7 +348,7 @@ Safeguards:
 
 ```mermaid
 flowchart LR
-    pull["checkmate source pull"] -->|"network"| remote["Jira / SQL"]
+    pull["checkmate source pull"] -->|"network"| remote["Jira / external adapter"]
     remote --> lock[".checkmate/source.lock.json<br/>versioned in Git"]
     lock --> check["checkmate check<br/>offline"]
     ci["Scheduled CI"] -->|"source pull + PR on change"| lock
@@ -406,5 +406,7 @@ flowchart LR
 
 ## 9. Open points
 
-- External protocol transport: stdio only in 1.0. An HTTP transport could serve hosted adapters, but nothing requires it yet.
-- A database as a source (V2): should Checkmate impose a schema, or should the team provide a mapping query? A mapping query is more flexible, but harder to make writable.
+No open points remain.
+
+- **External protocol transport**: stdio only in 1.0. An HTTP transport could serve hosted adapters, but nothing requires it yet; revisit if a hosted adapter is requested.
+- **Database as a source**: Checkmate ships no SQL adapter. A database with a mapping layer is an API, and the external adapter protocol already covers it. A team wraps its database in an external adapter that does the mapping and the writes. If demand appears, a template adapter project containing only the mapping code can be provided (a variant of the reference Python adapter).

@@ -245,4 +245,6 @@ flowchart LR
 
 ## 7. Open points
 
-- Telemetry stays absent (00, section 9.4); the version check of `self update --check` ([Release lifecycle](../repository/02-release-lifecycle.md)) is the only network call outside adapters, and it only runs when explicitly requested.
+No open points remain.
+
+- **Telemetry and network calls**: telemetry stays absent (00, section 9.4). The version check of `self update --check` ([Release lifecycle](../repository/02-release-lifecycle.md)) is the only network call outside adapters, and it only runs when explicitly requested.

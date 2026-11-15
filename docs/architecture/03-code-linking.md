@@ -8,7 +8,7 @@
 
 **Responsibilities**
 
-- Define and parse the annotation grammar (`// @rule RG-042`), in any language.
+- Define and parse the annotation grammar (`// @rule RULE-042`), in any language.
 - Traverse the repository in parallel, honouring `.gitignore` and the configuration.
 - Build a `LinkIndex`: rule → locations, file → rules, with the location kind (implementation or test).
 - Answer `explain <file>[:line]` and `where <ID>`.
@@ -53,29 +53,29 @@
 annotation := TAG WS id_list ( WS "--" WS note )?
 id_list    := ID ( ( "," WS? | WS ) ID )*
 TAG        := value of scan.tag, default "@rule"
-ID         := matches rules.id_pattern, default "RG-[A-Z0-9_]+"
+ID         := matches rules.id_pattern, default "RULE-[A-Z0-9_]+"
 note       := rest of the line, free text ignored by check
 ```
 
 Valid examples, all inside a comment:
 
 ```rust
-// @rule RG-042
-// @rule RG-042, RG-043
-// @rule RG-042 -- rounding applied before the sum
+// @rule RULE-042
+// @rule RULE-042, RULE-043
+// @rule RULE-042 -- rounding applied before the sum
 ```
 ```python
-# @rule RG-017
+# @rule RULE-017
 ```
 ```sql
--- @rule RG-101
+-- @rule RULE-101
 ```
 ```html
-<!-- @rule RG-205 -->
+<!-- @rule RULE-205 -->
 ```
 ```java
 /**
- * @rule RG-042
+ * @rule RULE-042
  */
 ```
 
@@ -304,7 +304,7 @@ classDiagram
 
 Placement rules:
 
-1. If the target line, or the line just above it, already carries an annotation, the identifier is appended to it (`@rule RG-042, RG-043`) rather than creating a new line.
+1. If the target line, or the line just above it, already carries an annotation, the identifier is appended to it (`@rule RULE-042, RULE-043`) rather than creating a new line.
 2. Otherwise, a line is inserted above the target line, with the same indentation.
 3. If a documentation block precedes the declaration (`/** ... */`, Python docstring), the annotation goes into that block (`DocCommentWriter`).
 4. The file is rewritten only if the text changes. Original line endings (LF or CRLF) are preserved.
@@ -350,20 +350,20 @@ Example `checkmate explain src/billing/vat.rs`:
 ```
 src/billing/vat.rs — 2 rules
 
-  RG-042  validated  Line-level VAT rounding                          l.88
+  RULE-042  validated  Line-level VAT rounding                          l.88
           Billing › VAT calculation · #vat #rounding
-  RG-051  proposed   Reduced rate for essential goods                 l.131
+  RULE-051  proposed   Reduced rate for essential goods                 l.131
           ⚠ rule still proposed (CM005)
 ```
 
-Example `checkmate where RG-042 --format json`:
+Example `checkmate where RULE-042 --format json`:
 
 ```json
 {
   "schema": "checkmate/where/v1",
   "results": [
     {
-      "id": "RG-042",
+      "id": "RULE-042",
       "known": true,
       "status": "validated",
       "locations": [
@@ -397,7 +397,9 @@ flowchart LR
 - Performance: a synthetic repository of 50,000 files and 5,000 annotations scanned in under 3 s cold.
 - Identical output on Linux, macOS and Windows (paths, ordering, line endings).
 
-## 9. Open points
+## 9. Rejected options
 
-- Should annotations outside comments be accepted, for example attributes (`#[rule("RG-042")]` in Rust, `@Rule("RG-042")` in Java)? They survive refactoring better, but require a dependency in production code. Proposal: plan them for V2 as an optional profile.
-- Range annotations (`@rule-begin` / `@rule-end`): useful for legacy code, but they make the grammar heavier. Add them only if the retro-documentation test calls for them.
+No open points remain. Two options were considered and rejected.
+
+- **Annotations outside comments** (attributes such as `#[rule("RULE-042")]` in Rust or `@Rule("RULE-042")` in Java). Rejected: the notation suggests that something happens behind the scenes, such as runtime registration or compile-time validation, whereas Checkmate does nothing of the sort. The annotation is only text read by the scanner. An attribute would also mislead readers into thinking the link is enforced by the language toolchain.
+- **Range annotations** (`@rule-begin` / `@rule-end`). Rejected: paired markers are hard to maintain (they drift, get orphaned or unbalanced as code moves) and are not practical in real use. They would also make the grammar heavier. A single-line `@rule` stays the only form.

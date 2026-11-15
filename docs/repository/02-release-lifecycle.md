@@ -22,7 +22,8 @@
 
 | Feature | MVP | V1 | V2 |
 |---|:-:|:-:|:-:|
-| Release pipeline: release-plz + dist, GitHub releases, installers, npm, Docker | ● | | |
+| Release pipeline: release-plz + dist, GitHub releases, npm package | ● | | |
+| Shell and PowerShell installers, Docker image | | ● | |
 | crates.io publication of every library crate | ● | | |
 | Signed artefacts, SBOM, build provenance attestations | ● | | |
 | Homebrew, Scoop, winget | | ● | |
@@ -52,7 +53,7 @@ Public contracts are versioned independently of the binary, because they evolve 
 
 | Artefact | Scheme | Strategy | Published to |
 |---|---|---|---|
-| `checkmate` binary (`checkmate-cli`) | SemVer, `0.x` until the format is frozen | Lockstep with every internal crate (`workspace.package.version`) | GitHub releases, installers, npm, Docker, Homebrew, crates.io |
+| `checkmate` binary (`checkmate-cli`) | SemVer, `0.x` until the format is frozen | Lockstep with every internal crate (`workspace.package.version`) | GitHub releases, npm, crates.io (V1: shell and PowerShell installers, Docker, Homebrew) |
 | Other library crates (`registry`, `link`, `check`, `import`, `publish`, `config`, `app`, `lsp`, `adapters/*`) | Same as the binary | Lockstep, published in dependency order by release-plz | crates.io |
 | `xtask`, `checkmate-e2e` | — | `publish = false` | — |
 | `checkmate-model` | SemVer, `1.x` from the first public release | Independent, checked by `cargo-semver-checks` | crates.io |
@@ -62,7 +63,7 @@ Public contracts are versioned independently of the binary, because they evolve 
 | JSON output schemas | `name/vN` | One version per breaking change | JSON Schema |
 | Skills | Tag aligned on the binary's minor (`v0.3.0`) | Declare a minimum binary version | Monorepo tag, optional mirror |
 | VS Code extension | SemVer, own version | Bundles a pinned binary version | VS Code Marketplace, Open VSX |
-| GitHub Action | Major tag `v1`, plus `v1.x.y` | Independent | Mirror repository |
+| GitHub Action (V2) | Major tag `v1`, plus `v1.x.y` | Independent | Mirror repository |
 
 ### 4.3 Release pipeline
 
@@ -85,16 +86,17 @@ sequenceDiagram
     GH->>DIST: tag checkmate-cli v0.4.0
     DIST->>DIST: build matrix (Linux musl x86_64 and arm64, macOS universal, Windows)
     DIST->>DIST: checksums, SBOM, signatures, provenance attestations
-    DIST->>CH: GitHub release, shell and PowerShell installers, npm package, Homebrew tap
-    GH->>CH: follow-up jobs: Docker image, VSIX per platform, skills tag, Action and GitLab mirrors
+    DIST->>CH: GitHub release and npm package (V1: shell and PowerShell installers, Homebrew tap)
+    GH->>CH: follow-up jobs: V1: Docker image, VSIX per platform, skills tag. V2: Action and GitLab mirrors
 ```
 
 | Step | Tool | Release |
 |---|---|---|
 | Version bumps, changelogs, tags, crates.io | release-plz | MVP |
-| Cross-platform binaries, installers, npm wrapper, Homebrew | dist (formerly cargo-dist) | MVP |
+| Cross-platform binaries, npm wrapper | dist (formerly cargo-dist) | MVP |
+| Shell and PowerShell installers, Homebrew | dist | V1 |
 | Release dry run on every PR | `dist plan` ([Repository structure](01-repository-structure.md), section 9.1) | MVP |
-| Docker image | GitHub Actions, multi-arch build from the release binaries | MVP |
+| Docker image | GitHub Actions, multi-arch build from the release binaries | V1 |
 | Signatures and provenance | GitHub artifact attestations; SBOM with `cargo-cyclonedx` | MVP |
 | VS Code extension | `vsce publish --target <platform>`, `ovsx publish` | V1 |
 | Scoop, winget | Manifests generated from the release | V1 |
@@ -158,7 +160,7 @@ Example `checkmate version --json`:
 | `cargo xtask arch` | Checks the dependency rules ([Repository structure](01-repository-structure.md), section 6.2) | MVP |
 | `cargo xtask skills-lint` | Validates skill front matter, links and minimum versions | MVP |
 | `cargo xtask release-check` | Verifies that format, protocol and schema versions in `version --json` match `schemas/` | MVP |
-| `cargo xtask mirror <action\|gitlab>` | Prepares the mirror repository content (used by CI) | MVP |
+| `cargo xtask mirror <action\|gitlab>` | Prepares the mirror repository content (used by CI) | V2 |
 
 ## 6. Interactions
 
@@ -174,8 +176,11 @@ flowchart LR
 
 - `dist plan` succeeds on every PR; a full release dry run (`release-plz release --dry-run`) runs nightly.
 - `cargo xtask release-check` passes on every release PR.
-- Installation test from the brief: first `check` in under 15 minutes for 3 external developers, using the published installers.
+- The `smoke-test` workflow runs on every tag, between the build and the npm publish: the built archive starts on Linux, macOS (x86_64 and arm64) and Windows, and the npm tarball declares the `checkmate` binary. Once `init` and `check` exist, it also runs `init` then `check` in a clean repository (flip `FULL_FLOW`).
+- Installation test from the brief: first `check` in under 15 minutes for 3 external developers, using the npm package, and including one `check` run in a CI workflow the developer writes by hand.
 
 ## 8. Open points
 
-- When should `checkmate-model` reach 1.0? Proposal: as soon as ADR-003 (English keys) is validated and the MVP has run on the internal-use build for 4 weeks.
+No open points remain.
+
+- **`checkmate-model` 1.0**: released as soon as ADR-003 (English keys) is validated and the MVP has run on the internal-use build for 4 weeks.

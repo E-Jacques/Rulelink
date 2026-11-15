@@ -32,7 +32,7 @@ Related documentation outside this folder:
 
 ## 1. Need and architecture drivers
 
-Checkmate answers two questions: **which business rule does this code implement**, and **which rules no longer have any code**. The product rests on three elements: a source of truth, a rule identifier in the code (`// @rule RG-042`) and a deterministic check in CI.
+Checkmate answers two questions: **which business rule does this code implement**, and **which rules no longer have any code**. The product rests on three elements: a source of truth, a rule identifier in the code (`// @rule RULE-042`) and a deterministic check in CI.
 
 The drivers below come straight from the brief:
 
@@ -45,7 +45,7 @@ The drivers below come straight from the brief:
 | Public rule format | The model is a separate, versioned crate described by a JSON Schema |
 | Community-contributed connectors | Public adapter contract, native Rust or external process in any language |
 | AI only through skills run by the developer's agent | The binary embeds no LLM. Skills call the CLI with `--format json` |
-| Less than 15 minutes to the first `check` | `checkmate init` generates configuration, rules file, CI workflow and skills |
+| Less than 15 minutes to the first `check` | `checkmate init` generates configuration and rules file; skills are installed by hand in the MVP |
 
 ## 2. Technology choice: Rust
 
@@ -58,7 +58,7 @@ The drivers below come straight from the brief:
 | One core, several entry points | The same library serves the CLI and the LSP server (`tower-lsp-server`) |
 | Public format | `serde` for serialisation, `schemars` to generate the JSON Schema from the types |
 | Determinism | No garbage collector or reflection, ordered collections (`BTreeMap`, `IndexMap`) |
-| Distribution | `cargo-dist`: GitHub releases, Homebrew, shell and PowerShell installers, npm package |
+| Distribution | `cargo-dist`: GitHub releases and npm package in the MVP; shell and PowerShell installers, Homebrew in V1 |
 
 Risks and mitigations:
 
@@ -240,7 +240,7 @@ A single `checkmate` binary exposes the LSP server: `checkmate lsp` is a subcomm
 ```mermaid
 sequenceDiagram
     autonumber
-    participant CI as CI (GitHub Action)
+    participant CI as CI (workflow written by the developer)
     participant CLI as checkmate check
     participant APP as Facade / bus
     participant SRC as JSON source
@@ -249,7 +249,7 @@ sequenceDiagram
     participant CHK as Check engine
     participant REP as Reporter
 
-    CI->>CLI: checkmate check --format sarif,github
+    CI->>CLI: checkmate check --format json
     CLI->>APP: dispatch(RunCheck)
     APP->>SRC: load()
     SRC-->>APP: RuleSet + positions in the file
@@ -259,7 +259,7 @@ sequenceDiagram
     APP->>CHK: run(RuleSet, LinkIndex, policy)
     CHK-->>APP: CheckReport (sorted findings)
     APP->>REP: render(report, formats)
-    REP-->>CI: SARIF + PR annotations + summary
+    REP-->>CI: JSON report
     CLI-->>CI: exit code 0 or 1
 ```
 
@@ -278,9 +278,9 @@ sequenceDiagram
     SK->>CLI: checkmate context --paths src/billing --query discount --format json
     CLI-->>AG: relevant validated rules + existing locations
     AG->>AG: implements according to the rules
-    AG->>CLI: checkmate annotate src/billing/discount.rs:42 RG-042
+    AG->>CLI: checkmate annotate src/billing/discount.rs:42 RULE-042
     AG->>CLI: checkmate check --changed --format json
-    CLI-->>AG: findings (e.g. RG-051 cited but only proposed)
+    CLI-->>AG: findings (e.g. RULE-051 cited but only proposed)
     AG-->>Dev: summary + rules applied + warnings
 ```
 
@@ -302,7 +302,7 @@ sequenceDiagram
     Dev-->>AG: accepts, corrects or rejects
     AG->>CLI: checkmate import file ... (status proposed, origin retrodoc)
     CLI->>SRC: apply(ChangeSet)
-    Dev->>CLI: checkmate rules approve RG-101 RG-102
+    Dev->>CLI: checkmate rules approve RULE-101 RULE-102
     AG->>CLI: checkmate annotate ... for each location
     AG->>CLI: checkmate check
 ```
@@ -360,7 +360,7 @@ sequenceDiagram
 | Builder | Creational | 01: `RuleQuery`; 06: `DocumentBuilder`; 09: `ConfigBuilder` | Build rich, immutable objects step by step |
 | Abstract Factory | Creational | 02: `AdapterFamily` (Jira: importer + source; Confluence: publisher) | Create consistent adapters from configuration |
 | Factory Method | Creational | 02: `AdapterRegistry::create`; 03: language profile per extension | Instantiate without knowing the concrete class |
-| Prototype | Creational | 09: `init` templates (legacy, SaaS, business application) | Copy a reference configuration, then adjust it |
+| Prototype | Creational | 09: `init` templates (legacy, greenfield, business application) | Copy a reference configuration, then adjust it |
 
 The **Singleton** pattern is deliberately rejected: shared state (configuration, adapter registry) goes through an explicit, injected `AppContext`. This keeps tests parallel and lets the LSP server handle several workspaces.
 
@@ -388,11 +388,11 @@ Binary name: `checkmate`. Noun or verb tree, in the style of `cargo` and `gh`.
 | Import | `import file`, `import csv`, `import jira`, `import github`, `import gitlab`, `import <external>` | MVP for `file` |
 | Output | `export`, `publish confluence`, `publish <external>` | V1 |
 | Source | `source info`, `source pull`, `source migrate` | V1 |
-| Agents | `context`, `skills install`, `skills list`, `skills update` | MVP |
+| Agents | `context` (MVP), `skills install`, `skills list`, `skills update` (V1) | MVP |
 | IDE | `lsp` | V1 |
 | Adapters | `adapters list`, `adapters check` | V1 |
 
-Common global options: `-C, --directory <DIR>`, `--config <FILE>`, `--format <human|json|...>`, `--color <auto|always|never>`, `-q`, `-v` (repeatable), `--log-format <text|json>`, `--no-input` (never prompt; implied in CI), `--lang <en|fr>`.
+Common global options: `-C, --directory <DIR>`, `--config <FILE>`, `--format <human|json|...>`, `--color <auto|always|never>`, `-q`, `-v` (repeatable), `--log-format <text|json>`, `--no-input` (never prompt; implied in CI).
 
 ### 9.2 Exit codes
 
@@ -452,12 +452,12 @@ Common global options: `-C, --directory <DIR>`, `--config <FILE>`, `--format <hu
 
 | Channel | Content | Release |
 |---|---|---|
-| GitHub releases via release-plz + dist (see [Release lifecycle](../repository/02-release-lifecycle.md)) | Binaries for Linux x86_64 and arm64 (musl), universal macOS, Windows x86_64 | MVP |
-| `curl \| sh` and PowerShell installers | Same | MVP |
+| GitHub releases via release-plz + dist (see [Release lifecycle](../repository/02-release-lifecycle.md)) | Binaries for Linux x86_64 and arm64 (musl), macOS x86_64 and arm64, Windows x86_64 | MVP |
+| `curl \| sh` and PowerShell installers | Same | V1 |
 | Homebrew, Scoop, winget | Same | V1 |
-| npm (`npx checkmate`) | Thin package that downloads the platform binary | MVP |
-| Docker image `ghcr.io/.../checkmate` | For CI without a download step | MVP |
-| GitHub Action, GitLab CI component | `check` in a few lines | MVP |
+| npm (`npx checkmate`) | Thin package that downloads the platform binary. The only user-facing installer in the MVP | MVP |
+| Docker image `ghcr.io/.../checkmate` | For CI without a download step | V1 |
+| GitHub Action, GitLab CI component | `check` in a few lines | V2 |
 | Skills | `skills/` folder of the monorepo, installable with `npx skills add` and `apm install` (see [Repository structure](../repository/01-repository-structure.md)) | MVP |
 | `cargo install checkmate-cli` | For contributors | MVP |
 
@@ -483,7 +483,7 @@ Release frames (MVP, V1, V2), the feature-by-release table and the exit criteria
 |---|---|---|---|
 | ADR-001 | Rust for the core, CLI and LSP | Proposed | Single binary, offline, one shared core |
 | ADR-002 | Hexagonal architecture, synchronous core, asynchronous adapters | Proposed | Core determinism and testability |
-| ADR-003 | Format keys in ASCII English (`title`, `statement`, `scope`...), display labels localised | **To be validated** | Public, international format with no accented JSON keys. The brief names the fields in French: the mapping is given in 01 |
+| ADR-003 | Every technical element is in English only: format keys, CLI, configuration, reports, skills. No localisation. Rule values (title, statement...) may be written in any language | Accepted | Public, international format. Values are data, never checked by the tool; only agents may read them to verify a rule. The brief's French field names are mapped in 01 |
 | ADR-004 | A single binary, with LSP as a subcommand | Proposed | One installation, one version |
 | ADR-005 | Native adapters (crates) and external adapters (JSON-RPC over stdio) | Accepted | Confirmed choice: contributions in any language |
 | ADR-006 | Linking by `@rule` comment, lexical scan in the MVP, tree-sitter in V2 | Proposed | Works in every language from day one |
@@ -502,7 +502,7 @@ Release frames (MVP, V1, V2), the feature-by-release table and the exit criteria
 
 | Topic | Risk | Way forward |
 |---|---|---|
-| Git conflicts on a single `rules.json` | Large teams adding rules in parallel | Canonical sorted writes; `json-dir` source in V1 |
+| Git conflicts on a single `rules.json` | Frequent in practice when several people add or edit rules | Canonical line-oriented formatting applied on every write (one property per line), `checkmate rules format` to repair a hand-merged file, `check` reports a non-canonical file; `json-dir` source in V1 |
 | False positives from the lexical scan | `@rule` inside a string literal or a documentation example | Language profiles restricted to comments; `scan.exclude`; tree-sitter in V2 |
 | Changes to Atlassian APIs | Jira Cloud search endpoints and the ADF format keep evolving | Bridge per edition, `wiremock` tests on recorded responses, documented minimum version |
 | Young skill tooling (`npx skills`, APM) | Changing flags and formats | Installer as a Strategy, fallback copy embedded in the binary |

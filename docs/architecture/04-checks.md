@@ -1,7 +1,7 @@
 # 04 — Deterministic checks (`check`) and CI integration
 
 > The check is what keeps Checkmate from becoming "yet more documentation". It cross-references the registry and the code index, offline and without AI, and produces findings that a human, a CI pipeline or an agent can read.
-> Crates: `checkmate-check` (engine, checks, reports), `adapters/git` (changed files, via `gix`). Deliverables: GitHub Action, GitLab CI component, pre-commit hook.
+> Crates: `checkmate-check` (engine, checks, reports), `adapters/git` (changed files, via `gix`). Deliverables: pre-commit hook (V1), GitHub Action and GitLab CI component (V2).
 > See also: [01 Registry](01-rule-registry.md), [03 Code linking](03-code-linking.md).
 
 ## 1. Role and scope
@@ -26,14 +26,16 @@ This sentence appears in the command help, in the CI summary and in the document
 |---|:-:|:-:|:-:|
 | The brief's 5 checks + source integrity | ● | | |
 | Configurable severity policy | ● | | |
-| `human`, `json`, `sarif`, `github` reports | ● | | |
-| GitHub Action (annotations, SARIF, summary) | ● | | |
-| GitLab CI component (codequality report) | ● | | |
+| `human`, `json` reports | ● | | |
+| `sarif`, `github` reports | | | ● |
+| GitHub Action (annotations, SARIF, summary) | | | ● |
+| GitLab CI component (codequality report) | | | ● |
 | `checkmate status`: coverage and counters | ● | | |
 | `junit`, `gitlab`, `markdown` (PR comment) reports | | ● | |
-| `check --changed` (files changed since the PR base) | | ● | |
+| `check --changed` (files changed since the PR base) | ● | | |
 | Baseline for adoption on legacy code | | ● | |
 | Pre-commit hook (pre-commit and lefthook frameworks) | | ● | |
+| Warning on a rule approved in the same commit that created it (agent self-approval control) | | ● | |
 | Additional checks: untested rule, rule outside its application, malformed annotation | | ● | |
 | Symbol-level checks (rule moved out of its function) | | | ● |
 
@@ -56,9 +58,11 @@ This sentence appears in the command help, in the CI summary and in the document
 | `CM005` | `unvalidated-reference` | The code cites a rule that is still `proposed` | Warning | MVP |
 | `CM006` | `malformed-annotation` | `@rule` without a valid identifier | Warning | V1 |
 | `CM007` | `untested-rule` | `validated` rule cited in the implementation but in no test | Off | V1 |
-| `CM008` | `wrong-application` | Rule cited in a path mapped to another application | Off | V1 |
-| `CM009` | `retired-reference` | The code cites a retired identifier | Error | MVP |
-| `CM100`–`CM105` | source integrity | See 01, section 5.3 | As in 01 | MVP / V1 |
+| `CM008` | `wrong-application` | Rule cited in a path mapped to an application not listed in the rule's `applications` | Off | V1 |
+| `CM009` | `retired-reference` | The code cites a `rejected` rule, or an identifier retired without a rule in the source (an `obsolete` rule is reported by `CM002`) | Error | MVP |
+| `CM100`–`CM106` | source integrity | See 01, section 5.3 | As in 01 | MVP / V1 |
+
+On an empty Source (no rules yet, as right after `init`), `check` passes with exit code 0 and an info message ("no rules yet"). A missing or unreadable Source file still fails with exit code 3.
 
 `CM007` reflects a sentence from the brief: "a test remains the best check of a rule". Checkmate does not replace tests; it can flag rules that no test cites.
 
@@ -216,8 +220,8 @@ classDiagram
 |---|---|---|
 | `human` | Terminal, with colours and `miette` excerpts | MVP |
 | `json` | Agents, scripts. Schema `checkmate/check-report/v1` | MVP |
-| `sarif` | GitHub Code Scanning, SAST tools | MVP |
-| `github` | `::error file=...` commands: inline annotations on the PR | MVP |
+| `sarif` | GitHub Code Scanning, SAST tools | V2 |
+| `github` | `::error file=...` commands: inline annotations on the PR | V2 |
 | `junit` | GitLab, Jenkins, Azure test reports | V1 |
 | `gitlab` | GitLab Code Quality report | V1 |
 | `markdown` | Job summary, PR comment | V1 |
@@ -288,19 +292,19 @@ pub struct CoverageStats { pub rules_by_status: BTreeMap<RuleStatus, usize>,
 Example `human` output:
 
 ```
-error[CM001] unknown reference: RG-099
+error[CM001] unknown reference: RULE-099
   ┌─ src/billing/discount.rs:42:12
-42 │     // @rule RG-099
+42 │     // @rule RULE-099
    │              ^^^^^^ not found in rules/rules.json
-   = help: similar rules: RG-090, RG-009
+   = help: similar rules: RULE-090, RULE-009
 
-warning[CM004] validated rule with no code: RG-017 "Cumulative discount cap"
+warning[CM004] validated rule with no code: RULE-017 "Cumulative discount cap"
 
 2 findings (1 error, 1 warning) · 118 validated rules, 94 linked to code (80%)
 Checkmate verifies the link between a rule and the code, not the correctness of the implementation.
 ```
 
-### 6.3 GitHub Action (MVP)
+### 6.3 GitHub Action (V2)
 
 ```yaml
 - uses: checkmate-dev/check-action@v1
@@ -313,7 +317,7 @@ Checkmate verifies the link between a rule and the code, not the correctness of 
 
 Internal steps: download the binary (cached per version), run `checkmate check --format github,sarif=checkmate.sarif,markdown=$GITHUB_STEP_SUMMARY`, upload the SARIF if `security-events: write` is granted, propagate the exit code.
 
-### 6.4 GitLab CI component (MVP)
+### 6.4 GitLab CI component (V2)
 
 ```yaml
 include:
@@ -351,4 +355,6 @@ flowchart LR
 
 ## 9. Open points
 
-- Should there be a "block only on new findings" mode without a baseline, by comparing with the base branch? It is easier to adopt, but requires two scans. Proposal: V2, if the baseline proves insufficient.
+No open points remain.
+
+- **"Block only on new findings" without a baseline**: deferred to V2, and only if the baseline proves insufficient. Comparing with the base branch is easier to adopt but requires two scans.

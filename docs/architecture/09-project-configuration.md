@@ -26,7 +26,7 @@
 | `checkmate.toml`, root discovery | ● | | |
 | Layered configuration + `${env:VAR}` | ● | | |
 | Interactive and non-interactive `init`, templates | ● | | |
-| CI workflow generation (GitHub, GitLab) by `init` | ● | | |
+| CI workflow generation (GitHub, GitLab) by `init` | | | ● |
 | `doctor`, `config show`, `config get/set`, `version`, `completions`, `schema` | ● | | |
 | Command bus, middleware, events | ● | | |
 | `migrate` (configuration and rule format) | | ● | |
@@ -53,12 +53,12 @@ version = 1
 name = "billing"
 
 [source]
-kind = "json"                       # json | json-dir (V1) | jira, sql (V2) | external adapter name
+kind = "json"                       # json | json-dir (V1) | jira (V2) | external adapter name
 path = "rules/rules.json"
 
 [rules]
-id_pattern = "RG-[A-Z0-9_]+"
-id_policy = { kind = "sequential", prefix = "RG", width = 3 }
+id_pattern = "RULE-[A-Z0-9_]+"
+id_policy = { kind = "sequential", prefix = "RULE", width = 3 }
 revalidate_on_change = true          # V1
 
 [scan]
@@ -270,7 +270,7 @@ pub enum DomainEvent {
 | Template | Entry point | Settings |
 |---|---|---|
 | `legacy` | Existing code without rules | `orphan-rule = off` at first, retro-documentation skill highlighted, baseline suggested (V1) |
-| `saas` | New rules annotated as development goes | Default settings, consultation skill |
+| `greenfield` | Active project: new rules annotated as development goes | Default settings, consultation skill |
 | `business` | Existing rule repository imported | `[import.jira]` section or CSV import prepared |
 
 Fixed steps (**Template Method**): detect (languages, Git remote, CI, `apm.yml`, agents present) → choose a template → ask the missing questions → write the files → install the skills → print the next commands.
@@ -286,23 +286,21 @@ sequenceDiagram
     Dev->>INIT: checkmate init
     INIT->>DET: languages, remote, CI, agents, apm.yml
     DET-->>INIT: GitHub, Rust + TS, Claude Code and Copilot detected
-    INIT->>Dev: template? [legacy / saas / business]
+    INIT->>Dev: template? [legacy / greenfield / business]
     Dev-->>INIT: legacy
     INIT->>FS: checkmate.toml
     INIT->>FS: empty rules/rules.json, with $schema
     INIT->>FS: .checkmate/.gitignore (cache, state)
-    INIT->>FS: .github/workflows/checkmate.yml
-    INIT->>FS: skills (via apm, npx or copy) + AGENTS.md section
     INIT-->>Dev: "Next step: ask your agent to document a module"
 ```
 
-Non-interactive mode: `checkmate init --template legacy --ci github --skills auto --yes`.
+Interactive and non-interactive modes are both supported. Every question has a flag and a default, so a one-liner works: `checkmate init --template legacy --rules-path rules/rules.json --id-prefix RULE --yes`. Without a terminal, in CI, or with `--yes` or `--no-input`, `init` never prompts and uses the flag value or the default. In the MVP, `init` writes the configuration and the rules file only; CI workflows (V2) and skills (V1) are not touched.
 
 ## 6. CLI entry points
 
 | Command | Options | Effect | Release |
 |---|---|---|---|
-| `checkmate init` | `--template legacy\|saas\|business`, `--source json\|json-dir`, `--rules-path <P>`, `--ci github\|gitlab\|none`, `--skills auto\|npx\|apm\|copy\|none`, `--no-agents-md`, `--yes` | Initialises the repository | MVP |
+| `checkmate init` | `--template legacy\|greenfield\|business`, `--source json\|json-dir`, `--rules-path <P>`, `--id-prefix <PREFIX>` (default `RULE`), `--ci github\|gitlab\|none` (V2), `--skills auto\|npx\|apm\|copy\|none` (V1), `--no-agents-md` (V1), `--yes` | Initialises the repository | MVP |
 | `checkmate config show` | `--resolved`, `--origin`, `--format toml\|json` | Effective configuration | MVP |
 | `checkmate config get <KEY>` | | Value of a key | MVP |
 | `checkmate config set <KEY> <VALUE>` | `--local` | Edits the file, preserving comments and order | MVP |
@@ -351,4 +349,6 @@ flowchart TB
 
 ## 9. Open points
 
-- Should several sources be allowed in a monorepo (one per application)? This contradicts "one source per project"; the proposal is to treat each application as a separate project, with its own `checkmate.toml` in its sub-folder, discovery stopping at the nearest file.
+No open points remain.
+
+- **Several sources in a monorepo**: not allowed. A project has exactly one source. Each rule lists the applications it applies to (`applications`, 01), and the `[applications]` table maps those names to paths. Splitting a monorepo into separate projects, each with its own `checkmate.toml`, stays possible but is not the supported model.
