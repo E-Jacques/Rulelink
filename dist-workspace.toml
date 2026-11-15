@@ -14,3 +14,7 @@ targets = ["aarch64-apple-darwin", "x86_64-apple-darwin", "x86_64-unknown-linux-
 # Build checksums and GitHub build-provenance attestations for every artifact.
 checksum = "sha256"
 github-attestations = true
+
+# dist 0.28 defaults its global jobs to ubuntu-20.04, which GitHub has retired (jobs never start).
+[dist.github-custom-runners]
+global = "ubuntu-latest"

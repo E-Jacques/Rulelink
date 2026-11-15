@@ -39,6 +39,9 @@ impl RuleSet {
 
     /// Serialises in Canonical form: rules in natural Identifier order, keys in schema
     /// order, one property or array element per line, LF endings, trailing newline.
+    ///
+    /// # Panics
+    /// Never in practice: a `RuleSet` only holds string-keyed maps and plain values.
     #[must_use]
     pub fn to_canonical(&self) -> String {
         let mut sorted = self.clone();
