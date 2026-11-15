@@ -1,0 +1,85 @@
+# Smoke test of the built release artifacts, called by release.yml (dist `host-jobs`).
+# publish-npm and announce wait for it, so a broken build is never published to npm.
+# It installs nothing from the network: it runs the archives built in this very run,
+# on a clean runner, the way a new user would: version, init, first check.
+name: Smoke test
+
+on:
+  workflow_call:
+    inputs:
+      plan:
+        description: dist plan (manifest JSON), unused for now but part of the dist contract
+        required: true
+        type: string
+
+env:
+  # Flip to "true" as soon as `checkmate init` and `checkmate check` exist in the CLI.
+  # Until then the job only proves that the binary starts on every platform.
+  FULL_FLOW: "false"
+
+jobs:
+  smoke:
+    name: smoke (${{ matrix.target }})
+    runs-on: ${{ matrix.runner }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - { runner: ubuntu-latest,  target: x86_64-unknown-linux-musl, ext: tar.xz }
+          - { runner: macos-13,       target: x86_64-apple-darwin,       ext: tar.xz }
+          - { runner: macos-latest,   target: aarch64-apple-darwin,      ext: tar.xz }
+          - { runner: windows-latest, target: x86_64-pc-windows-msvc,    ext: zip }
+    defaults:
+      run:
+        shell: bash
+    steps:
+      - name: Fetch the artifacts built in this run
+        uses: actions/download-artifact@v4
+        with:
+          pattern: artifacts-*
+          path: dist-artifacts
+          merge-multiple: true
+
+      - name: Unpack the binary for this platform
+        run: |
+          archive="dist-artifacts/checkmate-cli-${{ matrix.target }}.${{ matrix.ext }}"
+          test -f "$archive" || { echo "missing $archive"; ls dist-artifacts; exit 1; }
+          mkdir bin
+          if [ "${{ matrix.ext }}" = "zip" ]; then
+            7z x "$archive" -obin > /dev/null
+          else
+            tar -xJf "$archive" -C bin
+          fi
+          bin_path="$(find "$PWD/bin" -type f \( -name checkmate -o -name checkmate.exe \) | head -n 1)"
+          test -n "$bin_path" || { echo "no checkmate binary in the archive"; exit 1; }
+          chmod +x "$bin_path"
+          echo "CHECKMATE=$bin_path" >> "$GITHUB_ENV"
+
+      - name: checkmate --version
+        run: |
+          "$CHECKMATE" --version | tee version.txt
+          grep -q '^checkmate ' version.txt
+
+      - name: init then first check in a clean repository
+        if: ${{ env.FULL_FLOW == 'true' }}
+        run: |
+          mkdir sandbox && cd sandbox
+          git init -q
+          "$CHECKMATE" init --template greenfield --id-prefix RULE --yes
+          # An empty Source must pass, with a "no rules yet" message (exit code 0).
+          "$CHECKMATE" check
+
+  npm-package:
+    name: npm package content
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          pattern: artifacts-*
+          path: dist-artifacts
+          merge-multiple: true
+      - name: The npm tarball is present and declares the checkmate binary
+        run: |
+          pkg="$(ls dist-artifacts/*-npm-package.tar.gz)"
+          tar -xzf "$pkg" -O package/package.json | tee package.json
+          grep -q '"checkmate"' package.json
