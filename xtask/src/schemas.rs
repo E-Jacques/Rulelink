@@ -7,8 +7,8 @@ pub fn run(check: bool) -> Result<(), String> {
     let dir = Path::new("schemas");
     fs::create_dir_all(dir).map_err(|e| e.to_string())?;
     let schemas = [(
-        "rule.schema.json",
-        schemars::schema_for!(checkmate_model::Rule),
+        "rules.schema.json",
+        schemars::schema_for!(checkmate_model::RuleSet),
     )];
     for (file, schema) in schemas {
         let mut body = serde_json::to_string_pretty(&schema).map_err(|e| e.to_string())?;

@@ -9,3 +9,5 @@ publish = false
 [lints]
 workspace = true
 
+[dependencies]
+tempfile.workspace = true

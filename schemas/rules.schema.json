@@ -1,0 +1,205 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "RuleSet",
+  "description": "The content of a Source: its rules and the bookkeeping that keeps Identifiers unique.",
+  "type": "object",
+  "properties": {
+    "format": {
+      "description": "Source format version.",
+      "type": "integer",
+      "format": "uint32",
+      "minimum": 0
+    },
+    "retired": {
+      "description": "Retired Identifiers, never allocated again.",
+      "type": "array",
+      "default": [],
+      "items": {
+        "$ref": "#/$defs/RuleId"
+      }
+    },
+    "rules": {
+      "description": "The rules.",
+      "type": "array",
+      "default": [],
+      "items": {
+        "$ref": "#/$defs/Rule"
+      }
+    },
+    "sequences": {
+      "description": "Highest number allocated per Identifier prefix.",
+      "type": "object",
+      "additionalProperties": {
+        "type": "integer",
+        "format": "uint64",
+        "minimum": 0
+      },
+      "default": {}
+    }
+  },
+  "required": [
+    "format"
+  ],
+  "$defs": {
+    "Origin": {
+      "description": "Where a rule comes from.",
+      "type": "object",
+      "properties": {
+        "kind": {
+          "description": "Kind of origin (`jira`, `github`, `retrodoc`, `manual`, ...).",
+          "type": "string"
+        },
+        "ref": {
+          "description": "Reference in the origin system.",
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "url": {
+          "description": "Link to the origin.",
+          "type": [
+            "string",
+            "null"
+          ]
+        }
+      },
+      "required": [
+        "kind"
+      ]
+    },
+    "Rule": {
+      "description": "A business rule.",
+      "type": "object",
+      "properties": {
+        "applications": {
+          "description": "Applications the rule applies to; empty means the whole project.",
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "id": {
+          "description": "Identifier.",
+          "$ref": "#/$defs/RuleId"
+        },
+        "module": {
+          "description": "Functional module.",
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "origin": {
+          "description": "Where the rule comes from.",
+          "anyOf": [
+            {
+              "$ref": "#/$defs/Origin"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "related": {
+          "description": "Related rules.",
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/RuleId"
+          }
+        },
+        "scope": {
+          "description": "Covered and excluded cases.",
+          "anyOf": [
+            {
+              "$ref": "#/$defs/Scope"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "statement": {
+          "description": "Statement of the rule.",
+          "type": "string"
+        },
+        "status": {
+          "description": "Lifecycle status.",
+          "$ref": "#/$defs/RuleStatus"
+        },
+        "superseded_by": {
+          "description": "Replacement of an obsolete rule.",
+          "anyOf": [
+            {
+              "$ref": "#/$defs/RuleId"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "title": {
+          "description": "Short title (1 to 120 characters).",
+          "type": "string"
+        }
+      },
+      "required": [
+        "id",
+        "title",
+        "statement",
+        "status"
+      ]
+    },
+    "RuleId": {
+      "description": "Permanent identifier of a rule (e.g. `RULE-042`).",
+      "type": "string"
+    },
+    "RuleStatus": {
+      "description": "Lifecycle status of a rule.",
+      "oneOf": [
+        {
+          "description": "Awaiting human review.",
+          "type": "string",
+          "const": "proposed"
+        },
+        {
+          "description": "Approved by a human.",
+          "type": "string",
+          "const": "validated"
+        },
+        {
+          "description": "No longer applicable.",
+          "type": "string",
+          "const": "obsolete"
+        },
+        {
+          "description": "Declined by a human; kept so it is not proposed again.",
+          "type": "string",
+          "const": "rejected"
+        }
+      ]
+    },
+    "Scope": {
+      "description": "Covered and excluded cases of a rule.",
+      "type": "object",
+      "properties": {
+        "covered": {
+          "description": "Cases the rule covers.",
+          "type": "array",
+          "default": [],
+          "items": {
+            "type": "string"
+          }
+        },
+        "excluded": {
+          "description": "Cases the rule explicitly excludes.",
+          "type": "array",
+          "default": [],
+          "items": {
+            "type": "string"
+          }
+        }
+      }
+    }
+  }
+}

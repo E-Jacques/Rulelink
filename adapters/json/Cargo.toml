@@ -14,3 +14,4 @@ workspace = true
 [dependencies]
 thiserror.workspace = true
 checkmate-adapter-sdk.workspace = true
+checkmate-model.workspace = true

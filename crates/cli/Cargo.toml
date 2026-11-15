@@ -21,5 +21,6 @@ workspace = true
 
 [dependencies]
 checkmate-app.workspace = true
+clap.workspace = true
 checkmate-lsp = { workspace = true, optional = true }
 tokio = { workspace = true, features = ["rt", "macros"] }

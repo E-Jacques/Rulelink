@@ -18,7 +18,5 @@ workspace = true
 [dependencies]
 serde.workspace = true
 thiserror.workspace = true
-schemars = { workspace = true, optional = true }
-
-[dev-dependencies]
 serde_json.workspace = true
+schemars = { workspace = true, optional = true }

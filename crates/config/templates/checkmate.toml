@@ -1,0 +1,8 @@
+version = 1
+
+[source]
+kind = "json"
+path = "{{source_path}}"
+
+[rules]
+prefix = "{{id_prefix}}"
