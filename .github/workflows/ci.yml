@@ -11,6 +11,9 @@ jobs:
         with: { fetch-depth: 0 }
       - uses: dtolnay/rust-toolchain@stable
         with: { components: "clippy, rustfmt" }
+      - uses: taiki-e/install-action@v2
+        with:
+          tool: cargo-nextest,cargo-deny,cargo-dist@0.28.0
       - uses: moonrepo/setup-toolchain@v0
       - run: moon setup
       - run: moon ci

@@ -1,0 +1,12 @@
+# Parked until V1 (first TypeScript project). Without `inheritedBy`, moon applies a task file to
+# EVERY project, which ran these on the Rust crates. Restore as node.yml with `inheritedBy: { language: [typescript, javascript] }`.
+$schema: 'https://moonrepo.dev/schemas/tasks.json'
+tasks:
+  format:
+    command: 'pnpm biome format'
+  lint:
+    command: 'pnpm biome lint'
+  test:
+    command: 'pnpm vitest run'
+  build:
+    command: 'pnpm build'
