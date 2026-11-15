@@ -1,3 +1,0 @@
-language: 'rust'
-layer: 'library'
-tags: ['layer-adapter']
