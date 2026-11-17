@@ -11,4 +11,4 @@
 - [x] `init` on an existing setup refuses and leaves all files untouched
 - [x] A JSON Schema for the Rule model is generated and checked in CI
 - [x] CLI tests run the real binary on a temp fixture repo and assert stdout, stderr, exit code and files
-- [ ] Behaviour is identical on Linux, macOS and Windows
+- [x] Behaviour is identical on Linux, macOS and Windows
