@@ -48,6 +48,10 @@ Record the findings with the `code-review-report` skill.
 
 Commit: `refactor(cli): …` (or `fix(cli): …` if a bug was found)
 
-## 8. Pull request
+## 8. Check acceptance criteria out
+
+Control that acceptance criteria have been fulfilled and check them out if yes. If at least one is not, escaladate to user.
+
+## 9. Pull request
 
 Follow the `create-pull-request` skill. Hand it the review report and anything that went wrong along the way.
