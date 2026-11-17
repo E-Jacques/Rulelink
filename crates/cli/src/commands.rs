@@ -23,6 +23,48 @@ struct Cli {
 pub enum Command {
     /// Create `checkmate.toml` and an empty rules file in the current directory.
     Init(InitArgs),
+    /// Manage the Rules of the Source.
+    Rules {
+        /// What to do with the Rules.
+        #[command(subcommand)]
+        action: RulesCommand,
+    },
+}
+
+/// Subcommands of `rules`.
+#[derive(Debug, Subcommand)]
+pub enum RulesCommand {
+    /// Add a new `proposed` Rule with a freshly allocated Identifier.
+    Add(RulesAddArgs),
+}
+
+/// Arguments of `rules add`.
+#[derive(Debug, Args)]
+pub struct RulesAddArgs {
+    /// Short title of the Rule (1 to 120 characters).
+    #[arg(long)]
+    title: String,
+    /// Statement of the Rule.
+    #[arg(long)]
+    statement: String,
+    /// Application the Rule applies to (repeatable).
+    #[arg(long = "app")]
+    applications: Vec<String>,
+    /// Functional module of the Rule.
+    #[arg(long)]
+    module: Option<String>,
+    /// Case the Rule covers (repeatable).
+    #[arg(long)]
+    covered: Vec<String>,
+    /// Case the Rule excludes (repeatable).
+    #[arg(long)]
+    excluded: Vec<String>,
+    /// Identifier of a related Rule (repeatable).
+    #[arg(long)]
+    related: Vec<String>,
+    /// Where the Rule comes from, as `kind:reference`.
+    #[arg(long)]
+    origin: Option<String>,
 }
 
 /// Arguments of `init`.
@@ -92,6 +134,9 @@ fn dispatch(args: CliArgs) -> Result<(), AppError> {
             Ok(())
         }
         CliArgs::Run(Command::Init(args)) => init(&args),
+        CliArgs::Run(Command::Rules {
+            action: RulesCommand::Add(args),
+        }) => rules_add(args),
     }
 }
 
@@ -99,6 +144,25 @@ fn init(args: &InitArgs) -> Result<(), AppError> {
     let root = std::env::current_dir().map_err(|e| AppError::Internal(e.to_string()))?;
     checkmate_app::init::init(&root, &args.id_prefix)?;
     println!("Initialised Checkmate: wrote checkmate.toml and rules/rules.json");
+    Ok(())
+}
+
+fn rules_add(args: RulesAddArgs) -> Result<(), AppError> {
+    let root = std::env::current_dir().map_err(|e| AppError::Internal(e.to_string()))?;
+    let id = checkmate_app::rules::add(
+        &root,
+        checkmate_app::rules::NewRule {
+            title: args.title,
+            statement: args.statement,
+            applications: args.applications,
+            module: args.module,
+            covered: args.covered,
+            excluded: args.excluded,
+            related: args.related,
+            origin: args.origin,
+        },
+    )?;
+    println!("Added {} (proposed)", id.0);
     Ok(())
 }
 

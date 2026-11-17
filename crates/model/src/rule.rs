@@ -1,5 +1,10 @@
 use serde::{Deserialize, Serialize};
 
+use crate::Error;
+
+/// Longest accepted rule title, in characters.
+pub const MAX_TITLE_CHARS: usize = 120;
+
 /// Permanent identifier of a rule (e.g. `RULE-042`).
 #[derive(Debug, Clone, PartialEq, Eq, Hash, Serialize, Deserialize)]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
@@ -76,4 +81,35 @@ pub struct Rule {
     /// Replacement of an obsolete rule.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub superseded_by: Option<RuleId>,
+}
+
+impl Rule {
+    /// Checks the rule against the model, independently of any Source.
+    ///
+    /// # Errors
+    /// Returns [`Error::InvalidRule`] describing the first problem found.
+    pub fn validate(&self) -> Result<(), Error> {
+        let title_len = self.title.chars().count();
+        if self.title.trim().is_empty() {
+            return Err(invalid("the title must not be empty"));
+        }
+        if title_len > MAX_TITLE_CHARS {
+            return Err(invalid(&format!(
+                "the title is {title_len} characters long, the maximum is {MAX_TITLE_CHARS}"
+            )));
+        }
+        if self.statement.trim().is_empty() {
+            return Err(invalid("the statement must not be empty"));
+        }
+        if let Some(origin) = &self.origin
+            && origin.kind.trim().is_empty()
+        {
+            return Err(invalid("the origin kind must not be empty"));
+        }
+        Ok(())
+    }
+}
+
+fn invalid(reason: &str) -> Error {
+    Error::InvalidRule(reason.to_owned())
 }

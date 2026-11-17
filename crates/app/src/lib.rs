@@ -2,6 +2,7 @@
 
 mod error;
 pub mod init;
+pub mod rules;
 pub mod runtime;
 
 pub use error::Error;
