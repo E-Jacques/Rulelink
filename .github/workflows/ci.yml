@@ -18,3 +18,14 @@ jobs:
       - run: moon setup
       - run: moon ci
       - run: moon run :schemas :arch :deny :e2e :release-plan
+  e2e:
+    name: e2e (${{ matrix.os }})
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, macos-latest, windows-latest]
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+      - run: cargo test -p checkmate-e2e

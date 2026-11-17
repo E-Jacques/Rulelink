@@ -6,9 +6,9 @@
 
 **Status:** ready-for-agent
 
-- [ ] `init` in an empty repo creates the config and an empty Source; the Source is in Canonical form
-- [ ] The Identifier prefix is configurable and defaults to `RULE`
-- [ ] `init` on an existing setup refuses and leaves all files untouched
-- [ ] A JSON Schema for the Rule model is generated and checked in CI
-- [ ] CLI tests run the real binary on a temp fixture repo and assert stdout, stderr, exit code and files
+- [x] `init` in an empty repo creates the config and an empty Source; the Source is in Canonical form
+- [x] The Identifier prefix is configurable and defaults to `RULE`
+- [x] `init` on an existing setup refuses and leaves all files untouched
+- [x] A JSON Schema for the Rule model is generated and checked in CI
+- [x] CLI tests run the real binary on a temp fixture repo and assert stdout, stderr, exit code and files
 - [ ] Behaviour is identical on Linux, macOS and Windows
