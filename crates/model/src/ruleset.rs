@@ -70,6 +70,14 @@ impl RuleSet {
                 rule.id.0
             )));
         }
+        for (i, id) in rule.related.iter().enumerate() {
+            if *id == rule.id || rule.related[..i].contains(id) {
+                return Err(Error::InvalidRule(format!(
+                    "the related rule {} is listed more than once or refers to the rule itself",
+                    id.0
+                )));
+            }
+        }
         if let Some(missing) = rule
             .related
             .iter()

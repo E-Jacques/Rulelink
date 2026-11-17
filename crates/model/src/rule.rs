@@ -101,6 +101,23 @@ impl Rule {
         if self.statement.trim().is_empty() {
             return Err(invalid("the statement must not be empty"));
         }
+        let (covered, excluded) = self
+            .scope
+            .as_ref()
+            .map_or((&[][..], &[][..]), |s| (&s.covered[..], &s.excluded[..]));
+        let lists = [
+            ("applications", &self.applications[..]),
+            ("covered cases", covered),
+            ("excluded cases", excluded),
+        ];
+        for (name, values) in lists {
+            if values.iter().any(|v| v.trim().is_empty()) {
+                return Err(invalid(&format!("{name} must not contain empty values")));
+            }
+        }
+        if self.module.as_deref().is_some_and(|m| m.trim().is_empty()) {
+            return Err(invalid("the module must not be empty"));
+        }
         if let Some(origin) = &self.origin
             && origin.kind.trim().is_empty()
         {

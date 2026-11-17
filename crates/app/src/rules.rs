@@ -37,13 +37,17 @@ pub struct NewRule {
 /// [`AppError::Config`] when the project is not initialised or the input is invalid,
 /// [`AppError::Source`] when the Source cannot be read or written.
 pub fn add(root: &Path, new: NewRule) -> Result<RuleId, AppError> {
-    let config_text = fs::read_to_string(root.join(CONFIG_FILE)).map_err(|_| {
-        AppError::Config(format!(
-            "{CONFIG_FILE} not found: run `checkmate init` at the root of your project first"
-        ))
+    let config_text = fs::read_to_string(root.join(CONFIG_FILE)).map_err(|e| {
+        if e.kind() == std::io::ErrorKind::NotFound {
+            AppError::Config(format!(
+                "{CONFIG_FILE} not found: run `checkmate init` at the root of your project first"
+            ))
+        } else {
+            AppError::Config(format!("cannot read {CONFIG_FILE}: {e}"))
+        }
     })?;
     let config = Config::parse(&config_text).map_err(|e| AppError::Config(e.to_string()))?;
-    let source_path = root.join(&config.source_path);
+    let source_path = project_path(root, &config.source_path)?;
     let mut set = checkmate_adapter_json::read_source(&source_path)
         .map_err(|e| AppError::Source(e.to_string()))?;
 
@@ -81,4 +85,20 @@ fn parse_origin(raw: &str) -> Result<Origin, AppError> {
             "invalid origin `{raw}`: expected `kind:reference`, e.g. `jira:BILL-42`"
         ))),
     }
+}
+
+/// Resolves a configured path, which must stay inside the project.
+fn project_path(root: &Path, configured: &str) -> Result<std::path::PathBuf, AppError> {
+    let relative = Path::new(configured);
+    let escapes = relative.is_absolute()
+        || relative.has_root()
+        || relative
+            .components()
+            .any(|c| matches!(c, std::path::Component::ParentDir));
+    if escapes {
+        return Err(AppError::Config(format!(
+            "invalid source path `{configured}` in {CONFIG_FILE}: it must be relative and stay inside the project"
+        )));
+    }
+    Ok(root.join(relative))
 }

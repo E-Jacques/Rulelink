@@ -61,6 +61,7 @@ struct RawConfig {
 
 #[derive(serde::Deserialize)]
 struct RawSource {
+    kind: String,
     path: String,
 }
 
@@ -79,6 +80,11 @@ impl Config {
         let raw: RawConfig = toml::from_str(content).map_err(|e| Error::Invalid {
             reason: e.message().to_owned(),
         })?;
+        if raw.source.kind != "json" {
+            return Err(Error::Invalid {
+                reason: format!("unsupported source kind `{}`", raw.source.kind),
+            });
+        }
         Ok(Self {
             prefix: IdPrefix::parse(&raw.rules.prefix)?,
             source_path: raw.source.path,

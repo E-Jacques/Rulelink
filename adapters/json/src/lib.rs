@@ -70,9 +70,8 @@ mod tests {
 
     #[test]
     fn write_then_read_round_trips() {
-        let dir = std::env::temp_dir().join(format!("cm-json-{}", std::process::id()));
-        fs::create_dir_all(&dir).unwrap_or_else(|e| panic!("{e}"));
-        let path = dir.join("rules.json");
+        let dir = tempfile::tempdir().unwrap_or_else(|e| panic!("{e}"));
+        let path = dir.path().join("rules.json");
         create_source(&path, &RuleSet::empty()).unwrap_or_else(|e| panic!("{e}"));
         let mut set = read_source(&path).unwrap_or_else(|e| panic!("{e}"));
         set.sequences.insert("RULE".into(), 3);
@@ -80,6 +79,5 @@ mod tests {
         assert_eq!(read_source(&path).unwrap_or_else(|e| panic!("{e}")), set);
         fs::write(&path, "nope").unwrap_or_else(|e| panic!("{e}"));
         assert!(matches!(read_source(&path), Err(Error::Invalid(_))));
-        let _ = fs::remove_dir_all(&dir);
     }
 }

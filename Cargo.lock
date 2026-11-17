@@ -127,6 +127,7 @@ dependencies = [
  "checkmate-adapter-sdk",
  "checkmate-model",
  "serde_json",
+ "tempfile",
  "thiserror",
 ]
 

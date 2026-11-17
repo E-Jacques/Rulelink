@@ -208,3 +208,34 @@ fn values_may_be_in_any_language() {
     assert!(source.contains("La TVA est arrondie à la ligne — 税込み。"));
     assert!(run.stderr.is_empty() || run.stderr.is_ascii());
 }
+
+#[test]
+fn source_path_outside_the_project_is_refused() {
+    let repo = initialised(None);
+    let config = repo.read("checkmate.toml").expect("config");
+    repo.write(
+        "checkmate.toml",
+        &config.replace("rules/rules.json", "../escape.json"),
+    );
+    let run = add(&repo, "T");
+    assert_eq!(run.code, 2);
+    assert!(
+        run.stderr.contains("inside the project"),
+        "stderr: {}",
+        run.stderr
+    );
+}
+
+#[test]
+fn empty_list_entries_and_duplicate_related_are_refused() {
+    let repo = initialised(None);
+    add(&repo, "One");
+    for extra in [["--app", ""], ["--covered", " "], ["--related", "RULE-001"]] {
+        let mut args = vec!["rules", "add", "--title", "T", "--statement", "S."];
+        args.extend(extra);
+        if extra[0] == "--related" {
+            args.extend(["--related", "RULE-001"]);
+        }
+        assert_eq!(repo.run(&args).code, 2, "{args:?}");
+    }
+}

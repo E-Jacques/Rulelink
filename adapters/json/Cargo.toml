@@ -16,3 +16,6 @@ thiserror.workspace = true
 checkmate-adapter-sdk.workspace = true
 checkmate-model.workspace = true
 serde_json.workspace = true
+
+[dev-dependencies]
+tempfile.workspace = true
