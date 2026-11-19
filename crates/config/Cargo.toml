@@ -12,4 +12,6 @@ readme = "README.md"
 workspace = true
 
 [dependencies]
+serde.workspace = true
 thiserror.workspace = true
+toml = "0.8"
