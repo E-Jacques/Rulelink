@@ -97,6 +97,18 @@ impl RuleSet {
         if statement.is_empty() {
             return Err(Error::InvalidRule("the statement must not be empty".into()));
         }
+        let blank = new
+            .applications
+            .iter()
+            .chain(&new.covered)
+            .chain(&new.excluded)
+            .chain(new.module.as_ref())
+            .any(|value| value.trim().is_empty());
+        if blank {
+            return Err(Error::InvalidRule(
+                "applications, module and scope cases must not be blank".into(),
+            ));
+        }
         if let Some(unknown) = new
             .related
             .iter()

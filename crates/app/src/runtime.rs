@@ -35,6 +35,9 @@ pub enum AppError {
     /// Invalid configuration.
     #[error("configuration error: {0}")]
     Config(String),
+    /// Invalid input given to a command (exit code 2, like a usage error).
+    #[error("invalid input: {0}")]
+    Input(String),
     /// Source unreadable, invalid or not found.
     #[error("source error: {0}")]
     Source(String),
@@ -48,7 +51,7 @@ impl AppError {
     #[must_use]
     pub fn exit_code(&self) -> u8 {
         match self {
-            Self::Config(_) => 2,
+            Self::Config(_) | Self::Input(_) => 2,
             Self::Source(_) => 3,
             Self::Internal(_) => 10,
         }

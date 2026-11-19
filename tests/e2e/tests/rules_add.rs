@@ -179,7 +179,17 @@ fn identifier_is_not_reused_when_bookkeeping_was_lost_too() {
 fn invalid_input_is_refused_and_leaves_the_source_untouched() {
     let repo = initialised(None);
     let before = repo.read("rules/rules.json");
-    let cases: [&[&str]; 4] = [
+    let cases: [&[&str]; 5] = [
+        &[
+            "rules",
+            "add",
+            "--title",
+            "t",
+            "--statement",
+            "s",
+            "--app",
+            " ",
+        ],
         &["rules", "add", "--title", "", "--statement", "s"],
         &["rules", "add", "--title", "t", "--statement", "  "],
         &[
@@ -205,7 +215,7 @@ fn invalid_input_is_refused_and_leaves_the_source_untouched() {
     ];
     for args in cases {
         let run = repo.run(args);
-        assert_ne!(run.code, 0, "{args:?} should fail");
+        assert_eq!(run.code, 2, "{args:?} should fail");
         assert!(!run.stderr.is_empty(), "{args:?} gave no message");
         assert_eq!(repo.read("rules/rules.json"), before, "{args:?}");
     }

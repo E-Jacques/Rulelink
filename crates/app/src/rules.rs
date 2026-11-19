@@ -12,7 +12,7 @@ use crate::runtime::AppError;
 /// The Source is rewritten in Canonical form, and only when the Rule is valid.
 ///
 /// # Errors
-/// [`AppError::Config`] if the project is not initialised or the Rule is invalid,
+/// [`AppError::Config`] if the project is not initialised, [`AppError::Input`] if the Rule is invalid,
 /// [`AppError::Source`] if the Source cannot be read, [`AppError::Internal`] on write failure.
 pub fn add(root: &Path, new: NewRule) -> Result<RuleId, AppError> {
     let config = load_config(root)?;
@@ -21,7 +21,7 @@ pub fn add(root: &Path, new: NewRule) -> Result<RuleId, AppError> {
         .map_err(|e| AppError::Source(format!("{}: {e}", config.source_path)))?;
     let id = set
         .add_proposed(config.id_prefix.as_str(), new)
-        .map_err(|e| AppError::Config(e.to_string()))?;
+        .map_err(|e| AppError::Input(e.to_string()))?;
     checkmate_adapter_json::write_source(&source_path, &set)
         .map_err(|e| AppError::Internal(e.to_string()))?;
     Ok(id)

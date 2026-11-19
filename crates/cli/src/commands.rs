@@ -150,7 +150,7 @@ fn rules_add(args: RulesAddArgs) -> Result<(), AppError> {
         .as_deref()
         .map(Origin::parse)
         .transpose()
-        .map_err(|e| AppError::Config(e.to_string()))?;
+        .map_err(|e| AppError::Input(e.to_string()))?;
     let new = NewRule {
         title: args.title,
         statement: args.statement,
