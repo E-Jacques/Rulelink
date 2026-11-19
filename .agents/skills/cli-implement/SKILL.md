@@ -36,7 +36,7 @@ Commit: `feat(cli): …`
 
 ## 6. Refactor
 
-Ask what the change made awkward and what it would cost to fix. Do the cheap, worthwhile ones.
+Ask what the change made awkward and what it would cost to fix. Do the cheap, worthwhile ones. Apply the `strategic-programming` skill.
 
 Commit: `refactor(cli): …`
 
