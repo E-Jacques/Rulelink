@@ -3,6 +3,7 @@
 //! Adding a command: add a variant to [`Command`] with its own `clap::Args` struct, a handler
 //! function returning `Result<(), AppError>`, and one line in [`dispatch`].
 
+use checkmate_app::model::{NewRule, Origin, RuleId};
 use checkmate_app::runtime::{
     AppContext, AppError, CancellationToken, Entrypoint, Outcome, ShutdownReason, TelemetryConfig,
     UsageError,
@@ -23,6 +24,45 @@ struct Cli {
 pub enum Command {
     /// Create `checkmate.toml` and an empty rules file in the current directory.
     Init(InitArgs),
+    /// Manage the Rules of the project.
+    #[command(subcommand)]
+    Rules(RulesCommand),
+}
+
+/// Subcommands of `rules`.
+#[derive(Debug, Subcommand)]
+pub enum RulesCommand {
+    /// Create a proposed Rule with the next free Identifier.
+    Add(RulesAddArgs),
+}
+
+/// Arguments of `rules add`.
+#[derive(Debug, Args)]
+pub struct RulesAddArgs {
+    /// Short title of the Rule (1 to 120 characters).
+    #[arg(long)]
+    title: String,
+    /// Statement of the Rule.
+    #[arg(long)]
+    statement: String,
+    /// Application the Rule applies to (repeatable).
+    #[arg(long = "app")]
+    applications: Vec<String>,
+    /// Functional module of the Rule.
+    #[arg(long)]
+    module: Option<String>,
+    /// Case the Rule covers (repeatable).
+    #[arg(long)]
+    covered: Vec<String>,
+    /// Case the Rule excludes (repeatable).
+    #[arg(long)]
+    excluded: Vec<String>,
+    /// Existing Rule related to this one (repeatable).
+    #[arg(long)]
+    related: Vec<String>,
+    /// Where the Rule comes from, as `<kind>:<reference>`.
+    #[arg(long)]
+    origin: Option<String>,
 }
 
 /// Arguments of `init`.
@@ -92,6 +132,7 @@ fn dispatch(args: CliArgs) -> Result<(), AppError> {
             Ok(())
         }
         CliArgs::Run(Command::Init(args)) => init(&args),
+        CliArgs::Run(Command::Rules(RulesCommand::Add(args))) => rules_add(args),
     }
 }
 
@@ -99,6 +140,29 @@ fn init(args: &InitArgs) -> Result<(), AppError> {
     let root = std::env::current_dir().map_err(|e| AppError::Internal(e.to_string()))?;
     checkmate_app::init::init(&root, &args.id_prefix)?;
     println!("Initialised Checkmate: wrote checkmate.toml and rules/rules.json");
+    Ok(())
+}
+
+fn rules_add(args: RulesAddArgs) -> Result<(), AppError> {
+    let root = std::env::current_dir().map_err(|e| AppError::Internal(e.to_string()))?;
+    let origin = args
+        .origin
+        .as_deref()
+        .map(Origin::parse)
+        .transpose()
+        .map_err(|e| AppError::Config(e.to_string()))?;
+    let new = NewRule {
+        title: args.title,
+        statement: args.statement,
+        applications: args.applications,
+        module: args.module,
+        covered: args.covered,
+        excluded: args.excluded,
+        origin,
+        related: args.related.into_iter().map(RuleId).collect(),
+    };
+    let id = checkmate_app::rules::add(&root, new)?;
+    println!("Created {} (proposed)", id.0);
     Ok(())
 }
 

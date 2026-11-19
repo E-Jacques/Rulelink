@@ -6,4 +6,4 @@ mod ruleset;
 
 pub use error::Error;
 pub use rule::{Origin, Rule, RuleId, RuleStatus, Scope};
-pub use ruleset::{FORMAT_VERSION, RuleSet};
+pub use ruleset::{FORMAT_VERSION, NewRule, RuleSet, TITLE_MAX_CHARS};

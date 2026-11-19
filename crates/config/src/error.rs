@@ -7,4 +7,12 @@ pub enum Error {
         "invalid Identifier prefix `{0}`: use upper-case letters, digits and `_`, starting with a letter"
     )]
     InvalidIdPrefix(String),
+    /// `checkmate.toml` cannot be understood.
+    #[error("invalid {file}: {reason}")]
+    InvalidConfig {
+        /// The configuration file name.
+        file: &'static str,
+        /// What is wrong with it.
+        reason: String,
+    },
 }

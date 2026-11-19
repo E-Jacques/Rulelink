@@ -130,7 +130,7 @@ fn output_is_canonical_whatever_the_input_layout() {
     let run = add(&repo, "c");
     assert_eq!(run.code, 0, "stderr: {}", run.stderr);
     let source = repo.read("rules/rules.json").expect("source");
-    let positions: Vec<_> = ["RULE-2\"", "RULE-10\"", "RULE-11\""]
+    let positions: Vec<_> = ["RULE-2\"", "RULE-10\"", "RULE-011\""]
         .iter()
         .map(|id| source.find(id).unwrap_or_else(|| panic!("{id} missing")))
         .collect();

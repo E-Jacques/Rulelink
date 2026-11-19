@@ -46,6 +46,27 @@ pub struct Origin {
     pub url: Option<String>,
 }
 
+impl Origin {
+    /// Parses `<kind>:<reference>` (for example `jira:SHOP-42`).
+    ///
+    /// # Errors
+    /// [`crate::Error::InvalidRule`] if either part is missing.
+    pub fn parse(raw: &str) -> Result<Self, crate::Error> {
+        match raw.split_once(':') {
+            Some((kind, reference)) if !kind.trim().is_empty() && !reference.trim().is_empty() => {
+                Ok(Self {
+                    kind: kind.trim().to_owned(),
+                    reference: Some(reference.trim().to_owned()),
+                    url: None,
+                })
+            }
+            _ => Err(crate::Error::InvalidRule(format!(
+                "origin `{raw}` must look like <kind>:<reference>, for example jira:SHOP-42"
+            ))),
+        }
+    }
+}
+
 /// A business rule.
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
