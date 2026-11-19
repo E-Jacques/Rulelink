@@ -74,23 +74,19 @@ impl RuleSet {
     /// [`Error::InvalidRule`] if `new` breaks the Rule model (nothing is changed), or
     /// [`Error::IdentifiersExhausted`] if the prefix has no number left.
     pub fn add_proposed(&mut self, prefix: &str, new: NewRule) -> Result<RuleId, Error> {
-        let rule_fields = self.validate_new(new)?;
         let number = self
             .highest_number(prefix)
             .checked_add(1)
             .ok_or_else(|| Error::IdentifiersExhausted(prefix.to_owned()))?;
         let id = RuleId(format!("{prefix}-{number:0ID_DIGITS$}"));
+        let rule = self.build_proposed(id.clone(), new)?;
         self.sequences.insert(prefix.to_owned(), number);
-        self.rules.push(Rule {
-            id: id.clone(),
-            status: RuleStatus::Proposed,
-            ..rule_fields
-        });
+        self.rules.push(rule);
         Ok(id)
     }
 
-    /// Checks `new` and builds the Rule it describes (with a placeholder Identifier).
-    fn validate_new(&self, new: NewRule) -> Result<Rule, Error> {
+    /// Checks `new` against the Rule model and builds the `proposed` Rule it describes.
+    fn build_proposed(&self, id: RuleId, new: NewRule) -> Result<Rule, Error> {
         let title = new.title.trim();
         if title.is_empty() || title.chars().count() > TITLE_MAX_CHARS {
             return Err(Error::InvalidRule(format!(
@@ -120,7 +116,7 @@ impl RuleSet {
             })
         };
         Ok(Rule {
-            id: RuleId(String::new()),
+            id,
             title: title.to_owned(),
             statement: statement.to_owned(),
             status: RuleStatus::Proposed,
