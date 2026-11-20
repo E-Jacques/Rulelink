@@ -80,12 +80,12 @@ pub trait Entrypoint {
     fn name(&self) -> &'static str;
     fn parse_args(&self) -> Result<Self::Args, UsageError>;
     fn telemetry(&self, args: &Self::Args) -> TelemetryConfig;
-    fn build_context(&self, args: &Self::Args, cancel: CancellationToken) -> Result<AppContext, AppError>;
+    fn build_context(&self, args: &Self::Args, cancel: CancellationToken) -> Result<AppContext, app::Error>;
     fn run(&self, ctx: &AppContext) -> impl Future<Output = Outcome>;
     fn shutdown(&self, ctx: &AppContext, reason: ShutdownReason) -> impl Future<Output = ()>;
 }
 
-pub enum Outcome { Success, ChecksFailed, Failed(AppError) }
+pub enum Outcome { Success, ChecksFailed, Failed(app::Error) }
 pub enum ShutdownReason { Completed, Interrupted, Terminated, ParentExited, ClientRequested }
 ```
 

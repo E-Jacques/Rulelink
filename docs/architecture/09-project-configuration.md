@@ -232,14 +232,14 @@ Command catalogue:
 pub struct Checkmate { ctx: AppContext, bus: CommandBus }
 
 impl Checkmate {
-    pub fn open(opts: OpenOptions) -> Result<Self, AppError>;      // discovery + configuration + wiring
-    pub async fn rules(&self, q: RuleQuery) -> Result<Vec<RuleView>, AppError>;
-    pub async fn show(&self, ids: &[RuleId]) -> Result<Vec<RuleView>, AppError>;
-    pub async fn explain(&self, target: FileTarget) -> Result<Explanation, AppError>;
-    pub async fn where_(&self, ids: &[RuleId], kind: Option<LocationKind>) -> Result<Locations, AppError>;
-    pub async fn check(&self, opts: CheckOptions) -> Result<CheckOutcome, AppError>;
-    pub async fn context(&self, req: ContextRequest) -> Result<AgentContext, AppError>;
-    pub async fn dispatch<C: AppCommand>(&self, cmd: C) -> Result<C::Output, AppError>;
+    pub fn open(opts: OpenOptions) -> Result<Self, app::Error>;      // discovery + configuration + wiring
+    pub async fn rules(&self, q: RuleQuery) -> Result<Vec<RuleView>, app::Error>;
+    pub async fn show(&self, ids: &[RuleId]) -> Result<Vec<RuleView>, app::Error>;
+    pub async fn explain(&self, target: FileTarget) -> Result<Explanation, app::Error>;
+    pub async fn where_(&self, ids: &[RuleId], kind: Option<LocationKind>) -> Result<Locations, app::Error>;
+    pub async fn check(&self, opts: CheckOptions) -> Result<CheckOutcome, app::Error>;
+    pub async fn context(&self, req: ContextRequest) -> Result<AgentContext, app::Error>;
+    pub async fn dispatch<C: AppCommand>(&self, cmd: C) -> Result<C::Output, app::Error>;
     pub fn events(&self) -> EventSubscription;
 }
 ```

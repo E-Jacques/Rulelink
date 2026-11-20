@@ -1,14 +1,20 @@
 //! Command groups of the CLI. No business logic here: arguments become application commands.
 //!
 //! Adding a command: add a variant to [`Command`] with its own `clap::Args` struct, a handler
-//! function returning `Result<(), AppError>`, and one line in [`dispatch`].
+//! function returning `Result<(), Error>`, and one line in [`dispatch`].
 
-use checkmate_app::runtime::{
-    AppContext, AppError, CancellationToken, Entrypoint, Outcome, ShutdownReason, TelemetryConfig,
-    UsageError,
-};
 use clap::error::ErrorKind;
-use clap::{Args, Parser, Subcommand};
+use clap::{Parser, Subcommand};
+
+mod init;
+mod rules_add;
+
+use checkmate_app::Error;
+use checkmate_app::runtime::{
+    AppContext, CancellationToken, Entrypoint, Outcome, ShutdownReason, TelemetryConfig, UsageError,
+};
+use init::InitArgs;
+use rules_add::RulesAddArgs;
 
 /// Command line grammar, derived by `clap`.
 #[derive(Debug, Parser)]
@@ -23,14 +29,19 @@ struct Cli {
 pub enum Command {
     /// Create `checkmate.toml` and an empty rules file in the current directory.
     Init(InitArgs),
+    /// Create, inspect and change Rules.
+    Rules {
+        /// What to do with Rules.
+        #[command(subcommand)]
+        action: RulesAction,
+    },
 }
 
-/// Arguments of `init`.
-#[derive(Debug, Args)]
-pub struct InitArgs {
-    /// Prefix of the generated rule identifiers.
-    #[arg(long, default_value = checkmate_app::DEFAULT_ID_PREFIX)]
-    id_prefix: String,
+/// Subcommands of `rules`.
+#[derive(Debug, Subcommand)]
+pub enum RulesAction {
+    /// Create a `proposed` Rule with a newly allocated Identifier.
+    Add(RulesAddArgs),
 }
 
 /// Parsed command line.
@@ -65,7 +76,7 @@ impl Entrypoint for CliEntrypoint {
         &self,
         _args: &Self::Args,
         cancel: CancellationToken,
-    ) -> Result<AppContext, AppError> {
+    ) -> Result<AppContext, Error> {
         Ok(AppContext { cancel })
     }
 
@@ -73,7 +84,7 @@ impl Entrypoint for CliEntrypoint {
         // `Bootstrap` already validated the command line; parsing again is side-effect free.
         let result = match self.parse_args() {
             Ok(args) => dispatch(args),
-            Err(err) => Err(AppError::Internal(err.to_string())),
+            Err(err) => Err(Error::Internal(err.to_string())),
         };
         match result {
             Ok(()) => Outcome::Success,
@@ -85,21 +96,17 @@ impl Entrypoint for CliEntrypoint {
 }
 
 /// One line per command: the handlers hold the logic.
-fn dispatch(args: CliArgs) -> Result<(), AppError> {
+fn dispatch(args: CliArgs) -> Result<(), Error> {
     match args {
         CliArgs::Display(text) => {
             print!("{text}");
             Ok(())
         }
-        CliArgs::Run(Command::Init(args)) => init(&args),
+        CliArgs::Run(Command::Init(args)) => init::run(&args),
+        CliArgs::Run(Command::Rules {
+            action: RulesAction::Add(args),
+        }) => rules_add::run(&args),
     }
-}
-
-fn init(args: &InitArgs) -> Result<(), AppError> {
-    let root = std::env::current_dir().map_err(|e| AppError::Internal(e.to_string()))?;
-    checkmate_app::init::init(&root, &args.id_prefix)?;
-    println!("Initialised Checkmate: wrote checkmate.toml and rules/rules.json");
-    Ok(())
 }
 
 fn parse(args: impl IntoIterator<Item = String>) -> Result<CliArgs, UsageError> {
@@ -144,6 +151,37 @@ mod tests {
             panic!("expected init");
         };
         assert_eq!(init.id_prefix, "BR");
+    }
+
+    #[test]
+    fn rules_add_collects_repeated_options() {
+        let parsed = parse(args(&[
+            "rules",
+            "add",
+            "--title",
+            "T",
+            "--statement",
+            "S",
+            "--app",
+            "a",
+            "--app",
+            "b",
+        ]))
+        .unwrap_or_else(|e| panic!("{e}"));
+        let CliArgs::Run(Command::Rules {
+            action: RulesAction::Add(add),
+        }) = parsed
+        else {
+            panic!("expected rules add");
+        };
+        assert_eq!(add.applications, ["a", "b"]);
+        assert_eq!(add.module, None);
+    }
+
+    #[test]
+    fn rules_add_requires_title_and_statement() {
+        assert!(parse(args(&["rules", "add", "--title", "T"])).is_err());
+        assert!(parse(args(&["rules", "add", "--statement", "S"])).is_err());
     }
 
     #[test]

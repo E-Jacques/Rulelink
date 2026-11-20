@@ -6,8 +6,8 @@
 
 **Status:** ready-for-agent
 
-- [ ] Creating a Rule writes it as `proposed` with the next Identifier (e.g. `RULE-001`, `RULE-002`)
-- [ ] Output is always written in Canonical form
-- [ ] The Rule is validated against the schema; invalid input is refused with a clear message
-- [ ] An Identifier that was retired, or whose Rule was deleted by hand, is never allocated again
-- [ ] Rule values may be in any language; keys and messages stay English
+- [x] Creating a Rule writes it as `proposed` with the next Identifier (e.g. `RULE-001`, `RULE-002`)
+- [x] Output is always written in Canonical form
+- [x] The Rule is validated against the schema; invalid input is refused with a clear message
+- [x] An Identifier that was retired, or whose Rule was deleted by hand, is never allocated again
+- [x] Rule values may be in any language; keys and messages stay English

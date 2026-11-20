@@ -7,6 +7,8 @@ use std::future::Future;
 use std::sync::Arc;
 use std::sync::atomic::{AtomicBool, Ordering};
 
+use crate::Error;
+
 /// Cooperative cancellation flag shared between the signal handlers and the run loop.
 #[derive(Debug, Clone, Default)]
 pub struct CancellationToken(Arc<AtomicBool>);
@@ -28,32 +30,6 @@ impl CancellationToken {
 #[derive(Debug, thiserror::Error)]
 #[error("usage error: {0}")]
 pub struct UsageError(pub String);
-
-/// Application-level failure.
-#[derive(Debug, thiserror::Error)]
-pub enum AppError {
-    /// Invalid configuration.
-    #[error("configuration error: {0}")]
-    Config(String),
-    /// Source unreadable, invalid or not found.
-    #[error("source error: {0}")]
-    Source(String),
-    /// Unexpected internal error.
-    #[error("internal error: {0}")]
-    Internal(String),
-}
-
-impl AppError {
-    /// Exit code of the error (docs/architecture/00, section 9.2).
-    #[must_use]
-    pub fn exit_code(&self) -> u8 {
-        match self {
-            Self::Config(_) => 2,
-            Self::Source(_) => 3,
-            Self::Internal(_) => 10,
-        }
-    }
-}
 
 /// Tracing configuration requested by an entry point.
 #[derive(Debug, Clone, Copy, Default)]
@@ -77,7 +53,7 @@ pub enum Outcome {
     /// At least one error-level finding.
     ChecksFailed,
     /// The run failed.
-    Failed(AppError),
+    Failed(Error),
 }
 
 /// Why the process is shutting down.
@@ -111,12 +87,12 @@ pub trait Entrypoint {
     /// Builds the shared context.
     ///
     /// # Errors
-    /// Returns [`AppError`] when discovery or configuration fails.
+    /// Returns [`Error`] when discovery or configuration fails.
     fn build_context(
         &self,
         args: &Self::Args,
         cancel: CancellationToken,
-    ) -> Result<AppContext, AppError>;
+    ) -> Result<AppContext, Error>;
     /// Runs the entry point.
     fn run(&self, ctx: &AppContext) -> impl Future<Output = Outcome>;
     /// Releases resources.

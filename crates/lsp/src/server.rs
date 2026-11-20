@@ -1,6 +1,6 @@
+use checkmate_app::Error;
 use checkmate_app::runtime::{
-    AppContext, AppError, CancellationToken, Entrypoint, Outcome, ShutdownReason, TelemetryConfig,
-    UsageError,
+    AppContext, CancellationToken, Entrypoint, Outcome, ShutdownReason, TelemetryConfig, UsageError,
 };
 
 /// `Entrypoint` of the `checkmate lsp` subcommand.
@@ -26,12 +26,12 @@ impl Entrypoint for LspEntrypoint {
         &self,
         (): &Self::Args,
         cancel: CancellationToken,
-    ) -> Result<AppContext, AppError> {
+    ) -> Result<AppContext, Error> {
         Ok(AppContext { cancel })
     }
 
     async fn run(&self, _ctx: &AppContext) -> Outcome {
-        Outcome::Failed(AppError::Internal(
+        Outcome::Failed(Error::Internal(
             "language server not implemented (V1)".into(),
         ))
     }

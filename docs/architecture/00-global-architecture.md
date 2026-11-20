@@ -416,7 +416,7 @@ Common global options: `-C, --directory <DIR>`, `--config <FILE>`, `--format <hu
 
 ### 9.4 Errors and logging
 
-- Libraries: typed errors with `thiserror`, one enum per crate, converted to `AppError` at the application boundary.
+- Libraries: typed errors with `thiserror`, one enum per crate, converted to `app::Error` at the application boundary.
 - Binary: `miette` rendering, `tracing` logs to stderr. stdout is reserved for results so pipes stay clean.
 - No telemetry. The brief's main indicator (repositories where `check` has run for 30 days) is measured through public dependents of the GitHub Action and the GitLab component, not through data collection.
 
