@@ -81,7 +81,7 @@ Valid examples, all inside a comment:
 
 - Several annotations per file, and one rule in several places, tests included, as the brief requires.
 - An annotation applies to its file and line. In V2, it is also attached to the symbol that follows (function, method, class).
-- An `@rule` without a valid identifier produces a `CM006` malformed annotation finding (04).
+- An `@rule` without a valid identifier produces a `RL006` malformed annotation finding (04).
 
 ### 4.2 **Interpreter** pattern
 
@@ -353,7 +353,7 @@ src/billing/vat.rs — 2 rules
   RULE-042  validated  Line-level VAT rounding                          l.88
           Billing › VAT calculation · #vat #rounding
   RULE-051  proposed   Reduced rate for essential goods                 l.131
-          ⚠ rule still proposed (CM005)
+          ⚠ rule still proposed (RL005)
 ```
 
 Example `rulelink where RULE-042 --format json`:

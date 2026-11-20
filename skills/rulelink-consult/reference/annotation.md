@@ -14,7 +14,7 @@ An annotation links a piece of code to a business rule. It is a tag followed by 
 - Identifiers match the project's pattern, `RULE-[A-Z0-9_]+` by default. Separate several with a comma or a space.
 - An optional note follows ` -- ` and runs to the end of the line. `check` ignores it.
 - Several annotations per file, and one rule in several places (tests included), are normal.
-- A tag without a valid identifier is reported as malformed (`CM006`).
+- A tag without a valid identifier is reported as malformed (`RL006`).
 - Only comments are scanned. `@rule` inside a string literal is not an annotation.
 
 ## Examples per comment style
