@@ -63,4 +63,6 @@ One sentence: each call moves one Rule along the lifecycle or fails without touc
 | #12 format | `with_source` | `--check` (theirs) |
 | #14 check core | status semantics (validated expected to have code), `superseded_by` | findings (theirs) |
 
+Known limit, inherited by #14: `--superseded-by` only has to exist; it may be a rejected, obsolete or proposed Rule, and a cycle is possible. RL002 must tolerate it. `<id>` is trimmed and refused when blank (`RuleId::parse`); hand-edited duplicates are not detected.
+
 Deferred: `--reason`, un-rejecting, `validated -> proposed`, `--dry-run`; concurrent modification (known gap, review #6 of issue 02). Hand-edited duplicate Identifiers in the Source are not detected here (review #5); the first match wins.

@@ -25,22 +25,26 @@ fn root() -> Result<std::path::PathBuf, Error> {
 }
 
 pub(super) fn approve(args: &RuleRefArgs) -> Result<(), Error> {
-    let id = RuleId(args.id.clone());
+    let id = RuleId::parse(&args.id, "the Rule Identifier")?;
     rulelink_app::rules::approve(&root()?, &id)?;
     println!("{id} is now validated");
     Ok(())
 }
 
 pub(super) fn reject(args: &RuleRefArgs) -> Result<(), Error> {
-    let id = RuleId(args.id.clone());
+    let id = RuleId::parse(&args.id, "the Rule Identifier")?;
     rulelink_app::rules::reject(&root()?, &id)?;
     println!("{id} is now rejected; its Identifier is retired");
     Ok(())
 }
 
 pub(super) fn obsolete(args: &RulesObsoleteArgs) -> Result<(), Error> {
-    let id = RuleId(args.id.clone());
-    let replacement = args.superseded_by.clone().map(RuleId);
+    let id = RuleId::parse(&args.id, "the Rule Identifier")?;
+    let replacement = args
+        .superseded_by
+        .as_deref()
+        .map(|raw| RuleId::parse(raw, "--superseded-by"))
+        .transpose()?;
     rulelink_app::rules::obsolete(&root()?, &id, replacement.as_ref())?;
     println!("{id} is now obsolete; its Identifier is retired");
     Ok(())

@@ -5,6 +5,14 @@
 )]
 pub struct InvalidIdPrefix(pub String);
 
+/// An Identifier given on the command line is blank.
+#[derive(Debug, Clone, PartialEq, Eq, thiserror::Error)]
+#[error("{field} must not be empty or blank")]
+pub struct BlankRuleId {
+    /// Name of the offending value.
+    pub field: &'static str,
+}
+
 /// A value given for a new Rule is refused.
 #[derive(Debug, Clone, PartialEq, Eq, thiserror::Error)]
 pub enum DraftError {

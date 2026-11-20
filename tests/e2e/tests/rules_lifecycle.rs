@@ -211,6 +211,19 @@ fn a_rule_cannot_replace_itself() {
 }
 
 #[test]
+fn blank_identifiers_are_refused_and_surrounding_spaces_are_ignored() {
+    let repo = with_rule("validated");
+    refused_input(&repo, &["rules", "approve", "  "], "must not be empty");
+    refused_input(
+        &repo,
+        &["rules", "obsolete", "RULE-001", "--superseded-by", ""],
+        "--superseded-by must not be empty",
+    );
+    ok(&repo.run(&["rules", "obsolete", " RULE-001 "]));
+    assert_eq!(status_of(&repo), "obsolete");
+}
+
+#[test]
 fn missing_identifier_is_a_usage_error() {
     let repo = with_rule("proposed");
     assert_eq!(repo.run(&["rules", "approve"]).code, 2);
