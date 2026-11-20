@@ -81,7 +81,7 @@ moon setup
 moon run :test      # or: cargo test --workspace
 ```
 
-Working notes for AI agents are in [`AGENTS.md`](AGENTS.md). Specs and issues live as Markdown under `.scratch/<feature>/` (see [`docs/agents/issue-tracker.md`](docs/agents/issue-tracker.md)).
+Working notes for AI agents are in [`AGENTS.md`](AGENTS.md). Specs and issues live as GitHub issues (see [`docs/agents/issue-tracker.md`](docs/agents/issue-tracker.md)).
 
 ## License
 

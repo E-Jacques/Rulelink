@@ -13,8 +13,8 @@ Start from [templates/code-review-report-template.md](templates/code-review-repo
 
 `.scratch/<feature>/code-review-reports/report-{{issue_number}}-{{YYYY-MM-DD}}-{{counter}}.md`
 
-- `<feature>`: the feature directory of the issue being implemented (see `docs/agents/issue-tracker.md`). If the issue is on GitHub and has no local feature directory, use the feature slug from the branch name, or ask.
-- `issue_number`: the local ticket number (`03`) if the issue is a local file, or the GitHub issue number (`42`) if it is remote.
+- `<feature>`: the feature directory of the issue being implemented (see `docs/agents/issue-tracker.md`). If there is no local feature directory, use the feature slug from the branch name, or ask.
+- `issue_number`: the GitHub issue number (`42`).
 - `YYYY-MM-DD`: the review date.
 - `counter`: two digits, starting at `01`. Take the highest existing counter for the same issue and date, and add one.
 
@@ -29,7 +29,7 @@ Create the `code-review-reports/` directory if it does not exist.
 
 ## Deferred findings
 
-A finding that is not fixed carries a `blocks` value: the dependent tickets that will hit the same problem (found with `grep -l "Blocked by:.*<NN>" .scratch/*/issues/*.md`), or `none`. "Out of scope" is only a valid reason when `blocks` is `none`.
+A finding that is not fixed carries a `blocks` value: the dependent tickets that will hit the same problem (found with `gh api repos/{owner}/{repo}/issues/<n>/dependencies/blocking --jq '.[].number'`), or `none`. "Out of scope" is only a valid reason when `blocks` is `none`.
 
 ## Refactor considered
 
