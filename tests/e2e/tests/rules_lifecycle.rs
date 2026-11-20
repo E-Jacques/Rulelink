@@ -70,7 +70,13 @@ fn documented_reject_example_rejects_the_rule_and_retires_it() {
 fn documented_obsolete_example_records_the_replacement() {
     let repo = with_rule("validated");
     add(&repo, "Two");
-    let run = repo.run(&["rules", "obsolete", "RULE-001", "--superseded-by", "RULE-002"]);
+    let run = repo.run(&[
+        "rules",
+        "obsolete",
+        "RULE-001",
+        "--superseded-by",
+        "RULE-002",
+    ]);
     ok(&run);
     let text = source(&repo);
     assert!(text.contains("\"status\": \"obsolete\""));
@@ -165,7 +171,13 @@ fn unknown_replacement_is_refused() {
     let repo = with_rule("validated");
     refused_input(
         &repo,
-        &["rules", "obsolete", "RULE-001", "--superseded-by", "RULE-099"],
+        &[
+            "rules",
+            "obsolete",
+            "RULE-001",
+            "--superseded-by",
+            "RULE-099",
+        ],
         "RULE-099",
     );
 }
@@ -175,7 +187,13 @@ fn a_rule_cannot_replace_itself() {
     let repo = with_rule("validated");
     refused_input(
         &repo,
-        &["rules", "obsolete", "RULE-001", "--superseded-by", "RULE-001"],
+        &[
+            "rules",
+            "obsolete",
+            "RULE-001",
+            "--superseded-by",
+            "RULE-001",
+        ],
         "RULE-001",
     );
 }

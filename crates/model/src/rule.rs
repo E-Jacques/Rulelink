@@ -5,6 +5,12 @@ use serde::{Deserialize, Serialize};
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 pub struct RuleId(pub String);
 
+impl std::fmt::Display for RuleId {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        f.write_str(&self.0)
+    }
+}
+
 /// Lifecycle status of a rule.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
@@ -18,6 +24,17 @@ pub enum RuleStatus {
     Obsolete,
     /// Declined by a human; kept so it is not proposed again.
     Rejected,
+}
+
+impl std::fmt::Display for RuleStatus {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        f.write_str(match self {
+            Self::Proposed => "proposed",
+            Self::Validated => "validated",
+            Self::Obsolete => "obsolete",
+            Self::Rejected => "rejected",
+        })
+    }
 }
 
 /// Covered and excluded cases of a rule.

@@ -7,7 +7,7 @@ mod rule;
 mod ruleset;
 
 pub use draft::{RuleDraft, TITLE_MAX_CHARS};
-pub use error::{DraftError, Error, InvalidIdPrefix};
+pub use error::{DraftError, Error, InvalidIdPrefix, LifecycleError};
 pub use id_prefix::{DEFAULT_ID_PREFIX, IdPrefix};
 pub use rule::{Origin, Rule, RuleId, RuleStatus, Scope};
 pub use ruleset::{FORMAT_VERSION, RuleSet};

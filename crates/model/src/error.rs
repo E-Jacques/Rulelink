@@ -32,6 +32,34 @@ pub enum DraftError {
     },
 }
 
+use crate::{RuleId, RuleStatus};
+
+/// A lifecycle command is refused. Every variant names the value or Rule at fault.
+#[derive(Debug, Clone, PartialEq, Eq, thiserror::Error)]
+pub enum LifecycleError {
+    /// No Rule has this Identifier.
+    #[error("no Rule has the Identifier `{0}`")]
+    RuleNotFound(RuleId),
+    /// The Rule is not in the status the transition starts from.
+    #[error("cannot {action} {id}: it is {status}, only a {required} Rule can be {action}d")]
+    TransitionRefused {
+        /// The Rule.
+        id: RuleId,
+        /// Its current status.
+        status: RuleStatus,
+        /// The only status the transition accepts.
+        required: RuleStatus,
+        /// The refused action (`approve`, `reject`, `obsolete`).
+        action: &'static str,
+    },
+    /// The replacement Rule does not exist.
+    #[error("cannot record `{0}` as the replacement: no Rule has this Identifier")]
+    ReplacementNotFound(RuleId),
+    /// A Rule cannot replace itself.
+    #[error("{0} cannot be its own replacement")]
+    SelfReplacement(RuleId),
+}
+
 /// Errors raised by `rulelink-model` outside input validation.
 #[derive(Debug, Clone, PartialEq, Eq, thiserror::Error)]
 pub enum Error {
