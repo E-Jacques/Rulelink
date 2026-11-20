@@ -69,7 +69,8 @@ impl RuleSet {
     /// # Errors
     /// [`LifecycleError`] if the Rule does not exist or is not `proposed`. Nothing changes.
     pub fn approve(&mut self, id: &RuleId) -> Result<(), LifecycleError> {
-        self.transition(id, "approve", RuleStatus::Proposed)?.status = RuleStatus::Validated;
+        let at = self.position(id, "approve", RuleStatus::Proposed)?;
+        self.rules[at].status = RuleStatus::Validated;
         Ok(())
     }
 
@@ -78,7 +79,8 @@ impl RuleSet {
     /// # Errors
     /// [`LifecycleError`] if the Rule does not exist or is not `proposed`. Nothing changes.
     pub fn reject(&mut self, id: &RuleId) -> Result<(), LifecycleError> {
-        self.transition(id, "reject", RuleStatus::Proposed)?.status = RuleStatus::Rejected;
+        let at = self.position(id, "reject", RuleStatus::Proposed)?;
+        self.rules[at].status = RuleStatus::Rejected;
         self.retire(id);
         Ok(())
     }
@@ -94,7 +96,7 @@ impl RuleSet {
         id: &RuleId,
         superseded_by: Option<&RuleId>,
     ) -> Result<(), LifecycleError> {
-        self.transition(id, "obsolete", RuleStatus::Validated)?;
+        let at = self.position(id, "obsolete", RuleStatus::Validated)?;
         if let Some(replacement) = superseded_by {
             if replacement == id {
                 return Err(LifecycleError::SelfReplacement(id.clone()));
@@ -103,7 +105,7 @@ impl RuleSet {
                 return Err(LifecycleError::ReplacementNotFound(replacement.clone()));
             }
         }
-        let rule = self.transition(id, "obsolete", RuleStatus::Validated)?;
+        let rule = &mut self.rules[at];
         rule.status = RuleStatus::Obsolete;
         rule.superseded_by = superseded_by.cloned();
         self.retire(id);
@@ -114,24 +116,26 @@ impl RuleSet {
         self.rules.iter().find(|r| &r.id == id)
     }
 
-    /// The Rule `id`, if it is in the status `required`; the check every transition shares.
-    fn transition(
-        &mut self,
+    /// Index of the Rule `id` if it is in the status `required`; the check every
+    /// transition shares.
+    fn position(
+        &self,
         id: &RuleId,
         action: &'static str,
         required: RuleStatus,
-    ) -> Result<&mut Rule, LifecycleError> {
-        let rule = self
+    ) -> Result<usize, LifecycleError> {
+        let at = self
             .rules
-            .iter_mut()
-            .find(|r| &r.id == id)
+            .iter()
+            .position(|r| &r.id == id)
             .ok_or_else(|| LifecycleError::RuleNotFound(id.clone()))?;
-        if rule.status == required {
-            Ok(rule)
+        let status = self.rules[at].status;
+        if status == required {
+            Ok(at)
         } else {
             Err(LifecycleError::TransitionRefused {
                 id: id.clone(),
-                status: rule.status,
+                status,
                 required,
                 action,
             })
