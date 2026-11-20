@@ -3,13 +3,18 @@
 //! Adding a command: add a variant to [`Command`] with its own `clap::Args` struct, a handler
 //! function returning `Result<(), AppError>`, and one line in [`dispatch`].
 
-use checkmate_app::RuleDraft;
+use clap::error::ErrorKind;
+use clap::{Parser, Subcommand};
+
+mod init;
+mod rules_add;
+
 use checkmate_app::runtime::{
     AppContext, AppError, CancellationToken, Entrypoint, Outcome, ShutdownReason, TelemetryConfig,
     UsageError,
 };
-use clap::error::ErrorKind;
-use clap::{Args, Parser, Subcommand};
+use init::InitArgs;
+use rules_add::RulesAddArgs;
 
 /// Command line grammar, derived by `clap`.
 #[derive(Debug, Parser)]
@@ -37,37 +42,6 @@ pub enum Command {
 pub enum RulesAction {
     /// Create a `proposed` Rule with a newly allocated Identifier.
     Add(RulesAddArgs),
-}
-
-/// Arguments of `rules add`.
-#[derive(Debug, Args)]
-pub struct RulesAddArgs {
-    /// Short title of the Rule (1 to 120 characters).
-    #[arg(long)]
-    title: String,
-    /// Statement of the Rule.
-    #[arg(long)]
-    statement: String,
-    /// Application the Rule applies to; repeat for several.
-    #[arg(long = "app")]
-    applications: Vec<String>,
-    /// Functional module of the Rule.
-    #[arg(long)]
-    module: Option<String>,
-    /// Case the Rule covers; repeat for several.
-    #[arg(long)]
-    covered: Vec<String>,
-    /// Case the Rule explicitly excludes; repeat for several.
-    #[arg(long)]
-    excluded: Vec<String>,
-}
-
-/// Arguments of `init`.
-#[derive(Debug, Args)]
-pub struct InitArgs {
-    /// Prefix of the generated rule identifiers.
-    #[arg(long, default_value = checkmate_app::DEFAULT_ID_PREFIX)]
-    id_prefix: String,
 }
 
 /// Parsed command line.
@@ -128,33 +102,11 @@ fn dispatch(args: CliArgs) -> Result<(), AppError> {
             print!("{text}");
             Ok(())
         }
-        CliArgs::Run(Command::Init(args)) => init(&args),
+        CliArgs::Run(Command::Init(args)) => init::run(&args),
         CliArgs::Run(Command::Rules {
             action: RulesAction::Add(args),
-        }) => rules_add(&args),
+        }) => rules_add::run(&args),
     }
-}
-
-fn init(args: &InitArgs) -> Result<(), AppError> {
-    let root = std::env::current_dir().map_err(|e| AppError::Internal(e.to_string()))?;
-    checkmate_app::init::init(&root, &args.id_prefix)?;
-    println!("Initialised Checkmate: wrote checkmate.toml and rules/rules.json");
-    Ok(())
-}
-
-fn rules_add(args: &RulesAddArgs) -> Result<(), AppError> {
-    let draft = RuleDraft::new(
-        &args.title,
-        &args.statement,
-        &args.applications,
-        args.module.as_deref(),
-        &args.covered,
-        &args.excluded,
-    )?;
-    let root = std::env::current_dir().map_err(|e| AppError::Internal(e.to_string()))?;
-    let id = checkmate_app::rules::add(&root, draft)?;
-    println!("Created {} (proposed)", id.0);
-    Ok(())
 }
 
 fn parse(args: impl IntoIterator<Item = String>) -> Result<CliArgs, UsageError> {

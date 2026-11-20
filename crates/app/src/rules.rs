@@ -19,8 +19,8 @@ use crate::runtime::AppError;
 pub fn add(root: &Path, draft: RuleDraft) -> Result<RuleId, AppError> {
     let config = Config::load(root)?;
     let source_path = root.join(&config.source_path);
-    let mut set = checkmate_adapter_json::read_source(&source_path)?;
-    let id = set.add(&config.id_prefix, draft)?;
-    checkmate_adapter_json::write_source(&source_path, &set)?;
+    let mut rule_set = checkmate_adapter_json::read_source(&source_path)?;
+    let id = rule_set.add(&config.id_prefix, draft)?;
+    checkmate_adapter_json::write_source(&source_path, &rule_set)?;
     Ok(id)
 }

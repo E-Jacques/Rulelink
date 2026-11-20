@@ -38,22 +38,9 @@ pub fn create_source(path: &Path, rules: &RuleSet) -> Result<(), Error> {
 /// [`Error::NotFound`], [`Error::Invalid`] for malformed content, [`Error::UnsupportedFormat`],
 /// [`Error::Io`] for other I/O failures.
 pub fn read_source(path: &Path) -> Result<RuleSet, Error> {
-    let text = fs::read_to_string(path).map_err(|e| match e.kind() {
-        std::io::ErrorKind::NotFound => Error::NotFound(path.to_owned()),
-        std::io::ErrorKind::InvalidData => Error::Invalid {
-            path: path.to_owned(),
-            message: "not valid UTF-8".to_owned(),
-        },
-        _ => Error::Unreadable {
-            path: path.to_owned(),
-            message: e.to_string(),
-        },
-    })?;
+    let text = fs::read_to_string(path).map_err(|e| Error::from_read(path, &e))?;
     check_format(path, &text)?;
-    let set: RuleSet = serde_json::from_str(&text).map_err(|e| Error::Invalid {
-        path: path.to_owned(),
-        message: e.to_string(),
-    })?;
+    let set: RuleSet = serde_json::from_str(&text).map_err(|e| Error::invalid(path, e))?;
     Ok(set)
 }
 
@@ -64,10 +51,7 @@ fn check_format(path: &Path, text: &str) -> Result<(), Error> {
     struct Probe {
         format: u32,
     }
-    let probe: Probe = serde_json::from_str(text).map_err(|e| Error::Invalid {
-        path: path.to_owned(),
-        message: e.to_string(),
-    })?;
+    let probe: Probe = serde_json::from_str(text).map_err(|e| Error::invalid(path, e))?;
     if probe.format == FORMAT_VERSION {
         Ok(())
     } else {

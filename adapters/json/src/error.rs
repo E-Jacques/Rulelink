@@ -39,3 +39,25 @@ pub enum Error {
     #[error("{0}")]
     Io(#[from] std::io::Error),
 }
+
+impl Error {
+    /// Classifies a failure to read the Source file at `path`.
+    pub(crate) fn from_read(path: &std::path::Path, err: &std::io::Error) -> Self {
+        match err.kind() {
+            std::io::ErrorKind::NotFound => Self::NotFound(path.to_owned()),
+            std::io::ErrorKind::InvalidData => Self::invalid(path, "not valid UTF-8"),
+            _ => Self::Unreadable {
+                path: path.to_owned(),
+                message: err.to_string(),
+            },
+        }
+    }
+
+    /// The content of the Source file at `path` is refused, for `message`.
+    pub(crate) fn invalid(path: &std::path::Path, message: impl std::fmt::Display) -> Self {
+        Self::Invalid {
+            path: path.to_owned(),
+            message: message.to_string(),
+        }
+    }
+}

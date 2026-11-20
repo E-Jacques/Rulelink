@@ -8,11 +8,17 @@ pub const TITLE_MAX_CHARS: usize = 120;
 /// It has no Identifier and no status: [`RuleSet::add`](crate::RuleSet::add) gives it both.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct RuleDraft {
+    /// Trimmed, 1 to [`TITLE_MAX_CHARS`] characters.
     title: String,
+    /// Trimmed, not empty.
     statement: String,
+    /// Applications the Rule applies to, trimmed, without duplicates.
     applications: Vec<String>,
+    /// Functional module of the Rule; `None` when not given.
     module: Option<String>,
+    /// Cases the Rule covers, trimmed, without duplicates.
     covered: Vec<String>,
+    /// Cases the Rule explicitly excludes, trimmed, without duplicates.
     excluded: Vec<String>,
 }
 
