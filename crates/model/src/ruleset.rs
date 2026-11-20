@@ -11,6 +11,7 @@ pub const FORMAT_VERSION: u32 = 1;
 /// The content of a Source: its rules and the bookkeeping that keeps Identifiers unique.
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(deny_unknown_fields)]
 pub struct RuleSet {
     /// Source format version.
     pub format: u32,

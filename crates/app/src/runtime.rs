@@ -181,9 +181,10 @@ impl From<checkmate_adapter_json::Error> for AppError {
     fn from(err: checkmate_adapter_json::Error) -> Self {
         use checkmate_adapter_json::Error as E;
         match err {
-            E::NotFound(_) | E::Invalid { .. } | E::UnsupportedFormat { .. } => {
-                Self::Source(err.to_string())
-            }
+            E::NotFound(_)
+            | E::Invalid { .. }
+            | E::UnsupportedFormat { .. }
+            | E::Unreadable { .. } => Self::Source(err.to_string()),
             _ => Self::Internal(err.to_string()),
         }
     }

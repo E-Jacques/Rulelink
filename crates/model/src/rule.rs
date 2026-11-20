@@ -23,6 +23,7 @@ pub enum RuleStatus {
 /// Covered and excluded cases of a rule.
 #[derive(Debug, Clone, Default, PartialEq, Eq, Serialize, Deserialize)]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(deny_unknown_fields)]
 pub struct Scope {
     /// Cases the rule covers.
     #[serde(default)]
@@ -35,6 +36,7 @@ pub struct Scope {
 /// Where a rule comes from.
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(deny_unknown_fields)]
 pub struct Origin {
     /// Kind of origin (`jira`, `github`, `retrodoc`, `manual`, ...).
     pub kind: String,
@@ -49,6 +51,7 @@ pub struct Origin {
 /// A business rule.
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(deny_unknown_fields)]
 pub struct Rule {
     /// Identifier.
     pub id: RuleId,

@@ -44,18 +44,36 @@ pub fn read_source(path: &Path) -> Result<RuleSet, Error> {
             path: path.to_owned(),
             message: "not valid UTF-8".to_owned(),
         },
-        _ => Error::Io(e),
+        _ => Error::Unreadable {
+            path: path.to_owned(),
+            message: e.to_string(),
+        },
     })?;
+    check_format(path, &text)?;
     let set: RuleSet = serde_json::from_str(&text).map_err(|e| Error::Invalid {
         path: path.to_owned(),
         message: e.to_string(),
     })?;
-    if set.format == FORMAT_VERSION {
-        Ok(set)
+    Ok(set)
+}
+
+/// Reads `format` alone first, so a file of another format is reported as such rather than as
+/// a shape error.
+fn check_format(path: &Path, text: &str) -> Result<(), Error> {
+    #[derive(serde::Deserialize)]
+    struct Probe {
+        format: u32,
+    }
+    let probe: Probe = serde_json::from_str(text).map_err(|e| Error::Invalid {
+        path: path.to_owned(),
+        message: e.to_string(),
+    })?;
+    if probe.format == FORMAT_VERSION {
+        Ok(())
     } else {
         Err(Error::UnsupportedFormat {
             path: path.to_owned(),
-            found: set.format,
+            found: probe.format,
             expected: FORMAT_VERSION,
         })
     }
@@ -116,6 +134,25 @@ mod tests {
     }
 
     #[test]
+    fn unknown_fields_are_refused_instead_of_dropped_on_the_next_write() {
+        let dir = tempfile::tempdir().unwrap_or_else(|e| panic!("{e}"));
+        fs::write(path(&dir), "{\"format\": 1, \"mine\": true}").unwrap_or_else(|e| panic!("{e}"));
+        assert!(matches!(
+            read_source(&path(&dir)),
+            Err(Error::Invalid { .. })
+        ));
+    }
+
+    #[test]
+    fn a_directory_is_unreadable_not_internal() {
+        let dir = tempfile::tempdir().unwrap_or_else(|e| panic!("{e}"));
+        assert!(matches!(
+            read_source(dir.path()),
+            Err(Error::Unreadable { .. })
+        ));
+    }
+
+    #[test]
     fn missing_invalid_and_foreign_format_are_distinguished() {
         let dir = tempfile::tempdir().unwrap_or_else(|e| panic!("{e}"));
         assert!(matches!(read_source(&path(&dir)), Err(Error::NotFound(_))));
@@ -124,7 +161,7 @@ mod tests {
             read_source(&path(&dir)),
             Err(Error::Invalid { .. })
         ));
-        fs::write(path(&dir), "{\"format\": 9}").unwrap_or_else(|e| panic!("{e}"));
+        fs::write(path(&dir), "{\"format\": 9, \"other\": 1}").unwrap_or_else(|e| panic!("{e}"));
         assert!(matches!(
             read_source(&path(&dir)),
             Err(Error::UnsupportedFormat { found: 9, .. })

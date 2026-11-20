@@ -13,7 +13,7 @@ pub enum Error {
     /// A required text value is empty once trimmed.
     #[error("{field} must not be empty or blank")]
     Empty {
-        /// The offending option, as typed on the command line.
+        /// Name of the offending value.
         field: &'static str,
     },
     /// The title is longer than allowed.
@@ -27,7 +27,7 @@ pub enum Error {
     /// A list value appears twice.
     #[error("{field} lists `{value}` more than once")]
     Duplicate {
-        /// The offending option, as typed on the command line.
+        /// Name of the offending value.
         field: &'static str,
         /// The repeated value.
         value: String,

@@ -272,3 +272,13 @@ fn unsupported_format_version_is_refused() {
     assert_eq!(run.code, 3);
     assert!(run.stderr.contains("format"), "stderr: {}", run.stderr);
 }
+
+#[test]
+fn source_with_unknown_fields_is_refused_not_rewritten() {
+    let repo = initialised();
+    let hand_edited = "{\n  \"format\": 1,\n  \"note\": \"mine\",\n  \"rules\": []\n}\n";
+    repo.write("rules/rules.json", hand_edited);
+    let run = add(&repo, "One");
+    assert_eq!(run.code, 3);
+    assert_eq!(repo.read("rules/rules.json").as_deref(), Some(hand_edited));
+}

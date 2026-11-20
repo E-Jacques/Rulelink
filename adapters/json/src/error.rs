@@ -28,6 +28,14 @@ pub enum Error {
         /// The `format` this version handles.
         expected: u32,
     },
+    /// The Source file exists but cannot be read.
+    #[error("cannot read source file {}: {message}", .path.display())]
+    Unreadable {
+        /// The Source file.
+        path: PathBuf,
+        /// Cause reported by the operating system.
+        message: String,
+    },
     /// I/O failure.
     #[error("{0}")]
     Io(#[from] std::io::Error),

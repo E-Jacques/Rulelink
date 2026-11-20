@@ -33,7 +33,7 @@ impl RuleDraft {
         covered: &[String],
         excluded: &[String],
     ) -> Result<Self, Error> {
-        let title = non_empty("--title", title)?;
+        let title = non_empty("title", title)?;
         let len = title.chars().count();
         if len > TITLE_MAX_CHARS {
             return Err(Error::TitleTooLong {
@@ -43,11 +43,11 @@ impl RuleDraft {
         }
         Ok(Self {
             title,
-            statement: non_empty("--statement", statement)?,
-            applications: unique_items("--app", applications)?,
-            module: module.map(|m| non_empty("--module", m)).transpose()?,
-            covered: unique_items("--covered", covered)?,
-            excluded: unique_items("--excluded", excluded)?,
+            statement: non_empty("statement", statement)?,
+            applications: unique_items("application", applications)?,
+            module: module.map(|m| non_empty("module", m)).transpose()?,
+            covered: unique_items("covered case", covered)?,
+            excluded: unique_items("excluded case", excluded)?,
         })
     }
 
@@ -112,13 +112,8 @@ mod tests {
 
     #[test]
     fn blank_title_and_statement_are_refused() {
-        assert_eq!(draft(" ", "S"), Err(Error::Empty { field: "--title" }));
-        assert_eq!(
-            draft("T", "\t"),
-            Err(Error::Empty {
-                field: "--statement"
-            })
-        );
+        assert_eq!(draft(" ", "S"), Err(Error::Empty { field: "title" }));
+        assert_eq!(draft("T", "\t"), Err(Error::Empty { field: "statement" }));
     }
 
     #[test]
@@ -147,7 +142,7 @@ mod tests {
         assert_eq!(
             RuleDraft::new("T", "S", &dup, None, &[], &[]),
             Err(Error::Duplicate {
-                field: "--app",
+                field: "application",
                 value: "a".into()
             })
         );
