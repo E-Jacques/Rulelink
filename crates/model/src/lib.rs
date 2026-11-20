@@ -3,6 +3,7 @@
 mod draft;
 mod error;
 mod id_prefix;
+mod lifecycle;
 mod rule;
 mod ruleset;
 
