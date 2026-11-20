@@ -3,6 +3,7 @@
 //! Adding a command: add a variant to [`Command`] with its own `clap::Args` struct, a handler
 //! function returning `Result<(), AppError>`, and one line in [`dispatch`].
 
+use checkmate_app::RuleDraft;
 use checkmate_app::runtime::{
     AppContext, AppError, CancellationToken, Entrypoint, Outcome, ShutdownReason, TelemetryConfig,
     UsageError,
@@ -23,6 +24,42 @@ struct Cli {
 pub enum Command {
     /// Create `checkmate.toml` and an empty rules file in the current directory.
     Init(InitArgs),
+    /// Create, inspect and change Rules.
+    Rules {
+        /// What to do with Rules.
+        #[command(subcommand)]
+        action: RulesAction,
+    },
+}
+
+/// Subcommands of `rules`.
+#[derive(Debug, Subcommand)]
+pub enum RulesAction {
+    /// Create a `proposed` Rule with a newly allocated Identifier.
+    Add(RulesAddArgs),
+}
+
+/// Arguments of `rules add`.
+#[derive(Debug, Args)]
+pub struct RulesAddArgs {
+    /// Short title of the Rule (1 to 120 characters).
+    #[arg(long)]
+    title: String,
+    /// Statement of the Rule.
+    #[arg(long)]
+    statement: String,
+    /// Application the Rule applies to; repeat for several.
+    #[arg(long = "app")]
+    applications: Vec<String>,
+    /// Functional module of the Rule.
+    #[arg(long)]
+    module: Option<String>,
+    /// Case the Rule covers; repeat for several.
+    #[arg(long)]
+    covered: Vec<String>,
+    /// Case the Rule explicitly excludes; repeat for several.
+    #[arg(long)]
+    excluded: Vec<String>,
 }
 
 /// Arguments of `init`.
@@ -92,6 +129,9 @@ fn dispatch(args: CliArgs) -> Result<(), AppError> {
             Ok(())
         }
         CliArgs::Run(Command::Init(args)) => init(&args),
+        CliArgs::Run(Command::Rules {
+            action: RulesAction::Add(args),
+        }) => rules_add(&args),
     }
 }
 
@@ -99,6 +139,21 @@ fn init(args: &InitArgs) -> Result<(), AppError> {
     let root = std::env::current_dir().map_err(|e| AppError::Internal(e.to_string()))?;
     checkmate_app::init::init(&root, &args.id_prefix)?;
     println!("Initialised Checkmate: wrote checkmate.toml and rules/rules.json");
+    Ok(())
+}
+
+fn rules_add(args: &RulesAddArgs) -> Result<(), AppError> {
+    let draft = RuleDraft::new(
+        &args.title,
+        &args.statement,
+        &args.applications,
+        args.module.as_deref(),
+        &args.covered,
+        &args.excluded,
+    )?;
+    let root = std::env::current_dir().map_err(|e| AppError::Internal(e.to_string()))?;
+    let id = checkmate_app::rules::add(&root, draft)?;
+    println!("Created {} (proposed)", id.0);
     Ok(())
 }
 
@@ -144,6 +199,37 @@ mod tests {
             panic!("expected init");
         };
         assert_eq!(init.id_prefix, "BR");
+    }
+
+    #[test]
+    fn rules_add_collects_repeated_options() {
+        let parsed = parse(args(&[
+            "rules",
+            "add",
+            "--title",
+            "T",
+            "--statement",
+            "S",
+            "--app",
+            "a",
+            "--app",
+            "b",
+        ]))
+        .unwrap_or_else(|e| panic!("{e}"));
+        let CliArgs::Run(Command::Rules {
+            action: RulesAction::Add(add),
+        }) = parsed
+        else {
+            panic!("expected rules add");
+        };
+        assert_eq!(add.applications, ["a", "b"]);
+        assert_eq!(add.module, None);
+    }
+
+    #[test]
+    fn rules_add_requires_title_and_statement() {
+        assert!(parse(args(&["rules", "add", "--title", "T"])).is_err());
+        assert!(parse(args(&["rules", "add", "--statement", "S"])).is_err());
     }
 
     #[test]

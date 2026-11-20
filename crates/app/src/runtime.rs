@@ -32,6 +32,9 @@ pub struct UsageError(pub String);
 /// Application-level failure.
 #[derive(Debug, thiserror::Error)]
 pub enum AppError {
+    /// Invalid input: a value the user supplied is refused.
+    #[error("invalid input: {0}")]
+    Input(String),
     /// Invalid configuration.
     #[error("configuration error: {0}")]
     Config(String),
@@ -48,7 +51,7 @@ impl AppError {
     #[must_use]
     pub fn exit_code(&self) -> u8 {
         match self {
-            Self::Config(_) => 2,
+            Self::Input(_) | Self::Config(_) => 2,
             Self::Source(_) => 3,
             Self::Internal(_) => 10,
         }
@@ -158,6 +161,30 @@ impl Bootstrap {
                 eprintln!("{}: {err}", entry.name());
                 err.exit_code()
             }
+        }
+    }
+}
+
+impl From<checkmate_model::Error> for AppError {
+    fn from(err: checkmate_model::Error) -> Self {
+        Self::Input(err.to_string())
+    }
+}
+
+impl From<checkmate_config::Error> for AppError {
+    fn from(err: checkmate_config::Error) -> Self {
+        Self::Config(err.to_string())
+    }
+}
+
+impl From<checkmate_adapter_json::Error> for AppError {
+    fn from(err: checkmate_adapter_json::Error) -> Self {
+        use checkmate_adapter_json::Error as E;
+        match err {
+            E::NotFound(_) | E::Invalid { .. } | E::UnsupportedFormat { .. } => {
+                Self::Source(err.to_string())
+            }
+            _ => Self::Internal(err.to_string()),
         }
     }
 }
