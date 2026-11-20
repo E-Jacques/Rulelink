@@ -9,16 +9,16 @@ use clap::{Parser, Subcommand};
 mod init;
 mod rules_add;
 
-use checkmate_app::Error;
-use checkmate_app::runtime::{
+use init::InitArgs;
+use rulelink_app::Error;
+use rulelink_app::runtime::{
     AppContext, CancellationToken, Entrypoint, Outcome, ShutdownReason, TelemetryConfig, UsageError,
 };
-use init::InitArgs;
 use rules_add::RulesAddArgs;
 
 /// Command line grammar, derived by `clap`.
 #[derive(Debug, Parser)]
-#[command(name = "checkmate", version, about, arg_required_else_help = true)]
+#[command(name = "rulelink", version, about, arg_required_else_help = true)]
 struct Cli {
     #[command(subcommand)]
     command: Command,
@@ -27,7 +27,7 @@ struct Cli {
 /// Regular CLI commands (`lsp` is routed by `main` before this grammar is used).
 #[derive(Debug, Subcommand)]
 pub enum Command {
-    /// Create `checkmate.toml` and an empty rules file in the current directory.
+    /// Create `rulelink.toml` and an empty rules file in the current directory.
     Init(InitArgs),
     /// Create, inspect and change Rules.
     Rules {
@@ -61,7 +61,7 @@ impl Entrypoint for CliEntrypoint {
     type Args = CliArgs;
 
     fn name(&self) -> &'static str {
-        "checkmate"
+        "rulelink"
     }
 
     fn parse_args(&self) -> Result<Self::Args, UsageError> {
@@ -129,7 +129,7 @@ mod tests {
     use super::*;
 
     fn args(list: &[&str]) -> Vec<String> {
-        std::iter::once("checkmate")
+        std::iter::once("rulelink")
             .chain(list.iter().copied())
             .map(str::to_owned)
             .collect()
@@ -141,7 +141,7 @@ mod tests {
         let CliArgs::Run(Command::Init(init)) = parsed else {
             panic!("expected init");
         };
-        assert_eq!(init.id_prefix, checkmate_app::DEFAULT_ID_PREFIX);
+        assert_eq!(init.id_prefix, rulelink_app::DEFAULT_ID_PREFIX);
     }
 
     #[test]
@@ -188,7 +188,7 @@ mod tests {
     fn version_is_displayed_not_run() {
         assert!(matches!(
             parse(args(&["--version"])),
-            Ok(CliArgs::Display(text)) if text.starts_with("checkmate ")
+            Ok(CliArgs::Display(text)) if text.starts_with("rulelink ")
         ));
     }
 

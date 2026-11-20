@@ -1,7 +1,7 @@
 # 05 — Rule import
 
 > Import feeds the source of truth without ever bypassing it: it creates `proposed` rules, which a human then validates. It is the "Jira feeds" step of the real-world flow, and the entry point for retro-documentation.
-> Crates: `checkmate-import` (pipeline, extraction, reconciliation), `adapters/file`, `adapters/jira`, `adapters/csv`, `adapters/github`, `adapters/gitlab`.
+> Crates: `rulelink-import` (pipeline, extraction, reconciliation), `adapters/file`, `adapters/jira`, `adapters/csv`, `adapters/github`, `adapters/gitlab`.
 > See also: [01 Registry](01-rule-registry.md), [02 Sources](02-sources-of-truth.md), [07 Agents](07-agent-integration.md).
 
 ## 1. Role and scope
@@ -46,7 +46,7 @@
   - Jira Cloud: email + API token with basic authentication, or OAuth 2.0 (3LO) in V2.
   - Jira Data Center: Personal Access Token as `Bearer`.
   - GitHub: `GITHUB_TOKEN` or `gh auth token`. GitLab: `GITLAB_TOKEN` or `CI_JOB_TOKEN`.
-- Imported text is **data**. It is stored as is in `statement`, after conversion to plain text, and Checkmate never interprets it as an instruction. Skills also present it as data (07).
+- Imported text is **data**. It is stored as is in `statement`, after conversion to plain text, and Rulelink never interprets it as an instruction. Skills also present it as data (07).
 
 ## 4. Detailed design
 
@@ -107,7 +107,7 @@ The cursor is saved only after a successful `apply`. An interrupted import there
 |---|---|---|---|
 | `RegexExtractor` | Issue text converted to plain text | 0 to n candidates per item | Jira, issues: "RULE XXXX_N : my business rule" pattern |
 | `FieldExtractor` | Structured fields | 1 candidate per item | CSV, a custom Jira "Business rule" field |
-| `PassthroughExtractor` | Drafts already in Checkmate format | 1 candidate per draft | Proposals file (retro-documentation, skills) |
+| `PassthroughExtractor` | Drafts already in Rulelink format | 1 candidate per draft | Proposals file (retro-documentation, skills) |
 
 Default pattern, taken from the brief's decisions, with named groups:
 
@@ -249,7 +249,7 @@ This is the format produced by the retro-documentation skill and accepted by `im
 
 ```json
 {
-  "$schema": "https://checkmate.dev/schemas/proposals/v1.json",
+  "$schema": "https://rulelink.dev/schemas/proposals/v1.json",
   "proposals": [
     {
       "id": null,
@@ -274,12 +274,12 @@ This is the format produced by the retro-documentation skill and accepted by `im
 
 | Command | Specific options | Release |
 |---|---|---|
-| `checkmate import file <FILE>` | `--origin <KIND>` | MVP |
-| `checkmate import jira` | `--jql <JQL>`, `--project <KEY>`, `--since <DATE\|cursor>`, `--edition auto\|cloud\|datacenter`, `--pattern <REGEX>` | V1 |
-| `checkmate import csv <FILE>` | `--map <COLUMN>=<FIELD>...`, `--delimiter`, `--encoding` | V1 |
-| `checkmate import github` | `--repo <OWNER/NAME>`, `--label <L>`, `--state open\|closed\|all` | V1 |
-| `checkmate import gitlab` | `--project <ID\|PATH>`, `--label <L>`, `--state` | V1 |
-| `checkmate import <external>` | `--query <JSON>` | V1 |
+| `rulelink import file <FILE>` | `--origin <KIND>` | MVP |
+| `rulelink import jira` | `--jql <JQL>`, `--project <KEY>`, `--since <DATE\|cursor>`, `--edition auto\|cloud\|datacenter`, `--pattern <REGEX>` | V1 |
+| `rulelink import csv <FILE>` | `--map <COLUMN>=<FIELD>...`, `--delimiter`, `--encoding` | V1 |
+| `rulelink import github` | `--repo <OWNER/NAME>`, `--label <L>`, `--state open\|closed\|all` | V1 |
+| `rulelink import gitlab` | `--project <ID\|PATH>`, `--label <L>`, `--state` | V1 |
+| `rulelink import <external>` | `--query <JSON>` | V1 |
 
 Common options: `--dry-run`, `--yes`, `--merge skip|update|replace`, `--allow-similar`, `--update-validated`, `--limit <N>`, `--format human|json`.
 
@@ -304,7 +304,7 @@ Apply? [y/N]
 [import.jira]
 url = "https://acme.atlassian.net"
 edition = "auto"
-auth = { email = "${env:JIRA_EMAIL}", token = "${env:CHECKMATE_JIRA_TOKEN}" }
+auth = { email = "${env:JIRA_EMAIL}", token = "${env:RULELINK_JIRA_TOKEN}" }
 default_jql = "project = FAC AND labels = business-rule"
 page_size = 100
 timeout = "30s"
@@ -312,7 +312,7 @@ timeout = "30s"
 
 ### 5.3 JSON output
 
-Schema `checkmate/import-outcome/v1`: `plan` (changes), `report` (additions, updates, conflicts, duplicates, ignored items, each with its source reference), `applied` (fingerprint), `cursor`.
+Schema `rulelink/import-outcome/v1`: `plan` (changes), `report` (additions, updates, conflicts, duplicates, ignored items, each with its source reference), `applied` (fingerprint), `cursor`.
 
 ## 6. Interactions
 

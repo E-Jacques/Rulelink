@@ -1,7 +1,7 @@
 # 03 — Rule ↔ code linking
 
 > The heart of the promise: every rule stays attached to its code. This component finds `@rule` annotations in the code, builds the two-way index, and answers "which rules are in this file?" and "where is this rule?".
-> Crates: `checkmate-link` (domain: grammar, index, queries), `adapters/scan-fs` (file system traversal).
+> Crates: `rulelink-link` (domain: grammar, index, queries), `adapters/scan-fs` (file system traversal).
 > See also: [01 Registry](01-rule-registry.md), [04 Checks](04-checks.md), [08 IDE](08-ide-integration.md).
 
 ## 1. Role and scope
@@ -30,7 +30,7 @@
 | Implementation or test classification by path pattern | ● | | |
 | `explain`, `where`, `scan` | ● | | |
 | `annotate` (insertion and removal) | ● | | |
-| On-disk index cache (`.checkmate/cache`) | | ● | |
+| On-disk index cache (`.rulelink/cache`) | | ● | |
 | Incremental index for the LSP server | | ● | |
 | Application mapping by path (monorepo) | | ● | |
 | Labels shown on the implementation (`explain` output, LSP hover) | | ● | |
@@ -39,7 +39,7 @@
 
 ## 3. Technical constraints
 
-- Traversal via the `ignore` crate (`WalkParallel`): honours `.gitignore`, `.ignore`, `.checkmateignore`, and the `scan.include` / `scan.exclude` patterns.
+- Traversal via the `ignore` crate (`WalkParallel`): honours `.gitignore`, `.ignore`, `.rulelinkignore`, and the `scan.include` / `scan.exclude` patterns.
 - Reading with `grep-searcher` or `memchr`: look for the marker (`@rule`) as bytes first, and parse only candidate lines. Binary files and files above `scan.max_file_size` (default: 2 MB) are skipped.
 - Encoding: UTF-8 expected; UTF-16 detected by BOM and converted; any other encoding skipped with a warning at `-v`.
 - Index paths are relative to the root, with `/` as separator, including on Windows. Lines and columns start at 1.
@@ -317,7 +317,7 @@ Placement rules:
 
 ## 6. API and entry points
 
-### 6.1 `checkmate-link` crate
+### 6.1 `rulelink-link` crate
 
 ```rust
 pub struct ScanConfig { pub root: PathBuf, pub tag: String, pub id_pattern: Regex,
@@ -340,12 +340,12 @@ pub fn plan_annotation(file_text: &str, path: &RelPath, line: u32, ids: &[RuleId
 
 | Command | Arguments and options | Output | Release |
 |---|---|---|---|
-| `checkmate explain <PATH>[:LINE]` | `--format human\|json\|markdown`, `--status <S>`, `--with-statement` | Rules cited in the file (or at the line), with title, status, labels, statement on request | MVP |
-| `checkmate where <ID>...` | `--kind impl\|test\|doc`, `--format human\|json\|vimgrep`, `--first`, `--permalink` | `path:line:column` locations | MVP |
-| `checkmate scan` | `--paths <P>...`, `--format json\|ndjson`, `--stats` | Raw index, for debugging and tooling | MVP |
-| `checkmate annotate <PATH>:<LINE> <ID>...` | `--remove`, `--dry-run`, `--placement above\|inline\|doc` | Inserts or removes, prints the diff | MVP |
+| `rulelink explain <PATH>[:LINE]` | `--format human\|json\|markdown`, `--status <S>`, `--with-statement` | Rules cited in the file (or at the line), with title, status, labels, statement on request | MVP |
+| `rulelink where <ID>...` | `--kind impl\|test\|doc`, `--format human\|json\|vimgrep`, `--first`, `--permalink` | `path:line:column` locations | MVP |
+| `rulelink scan` | `--paths <P>...`, `--format json\|ndjson`, `--stats` | Raw index, for debugging and tooling | MVP |
+| `rulelink annotate <PATH>:<LINE> <ID>...` | `--remove`, `--dry-run`, `--placement above\|inline\|doc` | Inserts or removes, prints the diff | MVP |
 
-Example `checkmate explain src/billing/vat.rs`:
+Example `rulelink explain src/billing/vat.rs`:
 
 ```
 src/billing/vat.rs — 2 rules
@@ -356,11 +356,11 @@ src/billing/vat.rs — 2 rules
           ⚠ rule still proposed (CM005)
 ```
 
-Example `checkmate where RULE-042 --format json`:
+Example `rulelink where RULE-042 --format json`:
 
 ```json
 {
-  "schema": "checkmate/where/v1",
+  "schema": "rulelink/where/v1",
   "results": [
     {
       "id": "RULE-042",
@@ -401,5 +401,5 @@ flowchart LR
 
 No open points remain. Two options were considered and rejected.
 
-- **Annotations outside comments** (attributes such as `#[rule("RULE-042")]` in Rust or `@Rule("RULE-042")` in Java). Rejected: the notation suggests that something happens behind the scenes, such as runtime registration or compile-time validation, whereas Checkmate does nothing of the sort. The annotation is only text read by the scanner. An attribute would also mislead readers into thinking the link is enforced by the language toolchain.
+- **Annotations outside comments** (attributes such as `#[rule("RULE-042")]` in Rust or `@Rule("RULE-042")` in Java). Rejected: the notation suggests that something happens behind the scenes, such as runtime registration or compile-time validation, whereas Rulelink does nothing of the sort. The annotation is only text read by the scanner. An attribute would also mislead readers into thinking the link is enforced by the language toolchain.
 - **Range annotations** (`@rule-begin` / `@rule-end`). Rejected: paired markers are hard to maintain (they drift, get orphaned or unbalanced as code moves) and are not practical in real use. They would also make the grammar heavier. A single-line `@rule` stays the only form.

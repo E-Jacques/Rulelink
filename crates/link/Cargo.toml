@@ -1,5 +1,5 @@
 [package]
-name = "checkmate-link"
+name = "rulelink-link"
 description = "Code linking: rule annotations and their resolution."
 version.workspace = true
 edition.workspace = true
@@ -13,4 +13,4 @@ workspace = true
 
 [dependencies]
 thiserror.workspace = true
-checkmate-model.workspace = true
+rulelink-model.workspace = true

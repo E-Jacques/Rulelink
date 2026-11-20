@@ -1,4 +1,4 @@
-/// Errors raised by `checkmate-adapter-external`.
+/// Errors raised by `rulelink-adapter-external`.
 #[derive(Debug, thiserror::Error)]
 pub enum Error {
     /// The requested capability is not implemented yet.

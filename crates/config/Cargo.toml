@@ -1,6 +1,6 @@
 [package]
-name = "checkmate-config"
-description = "Project discovery and configuration (checkmate.toml)."
+name = "rulelink-config"
+description = "Project discovery and configuration (rulelink.toml)."
 version.workspace = true
 edition.workspace = true
 rust-version.workspace = true
@@ -15,4 +15,4 @@ workspace = true
 thiserror.workspace = true
 serde.workspace = true
 toml.workspace = true
-checkmate-model.workspace = true
+rulelink-model.workspace = true

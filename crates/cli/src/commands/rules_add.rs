@@ -1,8 +1,8 @@
 //! `rules add`.
 
-use checkmate_app::Error;
-use checkmate_app::RuleDraft;
 use clap::Args;
+use rulelink_app::Error;
+use rulelink_app::RuleDraft;
 
 /// Arguments of `rules add`.
 #[derive(Debug, Args)]
@@ -37,7 +37,7 @@ pub(super) fn run(args: &RulesAddArgs) -> Result<(), Error> {
         &args.excluded,
     )?;
     let root = std::env::current_dir().map_err(|e| Error::Internal(e.to_string()))?;
-    let id = checkmate_app::rules::add(&root, draft)?;
+    let id = rulelink_app::rules::add(&root, draft)?;
     println!("Created {} (proposed)", id.0);
     Ok(())
 }

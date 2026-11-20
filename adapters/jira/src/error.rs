@@ -1,4 +1,4 @@
-/// Errors raised by `checkmate-adapter-jira`.
+/// Errors raised by `rulelink-adapter-jira`.
 #[derive(Debug, thiserror::Error)]
 pub enum Error {
     /// The requested capability is not implemented yet.

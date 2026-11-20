@@ -1,7 +1,7 @@
 # 02 — Sources of truth and adapter contract
 
 > This component connects business rules to persistence mechanisms, as the Adapter pattern did in the original design. It also publishes the **adapter contract**, which covers all three roles: source, import, publishing.
-> Crates: `checkmate-adapter-sdk` (public contract), `adapters/json`, `adapters/external`, then `adapters/jira-source` in V2.
+> Crates: `rulelink-adapter-sdk` (public contract), `adapters/json`, `adapters/external`, then `adapters/jira-source` in V2.
 > See also: [01 Registry](01-rule-registry.md), [05 Import](05-import.md), [06 Publishing](06-publishing-export.md).
 
 ## 1. Role and scope
@@ -43,7 +43,7 @@ The brief replaces "9 interfaces at the same level" with three roles. One tool c
 | `RuleSource` port, single-file JSON source | ● | | |
 | Canonical, line-oriented, atomic writes with lock and fingerprint | ● | | |
 | Rule positions in the file | ● | | |
-| Published `checkmate-adapter-sdk` contract (native traits) | ● | | |
+| Published `rulelink-adapter-sdk` contract (native traits) | ● | | |
 | Adapter registry (Factory Method, Abstract Factory) | ● | | |
 | JSON directory source | | ● | |
 | External adapter protocol 1.0 + proxy | | ● | |
@@ -51,13 +51,13 @@ The brief replaces "9 interfaces at the same level" with three roles. One tool c
 | `source migrate` (JSON → directory...) | | ● | |
 | `CachedSource`, `ReadOnlySource` decorators | ● read-only | ● cache | |
 | Remote sources: Jira | | | ● |
-| Offline snapshot `.checkmate/source.lock.json` | | | ● |
+| Offline snapshot `.rulelink/source.lock.json` | | | ● |
 | Several repositories sharing one source | | | ● |
 
 ## 4. Technical constraints
 
-- `checkmate-adapter-sdk` depends only on `checkmate-model`, `serde`, `thiserror` and `async-trait` (or native `async fn` in traits, with boxed futures for `dyn`). Its public API is stable within a major version.
-- **Canonical writes** for the JSON source: rules in natural order, keys in schema order, 2-space indentation, LF line endings, trailing newline. Formatting is **line-oriented**, so that two people editing different things touch different lines: every object property on its own line, every array element on its own line (never `["a", "b"]` on one line), every `sequences` and `retired` entry on its own line, no alignment padding, no trailing whitespace. Two writes of the same content produce the same bytes. A merge conflict then lands on the few lines that really differ and can be resolved by hand; `checkmate rules format` rewrites the file canonically afterwards, and `check` reports a file that is not canonical.
+- `rulelink-adapter-sdk` depends only on `rulelink-model`, `serde`, `thiserror` and `async-trait` (or native `async fn` in traits, with boxed futures for `dyn`). Its public API is stable within a major version.
+- **Canonical writes** for the JSON source: rules in natural order, keys in schema order, 2-space indentation, LF line endings, trailing newline. Formatting is **line-oriented**, so that two people editing different things touch different lines: every object property on its own line, every array element on its own line (never `["a", "b"]` on one line), every `sequences` and `retired` entry on its own line, no alignment padding, no trailing whitespace. Two writes of the same content produce the same bytes. A merge conflict then lands on the few lines that really differ and can be resolved by hand; `rulelink rules format` rewrites the file canonically afterwards, and `check` reports a file that is not canonical.
 - **Atomicity**: write to a temporary file in the same directory, `fsync`, then rename. Advisory lock (`fd-lock`) held through the read → fingerprint comparison → write sequence.
 - **Fingerprint**: SHA-256 of the content read. If the fingerprint changed since it was read, the write fails (code 5) and the command can be retried.
 - **Positions**: the JSON loader keeps the range (line, column) of each rule and field. The LSP uses it for "go to definition", and schema diagnostics point to the right line.
@@ -191,7 +191,7 @@ classDiagram
 - `AdapterFamily` is the **Abstract Factory**: each family creates consistent products (the Jira importer and source share `JiraClient`).
 - `AdapterRegistry::source()`, `importer()` and `publisher()` are **Factory Methods** parameterised by `kind`.
 - Native families are registered at compile time, each behind a Cargo feature (`adapter-jira`, `adapter-confluence`...). External families are registered from `[adapters.<name>]` in the configuration.
-- `config_schema()` publishes the schema of the adapter's configuration section. `checkmate doctor` and `checkmate config` validate the configuration against it.
+- `config_schema()` publishes the schema of the adapter's configuration section. `rulelink doctor` and `rulelink config` validate the configuration against it.
 
 ### 5.3 JSON source — **Adapter** + **Memento**
 
@@ -262,7 +262,7 @@ classDiagram
 | `ReadOnlySource` | `check`, `explain`, `where`, `context` | Forbids any write | MVP |
 | `TracingSource` | Always, at `-vv` | Durations and volumes in logs | MVP |
 | `CachedSource` | LSP (long-running process) | Reloads only when the fingerprint changes | V1 |
-| `SnapshotSource` | `check` with a remote source | Reads `.checkmate/source.lock.json`, guarantees offline operation (ADR-008) | V2 |
+| `SnapshotSource` | `check` with a remote source | Reads `.rulelink/source.lock.json`, guarantees offline operation (ADR-008) | V2 |
 
 Typical composition for a `check` with Jira as the source (V2): `TracingSource(ReadOnlySource(SnapshotSource(JiraSource)))`.
 
@@ -275,13 +275,13 @@ Typical composition for a `check` with Jira as the source (V2): `TracingSource(R
 ```mermaid
 sequenceDiagram
     autonumber
-    participant APP as checkmate
+    participant APP as rulelink
     participant PX as ExternalAdapterProxy
-    participant P as checkmate-adapter-notion process
+    participant P as rulelink-adapter-notion process
 
     APP->>PX: importer("notion", cfg)
     PX->>P: starts the declared command
-    PX->>P: initialize {protocol: "1.0", checkmate: "0.6.0", config}
+    PX->>P: initialize {protocol: "1.0", rulelink: "0.6.0", config}
     P-->>PX: {protocol: "1.0", name, version, roles: ["import"], config_schema}
     APP->>PX: fetch(request)
     PX->>P: import/fetch {query, cursor}
@@ -298,7 +298,7 @@ sequenceDiagram
 
 | Method | Parameters | Result | Role |
 |---|---|---|---|
-| `initialize` | `protocol`, `checkmate_version`, `config`, `workspace_root`, `secrets` (only those declared) | `protocol`, `name`, `version`, `roles`, `config_schema?` | All |
+| `initialize` | `protocol`, `rulelink_version`, `config`, `workspace_root`, `secrets` (only those declared) | `protocol`, `name`, `version`, `roles`, `config_schema?` | All |
 | `health` | — | `{ status: ok\|degraded\|error, details }` | All |
 | `source/load` | — | `{ ruleset, fingerprint, positions? }` | Source |
 | `source/fingerprint` | — | `{ fingerprint }` | Source |
@@ -317,7 +317,7 @@ Safeguards:
 - Explicit declaration is mandatory; there is never any implicit discovery:
   ```toml
   [adapters.notion]
-  command = ["python3", "-m", "checkmate_notion"]
+  command = ["python3", "-m", "rulelink_notion"]
   roles = ["import"]
   secrets = ["NOTION_TOKEN"]
   timeout = "60s"
@@ -328,7 +328,7 @@ Safeguards:
 
 ### 5.6 Conformance kit — **Template Method** pattern
 
-`checkmate-adapter-sdk::conformance` provides a test suite with a fixed skeleton. The adapter supplies only the hooks (factory, seed data, cleanup). The same suite runs against a native or an external adapter: `checkmate adapters check <name>`.
+`rulelink-adapter-sdk::conformance` provides a test suite with a fixed skeleton. The adapter supplies only the hooks (factory, seed data, cleanup). The same suite runs against a native or an external adapter: `rulelink adapters check <name>`.
 
 | Scenario | Source | Import | Publishing |
 |---|:-:|:-:|:-:|
@@ -342,15 +342,15 @@ Safeguards:
 
 ### 5.7 Source migration (V1)
 
-`checkmate source migrate --to json-dir --path rules/` reads the current source, writes the target, checks that both `RuleSet`s are equal, then updates `checkmate.toml`. The command is a **Command** composed of reversible sub-commands: on failure, the target write is undone and the configuration is left untouched.
+`rulelink source migrate --to json-dir --path rules/` reads the current source, writes the target, checks that both `RuleSet`s are equal, then updates `rulelink.toml`. The command is a **Command** composed of reversible sub-commands: on failure, the target write is undone and the configuration is left untouched.
 
 ### 5.8 Remote source and snapshot (V2)
 
 ```mermaid
 flowchart LR
-    pull["checkmate source pull"] -->|"network"| remote["Jira / external adapter"]
-    remote --> lock[".checkmate/source.lock.json<br/>versioned in Git"]
-    lock --> check["checkmate check<br/>offline"]
+    pull["rulelink source pull"] -->|"network"| remote["Jira / external adapter"]
+    remote --> lock[".rulelink/source.lock.json<br/>versioned in Git"]
+    lock --> check["rulelink check<br/>offline"]
     ci["Scheduled CI"] -->|"source pull + PR on change"| lock
 ```
 
@@ -364,14 +364,14 @@ flowchart LR
 
 | Command | Options | Effect | Release |
 |---|---|---|---|
-| `checkmate source info` | `--format` | Kind, location, fingerprint, capabilities, rule counts by status | MVP |
-| `checkmate source pull` | `--check` (fails if the snapshot is stale) | Refreshes the snapshot of a remote source | V2 |
-| `checkmate source migrate` | `--to <KIND>`, target options, `--dry-run` | Changes the source of truth | V1 |
-| `checkmate adapters list` | `--format` | Native and external adapters, roles, versions | V1 |
-| `checkmate adapters check <NAME>` | `--role`, `--format` | Conformance kit | V1 |
-| `checkmate adapters new <NAME>` | `--lang python\|typescript\|rust` | Generates an adapter skeleton | V1 |
+| `rulelink source info` | `--format` | Kind, location, fingerprint, capabilities, rule counts by status | MVP |
+| `rulelink source pull` | `--check` (fails if the snapshot is stale) | Refreshes the snapshot of a remote source | V2 |
+| `rulelink source migrate` | `--to <KIND>`, target options, `--dry-run` | Changes the source of truth | V1 |
+| `rulelink adapters list` | `--format` | Native and external adapters, roles, versions | V1 |
+| `rulelink adapters check <NAME>` | `--role`, `--format` | Conformance kit | V1 |
+| `rulelink adapters new <NAME>` | `--lang python\|typescript\|rust` | Generates an adapter skeleton | V1 |
 
-### 6.2 `checkmate-adapter-sdk` crate API
+### 6.2 `rulelink-adapter-sdk` crate API
 
 | Element | Kind |
 |---|---|
@@ -409,4 +409,4 @@ flowchart LR
 No open points remain.
 
 - **External protocol transport**: stdio only in 1.0. An HTTP transport could serve hosted adapters, but nothing requires it yet; revisit if a hosted adapter is requested.
-- **Database as a source**: Checkmate ships no SQL adapter. A database with a mapping layer is an API, and the external adapter protocol already covers it. A team wraps its database in an external adapter that does the mapping and the writes. If demand appears, a template adapter project containing only the mapping code can be provided (a variant of the reference Python adapter).
+- **Database as a source**: Rulelink ships no SQL adapter. A database with a mapping layer is an API, and the external adapter protocol already covers it. A team wraps its database in an external adapter that does the mapping and the writes. If demand appears, a template adapter project containing only the mapping code can be provided (a variant of the reference Python adapter).

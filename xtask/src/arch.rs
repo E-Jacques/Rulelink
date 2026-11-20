@@ -5,10 +5,10 @@ use std::collections::{HashMap, HashSet};
 use std::process::Command;
 
 const DOMAIN: &[&str] = &[
-    "checkmate-model",
-    "checkmate-registry",
-    "checkmate-link",
-    "checkmate-check",
+    "rulelink-model",
+    "rulelink-registry",
+    "rulelink-link",
+    "rulelink-check",
 ];
 const FORBIDDEN: &[&str] = &[
     "tokio",
@@ -20,7 +20,7 @@ const FORBIDDEN: &[&str] = &[
     "async-io",
 ];
 /// Packages allowed to define `fn main`.
-const MAIN_ALLOWED: &[&str] = &["checkmate-cli", "xtask"];
+const MAIN_ALLOWED: &[&str] = &["rulelink-cli", "xtask"];
 
 pub fn run() -> Result<(), String> {
     let out = Command::new("cargo")
@@ -91,7 +91,7 @@ fn check_main(meta: &Value, errors: &mut Vec<String>) {
         else {
             continue;
         };
-        if !name.starts_with("checkmate-") && name != "xtask" {
+        if !name.starts_with("rulelink-") && name != "xtask" {
             continue;
         }
         if MAIN_ALLOWED.contains(&name) {

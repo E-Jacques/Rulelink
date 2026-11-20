@@ -1,5 +1,5 @@
 [package]
-name = "checkmate-adapter-gitlab"
+name = "rulelink-adapter-gitlab"
 description = "GitLab adapter (V1)."
 version.workspace = true
 edition.workspace = true
@@ -13,4 +13,4 @@ workspace = true
 
 [dependencies]
 thiserror.workspace = true
-checkmate-adapter-sdk.workspace = true
+rulelink-adapter-sdk.workspace = true

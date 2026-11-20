@@ -8,23 +8,23 @@ version = "0.1.0"
 edition = "2024"
 rust-version = "1.85"
 license = "MIT"
-repository = "https://github.com/E-Jacques/checkmate"
+repository = "https://github.com/E-Jacques/rulelink"
 
 [workspace.dependencies]
-checkmate-model = { path = "crates/model", version = "0.1.0" }
-checkmate-registry = { path = "crates/registry", version = "0.1.0" }
-checkmate-link = { path = "crates/link", version = "0.1.0" }
-checkmate-check = { path = "crates/check", version = "0.1.0" }
-checkmate-import = { path = "crates/import", version = "0.1.0" }
-checkmate-publish = { path = "crates/publish", version = "0.1.0" }
-checkmate-adapter-sdk = { path = "crates/adapter-sdk", version = "0.1.0" }
-checkmate-config = { path = "crates/config", version = "0.1.0" }
-checkmate-app = { path = "crates/app", version = "0.1.0" }
-checkmate-lsp = { path = "crates/lsp", version = "0.1.0" }
-checkmate-adapter-json = { path = "adapters/json", version = "0.1.0" }
-checkmate-adapter-scan-fs = { path = "adapters/scan-fs", version = "0.1.0" }
-checkmate-adapter-git = { path = "adapters/git", version = "0.1.0" }
-checkmate-adapter-external = { path = "adapters/external", version = "0.1.0" }
+rulelink-model = { path = "crates/model", version = "0.1.0" }
+rulelink-registry = { path = "crates/registry", version = "0.1.0" }
+rulelink-link = { path = "crates/link", version = "0.1.0" }
+rulelink-check = { path = "crates/check", version = "0.1.0" }
+rulelink-import = { path = "crates/import", version = "0.1.0" }
+rulelink-publish = { path = "crates/publish", version = "0.1.0" }
+rulelink-adapter-sdk = { path = "crates/adapter-sdk", version = "0.1.0" }
+rulelink-config = { path = "crates/config", version = "0.1.0" }
+rulelink-app = { path = "crates/app", version = "0.1.0" }
+rulelink-lsp = { path = "crates/lsp", version = "0.1.0" }
+rulelink-adapter-json = { path = "adapters/json", version = "0.1.0" }
+rulelink-adapter-scan-fs = { path = "adapters/scan-fs", version = "0.1.0" }
+rulelink-adapter-git = { path = "adapters/git", version = "0.1.0" }
+rulelink-adapter-external = { path = "adapters/external", version = "0.1.0" }
 clap = { version = "4", features = ["derive"] }
 serde = { version = "1", features = ["derive"] }
 serde_json = "1"

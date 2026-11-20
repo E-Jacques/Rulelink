@@ -1,4 +1,4 @@
-# Spec: Checkmate MVP
+# Spec: Rulelink MVP
 
 - Status: open
 - Labels: ready-for-agent
@@ -22,11 +22,11 @@ A local, npm-installed CLI that the developer sets up alone in a repository, wit
 
 All technical elements (keys, commands, messages) are English; only Rule values may be in another language (ADR-0002).
 
-The MVP is done when: at least 50% of retro-documented Rules are accepted without rewriting; three external developers go from `npx checkmate init` to a first clean `check` in under 15 minutes, including one hand-written CI workflow running `npx checkmate check`; and agents with the skills installed get at least 8 of 10 tasks right (right Rules consulted, code annotated).
+The MVP is done when: at least 50% of retro-documented Rules are accepted without rewriting; three external developers go from `npx rulelink init` to a first clean `check` in under 15 minutes, including one hand-written CI workflow running `npx rulelink check`; and agents with the skills installed get at least 8 of 10 tasks right (right Rules consulted, code annotated).
 
 ## User Stories
 
-1. As a developer, I want to run `npx checkmate init` in my repository, so that I get a configuration and an empty Source without any approval or purchase.
+1. As a developer, I want to run `npx rulelink init` in my repository, so that I get a configuration and an empty Source without any approval or purchase.
 2. As a developer, I want `init` to detect an existing setup and refuse to overwrite it, so that I never lose my Rules.
 3. As a developer, I want `doctor` to diagnose my configuration, Source and environment, so that I can fix setup problems quickly.
 4. As a developer, I want to configure the Identifier prefix (default `RULE`), so that Identifiers match my project's conventions.
@@ -59,7 +59,7 @@ The MVP is done when: at least 50% of retro-documented Rules are accepted withou
 31. As an agent, I want `check --format json`, so that I can parse Findings reliably.
 32. As an agent, I want `check --changed` to only report Findings about changed files and the Rules they touch, so that the loop is fast on large repositories.
 33. As a developer, I want a distinct non-zero exit code on errors, so that a CI step fails correctly.
-34. As a developer, I want to run `npx checkmate check` in a workflow I write by hand, so that I get CI enforcement without a maintained Action.
+34. As a developer, I want to run `npx rulelink check` in a workflow I write by hand, so that I get CI enforcement without a maintained Action.
 35. As a developer, I want the scan to find `@rule` comments in many languages and comment styles, so that the link works whatever the stack.
 36. As a developer, I want one file to cite several Rules and one Rule to appear in several places, tests included, so that the link reflects reality.
 37. As a developer, I want the scan to respect ignore files and configured exclusions, so that vendored or generated code is not scanned.
@@ -78,7 +78,7 @@ The MVP is done when: at least 50% of retro-documented Rules are accepted withou
 50. As a developer, I want a retro-documentation skill, so that my agent proposes Rules from legacy code that I can review.
 51. As a developer, I want both skills installed by hand with `npx skills add` or APM, so that no installer is required.
 52. As a developer, I want the skills' reference files (annotation grammar, statuses) to match the real CLI behaviour, so that agents are not misled.
-53. As a developer, I want to install via `npx checkmate` or `cargo install`, so that I choose my channel.
+53. As a developer, I want to install via `npx rulelink` or `cargo install`, so that I choose my channel.
 54. As a contributor, I want release archives and the npm package built by dist from a tag, so that releases are reproducible.
 55. As a user on Linux, macOS or Windows, I want the same behaviour on each, so that my team can mix platforms.
 56. As a non-English team, I want Rule values in my language, so that rules read naturally while the tool stays English.
@@ -97,13 +97,13 @@ The MVP is done when: at least 50% of retro-documented Rules are accepted withou
 - **Reports**: `human` and `json` only. The JSON report schema is a contract consumed by the skills.
 - **Import**: JSON file only; produces `proposed` Rules, never `validated`; imported text is untrusted.
 - **`context`** returns the Rules linked to a path or area in a form suited to agents (human and JSON).
-- **Skills**: `checkmate-consult` and `checkmate-retrodoc` live in the skills folder, with reference files kept in sync by a repo task.
+- **Skills**: `rulelink-consult` and `rulelink-retrodoc` live in the skills folder, with reference files kept in sync by a repo task.
 - **Configuration**: created by `init`; keys are English; no locale or `--lang` option.
 - **Distribution**: npm package plus `cargo install`; GitHub release archives built by dist.
 
 ## Testing Decisions
 
-- **Single seam: the CLI process.** Tests run the real `checkmate` binary against fixture repositories in temporary directories and assert on stdout, stderr, exit code and resulting files. Internal crates are not tested through their own interfaces for behaviour already reachable from the CLI.
+- **Single seam: the CLI process.** Tests run the real `rulelink` binary against fixture repositories in temporary directories and assert on stdout, stderr, exit code and resulting files. Internal crates are not tested through their own interfaces for behaviour already reachable from the CLI.
 - A good test asserts external behaviour only: a given repository state and command produce given Findings, output and file contents. It never asserts on internal types, module layout or call order.
 - Cover through the seam: every lifecycle transition (allowed and refused), Identifier allocation and non-reuse, Canonical form round-trip (`rules format` is idempotent; two independent edits merge cleanly in Git), each `CMxxx` Finding with a minimal fixture, `--changed` scoping on a Git fixture, `annotate` idempotency, Import always yielding `proposed`, hostile Import input, `explain`/`where`/`context` for known, unknown and retired Identifiers, JSON report shape against its schema, and exit codes.
 - Add one end-to-end journey mirroring the exit criterion: `init`, import or create Rules, annotate code, `check` clean, then run the same `check` as a hand-written CI step.
@@ -114,7 +114,7 @@ The MVP is done when: at least 50% of retro-documented Rules are accepted withou
 
 - Anything marked V1 or V2 in the features table: labels, filter language, directory source, `source migrate`, external adapters, Jira/CSV/GitHub/GitLab import, Markdown/CSV/JSON export, Confluence publishing, LSP and IDE extensions, baseline, pre-commit hook, self-approval warning, cycle detection, `CM006`–`CM008`, onboarding and other skills, tree-sitter, remote sources.
 - GitHub Action, GitLab CI component, SARIF and `github` reporters, workflow generation by `init`.
-- The `checkmate skills` installer, managed `AGENTS.md` section, shell/PowerShell installers, Homebrew/Scoop/winget, Docker image.
+- The `rulelink skills` installer, managed `AGENTS.md` section, shell/PowerShell installers, Homebrew/Scoop/winget, Docker image.
 - Judging whether code correctly implements a Rule: `check` proves the link, not correctness.
 - Writing to remote sources.
 

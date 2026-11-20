@@ -11,13 +11,13 @@ Start from [templates/cli-documentation-template.md](templates/cli-documentation
 
 ## Where the page goes
 
-`crates/cli/docs/reference/<command>.md`, one file per command, named after the command (`init.md` for `checkmate init`). For a subcommand, use `<command>-<subcommand>.md`.
+`crates/cli/docs/reference/<command>.md`, one file per command, named after the command (`init.md` for `rulelink init`). For a subcommand, use `<command>-<subcommand>.md`.
 
 ## Sections
 
 Keep them in this order.
 
-1. **Title** (`# …`): the command as typed, e.g. `# checkmate init`.
+1. **Title** (`# …`): the command as typed, e.g. `# rulelink init`.
 2. **Description**: one to three sentences. Say what the command does and when to use it. Do not describe the implementation.
 3. **Example**: a single `bash` block with the most common, copy-pasteable invocation. Add a second block only if a distinct use case needs it.
 4. **Arguments**: positional parameters. Omit the whole section, heading included, if the command has none.

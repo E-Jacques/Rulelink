@@ -1,9 +1,9 @@
-use checkmate_app::Error;
-use checkmate_app::runtime::{
+use rulelink_app::Error;
+use rulelink_app::runtime::{
     AppContext, CancellationToken, Entrypoint, Outcome, ShutdownReason, TelemetryConfig, UsageError,
 };
 
-/// `Entrypoint` of the `checkmate lsp` subcommand.
+/// `Entrypoint` of the `rulelink lsp` subcommand.
 #[derive(Debug, Default)]
 pub struct LspEntrypoint;
 
@@ -11,7 +11,7 @@ impl Entrypoint for LspEntrypoint {
     type Args = ();
 
     fn name(&self) -> &'static str {
-        "checkmate-lsp"
+        "rulelink-lsp"
     }
 
     fn parse_args(&self) -> Result<Self::Args, UsageError> {

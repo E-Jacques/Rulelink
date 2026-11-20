@@ -1,4 +1,4 @@
-//! Harness for end-to-end tests: runs the real `checkmate` binary against a fixture
+//! Harness for end-to-end tests: runs the real `rulelink` binary against a fixture
 //! repository in a temporary directory.
 
 use std::fs;
@@ -6,7 +6,7 @@ use std::path::{Path, PathBuf};
 use std::process::Command;
 use std::sync::OnceLock;
 
-/// Result of one `checkmate` invocation.
+/// Result of one `rulelink` invocation.
 #[derive(Debug)]
 pub struct Run {
     /// Process exit code.
@@ -63,13 +63,13 @@ impl Repo {
         fs::read_to_string(self.path().join(rel)).ok()
     }
 
-    /// Runs `checkmate <args>` in the repository root.
+    /// Runs `rulelink <args>` in the repository root.
     ///
     /// # Panics
     /// Panics if the binary cannot be built or started.
     #[must_use]
     pub fn run(&self, args: &[&str]) -> Run {
-        let output = Command::new(checkmate_bin())
+        let output = Command::new(rulelink_bin())
             .args(args)
             .current_dir(self.path())
             .output()
@@ -82,27 +82,27 @@ impl Repo {
     }
 }
 
-/// Builds (once) and locates the `checkmate` binary.
+/// Builds (once) and locates the `rulelink` binary.
 ///
 /// # Panics
 /// Panics if the build fails.
 #[must_use]
-pub fn checkmate_bin() -> PathBuf {
+pub fn rulelink_bin() -> PathBuf {
     static BIN: OnceLock<PathBuf> = OnceLock::new();
     BIN.get_or_init(|| {
         let root = PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../..");
         let cargo = std::env::var("CARGO").unwrap_or_else(|_| "cargo".into());
         let status = Command::new(cargo)
-            .args(["build", "--quiet", "-p", "checkmate-cli"])
+            .args(["build", "--quiet", "-p", "rulelink-cli"])
             .current_dir(&root)
             .status()
             .expect("cargo runs");
-        assert!(status.success(), "building checkmate-cli failed");
+        assert!(status.success(), "building rulelink-cli failed");
         let target =
             std::env::var_os("CARGO_TARGET_DIR").map_or_else(|| root.join("target"), PathBuf::from);
         target
             .join("debug")
-            .join(format!("checkmate{}", std::env::consts::EXE_SUFFIX))
+            .join(format!("rulelink{}", std::env::consts::EXE_SUFFIX))
     })
     .clone()
 }

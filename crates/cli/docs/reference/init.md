@@ -1,11 +1,11 @@
-# checkmate init
+# rulelink init
 
-Sets up Checkmate in the current directory by creating `checkmate.toml` and an empty rules file at `rules/rules.json`. Run it once, at the root of your project, before you add any Rule. It stops without changing anything if either file already exists.
+Sets up Rulelink in the current directory by creating `rulelink.toml` and an empty rules file at `rules/rules.json`. Run it once, at the root of your project, before you add any Rule. It stops without changing anything if either file already exists.
 
 ## Example
 
 ```bash
-checkmate init
+rulelink init
 ```
 
 ## Options

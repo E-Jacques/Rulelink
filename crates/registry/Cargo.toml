@@ -1,5 +1,5 @@
 [package]
-name = "checkmate-registry"
+name = "rulelink-registry"
 description = "Rule registry: lifecycle, identifiers and queries."
 version.workspace = true
 edition.workspace = true
@@ -13,4 +13,4 @@ workspace = true
 
 [dependencies]
 thiserror.workspace = true
-checkmate-model.workspace = true
+rulelink-model.workspace = true

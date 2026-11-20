@@ -1,5 +1,5 @@
 [package]
-name = "checkmate-adapter-sdk"
+name = "rulelink-adapter-sdk"
 description = "Adapter contract: traits, protocol types and conformance kit."
 version.workspace = true
 edition.workspace = true
@@ -13,4 +13,4 @@ workspace = true
 
 [dependencies]
 thiserror.workspace = true
-checkmate-model.workspace = true
+rulelink-model.workspace = true

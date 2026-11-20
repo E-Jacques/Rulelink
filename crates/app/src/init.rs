@@ -4,12 +4,12 @@ use std::fs::{self, OpenOptions};
 use std::io::Write;
 use std::path::Path;
 
-use checkmate_config::{CONFIG_FILE, DEFAULT_SOURCE_PATH, IdPrefix};
-use checkmate_model::RuleSet;
+use rulelink_config::{CONFIG_FILE, DEFAULT_SOURCE_PATH, IdPrefix};
+use rulelink_model::RuleSet;
 
 use crate::Error;
 
-/// Initialises Checkmate in `root`. Refuses, touching nothing, if a setup already exists.
+/// Initialises Rulelink in `root`. Refuses, touching nothing, if a setup already exists.
 ///
 /// # Errors
 /// Returns [`Error::Config`] for an invalid prefix or an existing setup, and
@@ -28,8 +28,8 @@ pub fn init(root: &Path, prefix: &str) -> Result<(), Error> {
             )));
         }
     }
-    checkmate_adapter_json::create_source(&source_path, &RuleSet::empty()).map_err(internal)?;
-    if let Err(err) = write_new(&config_path, &checkmate_config::render_initial(&prefix)) {
+    rulelink_adapter_json::create_source(&source_path, &RuleSet::empty()).map_err(internal)?;
+    if let Err(err) = write_new(&config_path, &rulelink_config::render_initial(&prefix)) {
         let _ = fs::remove_file(&source_path);
         return Err(internal(err));
     }

@@ -1,6 +1,6 @@
 ---
 name: cli-implement
-description: Workflow for implementing a new CLI command or subcommand in checkmate, from end-user docs to pull request. Use when adding or changing a command in `crates/cli`.
+description: Workflow for implementing a new CLI command or subcommand in rulelink, from end-user docs to pull request. Use when adding or changing a command in `crates/cli`.
 ---
 
 # Implementing a CLI command

@@ -8,7 +8,7 @@ tasks:
   deny:
     command: 'cargo deny check'
   e2e:
-    command: 'cargo nextest run -p checkmate-e2e'
+    command: 'cargo nextest run -p rulelink-e2e'
   docs-check:
     command: 'cargo xtask docs-check'
   skills-lint:

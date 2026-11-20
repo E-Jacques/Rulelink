@@ -1,6 +1,6 @@
-# Checkmate
+# Rulelink
 
-Checkmate links business rules to the code that implements them, and reports which rules have no code.
+Rulelink links business rules to the code that implements them, and reports which rules have no code.
 
 ## Language
 

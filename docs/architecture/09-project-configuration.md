@@ -1,14 +1,14 @@
 # 09 — Project, configuration and application layer
 
 > This component holds everything together: it discovers the workspace, loads the configuration, wires the adapters, and exposes the **facade** and the **command bus** used by every entry point (CLI, LSP). It also owns `init`, the first contact with the tool (target: first `check` in under 15 minutes).
-> Crates: `checkmate-config`, `checkmate-app`, `checkmate-cli` (binary).
+> Crates: `rulelink-config`, `rulelink-app`, `rulelink-cli` (binary).
 > See also: [00 Global architecture](00-global-architecture.md).
 
 ## 1. Role and scope
 
 **Responsibilities**
 
-- Find the project root and the `checkmate.toml` file.
+- Find the project root and the `rulelink.toml` file.
 - Load layered configuration, validate it, resolve secrets.
 - Build the application context: decorated source, scanner, adapters, check policy.
 - Define every action as a command, execute it through a bus with middleware, publish events.
@@ -23,14 +23,14 @@
 
 | Feature | MVP | V1 | V2 |
 |---|:-:|:-:|:-:|
-| `checkmate.toml`, root discovery | ● | | |
+| `rulelink.toml`, root discovery | ● | | |
 | Layered configuration + `${env:VAR}` | ● | | |
 | Interactive and non-interactive `init`, templates | ● | | |
 | CI workflow generation (GitHub, GitLab) by `init` | | | ● |
 | `doctor`, `config show`, `config get/set`, `version`, `completions`, `schema` | ● | | |
 | Command bus, middleware, events | ● | | |
 | `migrate` (configuration and rule format) | | ● | |
-| `checkmate auth`: secrets in the OS keychain | | ● | |
+| `rulelink auth`: secrets in the OS keychain | | ● | |
 | Monorepo: `[applications]` by path | | ● | |
 | Environment profiles (`--profile ci`) | | ● | |
 | Source shared across repositories | | | ● |
@@ -38,15 +38,15 @@
 ## 3. Technical constraints
 
 - TOML format (`toml_edit` for writes: comments and ordering are preserved when `config set` changes the file).
-- The configuration is described by Rust types, from which a JSON Schema is generated (`checkmate schema config`), usable in editors through Taplo or `#:schema`.
+- The configuration is described by Rust types, from which a JSON Schema is generated (`rulelink schema config`), usable in editors through Taplo or `#:schema`.
 - Unknown keys are errors (with a suggestion of the closest key), except under `[adapters.*]` and `x-*`.
 - No plain-text secret is accepted: a `token`, `password` or `secret` key whose value is not a reference (`${env:...}`, `${keyring:...}`) makes loading fail.
 - The CLI detects CI (`CI=true` and provider-specific variables): no interactive prompts, no colour by default, and `github` format added automatically under GitHub Actions if no format is requested.
 
-## 4. `checkmate.toml` file
+## 4. `rulelink.toml` file
 
 ```toml
-#:schema https://checkmate.dev/schemas/config/v1.json
+#:schema https://rulelink.dev/schemas/config/v1.json
 version = 1
 
 [project]
@@ -97,15 +97,15 @@ permalink_template = "{web_url}/blob/{commit}/{path}#L{line}"
 
 ```mermaid
 flowchart LR
-    D["Defaults<br/>(compiled in)"] --> U["User<br/>~/.config/checkmate/config.toml<br/>(profiles, credentials)"]
-    U --> P["Project<br/>checkmate.toml"]
-    P --> L["Local, unversioned<br/>checkmate.local.toml"]
-    L --> E["Environment<br/>CHECKMATE_*"]
+    D["Defaults<br/>(compiled in)"] --> U["User<br/>~/.config/rulelink/config.toml<br/>(profiles, credentials)"]
+    U --> P["Project<br/>rulelink.toml"]
+    P --> L["Local, unversioned<br/>rulelink.local.toml"]
+    L --> E["Environment<br/>RULELINK_*"]
     E --> F["CLI options"]
     F --> R["Resolved configuration<br/>+ provenance of each value"]
 ```
 
-Each layer is a `ConfigLayer` link that completes the partial value and passes it on. `ConfigBuilder` (**Builder**) assembles the chain, then validates and produces an immutable `ResolvedConfig`. The provenance of each value is kept: `checkmate config show --resolved --origin` shows where each setting comes from.
+Each layer is a `ConfigLayer` link that completes the partial value and passes it on. `ConfigBuilder` (**Builder**) assembles the chain, then validates and produces an immutable `ResolvedConfig`. The provenance of each value is kept: `rulelink config show --resolved --origin` shows where each setting comes from.
 
 ```mermaid
 classDiagram
@@ -154,7 +154,7 @@ sequenceDiagram
     participant CTX as AppContext
 
     MAIN->>WS: discover(cwd or -C)
-    WS-->>MAIN: root + path of checkmate.toml
+    WS-->>MAIN: root + path of rulelink.toml
     MAIN->>CB: layers → build()
     CB-->>MAIN: ResolvedConfig
     MAIN->>AR: registers native families + declared external ones
@@ -229,9 +229,9 @@ Command catalogue:
 ### 5.4 Facade — **Facade**
 
 ```rust
-pub struct Checkmate { ctx: AppContext, bus: CommandBus }
+pub struct Rulelink { ctx: AppContext, bus: CommandBus }
 
-impl Checkmate {
+impl Rulelink {
     pub fn open(opts: OpenOptions) -> Result<Self, app::Error>;      // discovery + configuration + wiring
     pub async fn rules(&self, q: RuleQuery) -> Result<Vec<RuleView>, app::Error>;
     pub async fn show(&self, ids: &[RuleId]) -> Result<Vec<RuleView>, app::Error>;
@@ -279,47 +279,47 @@ Fixed steps (**Template Method**): detect (languages, Git remote, CI, `apm.yml`,
 sequenceDiagram
     autonumber
     actor Dev
-    participant INIT as checkmate init
+    participant INIT as rulelink init
     participant DET as Detectors
     participant FS as Repository
 
-    Dev->>INIT: checkmate init
+    Dev->>INIT: rulelink init
     INIT->>DET: languages, remote, CI, agents, apm.yml
     DET-->>INIT: GitHub, Rust + TS, Claude Code and Copilot detected
     INIT->>Dev: template? [legacy / greenfield / business]
     Dev-->>INIT: legacy
-    INIT->>FS: checkmate.toml
+    INIT->>FS: rulelink.toml
     INIT->>FS: empty rules/rules.json, with $schema
-    INIT->>FS: .checkmate/.gitignore (cache, state)
+    INIT->>FS: .rulelink/.gitignore (cache, state)
     INIT-->>Dev: "Next step: ask your agent to document a module"
 ```
 
-Interactive and non-interactive modes are both supported. Every question has a flag and a default, so a one-liner works: `checkmate init --template legacy --rules-path rules/rules.json --id-prefix RULE --yes`. Without a terminal, in CI, or with `--yes` or `--no-input`, `init` never prompts and uses the flag value or the default. In the MVP, `init` writes the configuration and the rules file only; CI workflows (V2) and skills (V1) are not touched.
+Interactive and non-interactive modes are both supported. Every question has a flag and a default, so a one-liner works: `rulelink init --template legacy --rules-path rules/rules.json --id-prefix RULE --yes`. Without a terminal, in CI, or with `--yes` or `--no-input`, `init` never prompts and uses the flag value or the default. In the MVP, `init` writes the configuration and the rules file only; CI workflows (V2) and skills (V1) are not touched.
 
 ## 6. CLI entry points
 
 | Command | Options | Effect | Release |
 |---|---|---|---|
-| `checkmate init` | `--template legacy\|greenfield\|business`, `--source json\|json-dir`, `--rules-path <P>`, `--id-prefix <PREFIX>` (default `RULE`), `--ci github\|gitlab\|none` (V2), `--skills auto\|npx\|apm\|copy\|none` (V1), `--no-agents-md` (V1), `--yes` | Initialises the repository | MVP |
-| `checkmate config show` | `--resolved`, `--origin`, `--format toml\|json` | Effective configuration | MVP |
-| `checkmate config get <KEY>` | | Value of a key | MVP |
-| `checkmate config set <KEY> <VALUE>` | `--local` | Edits the file, preserving comments and order | MVP |
-| `checkmate doctor` | `--format` | Checks: configuration, readable source, ID pattern, installed and compatible skills, CI present, reachable adapters (`--network`) | MVP |
-| `checkmate migrate` | `--dry-run` | Updates `checkmate.toml` and the rule format | V1 |
-| `checkmate auth login <ADAPTER>` | `--url` | Stores a token in the keychain | V1 |
-| `checkmate auth logout <ADAPTER>` | | Removes the token | V1 |
-| `checkmate completions <SHELL>` | bash, zsh, fish, powershell, elvish | Shell completion | MVP |
-| `checkmate version` | `--json` | Version, commit, supported formats and protocols | MVP |
-| `checkmate schema <NAME>` | `rules`, `config`, `proposals`, `check-report`, `agent-context`... | JSON Schema | MVP |
+| `rulelink init` | `--template legacy\|greenfield\|business`, `--source json\|json-dir`, `--rules-path <P>`, `--id-prefix <PREFIX>` (default `RULE`), `--ci github\|gitlab\|none` (V2), `--skills auto\|npx\|apm\|copy\|none` (V1), `--no-agents-md` (V1), `--yes` | Initialises the repository | MVP |
+| `rulelink config show` | `--resolved`, `--origin`, `--format toml\|json` | Effective configuration | MVP |
+| `rulelink config get <KEY>` | | Value of a key | MVP |
+| `rulelink config set <KEY> <VALUE>` | `--local` | Edits the file, preserving comments and order | MVP |
+| `rulelink doctor` | `--format` | Checks: configuration, readable source, ID pattern, installed and compatible skills, CI present, reachable adapters (`--network`) | MVP |
+| `rulelink migrate` | `--dry-run` | Updates `rulelink.toml` and the rule format | V1 |
+| `rulelink auth login <ADAPTER>` | `--url` | Stores a token in the keychain | V1 |
+| `rulelink auth logout <ADAPTER>` | | Removes the token | V1 |
+| `rulelink completions <SHELL>` | bash, zsh, fish, powershell, elvish | Shell completion | MVP |
+| `rulelink version` | `--json` | Version, commit, supported formats and protocols | MVP |
+| `rulelink schema <NAME>` | `rules`, `config`, `proposals`, `check-report`, `agent-context`... | JSON Schema | MVP |
 
-Example `checkmate doctor`:
+Example `rulelink doctor`:
 
 ```
-✔ checkmate.toml valid (version 1)
+✔ rulelink.toml valid (version 1)
 ✔ json source: rules/rules.json, 118 rules (102 validated, 12 proposed, 4 obsolete)
 ✔ identifier pattern consistent with all 118 rules
-✔ skills: checkmate-consult 0.3.0, checkmate-retrodoc 0.3.0 (via apm)
-⚠ no CI workflow runs checkmate check → checkmate init --ci github
+✔ skills: rulelink-consult 0.3.0, rulelink-retrodoc 0.3.0 (via apm)
+⚠ no CI workflow runs rulelink check → rulelink init --ci github
 ✔ AGENTS.md section up to date
 ```
 
@@ -329,13 +329,13 @@ Binary structure (`clap` in derive mode): one module per command group, each tra
 
 ```mermaid
 flowchart TB
-    CLI["checkmate-cli"] --> FAC["Checkmate facade"]
-    LSP["checkmate-lsp"] --> FAC
+    CLI["rulelink-cli"] --> FAC["Rulelink facade"]
+    LSP["rulelink-lsp"] --> FAC
     FAC --> BUS["CommandBus + middleware"]
     BUS --> CMDS["Commands 01 to 07"]
     BUS --> EVT["Events"]
     EVT --> LSP
-    CFG["checkmate-config"] --> CTX["AppContext"]
+    CFG["rulelink-config"] --> CTX["AppContext"]
     CTX --> BUS
     AR["AdapterRegistry (02)"] --> CTX
 ```
@@ -345,10 +345,10 @@ flowchart TB
 - `init` on 5 typical repositories (Rust, TypeScript, Java, Python, monorepo), followed by an immediate `check` with no error.
 - The brief's installation test: 3 external developers, unaided, first `check` in under 15 minutes.
 - Each configuration layer is tested on its own and in combination; the reported provenance is accurate.
-- A plain-text secret in `checkmate.toml` is rejected with a message suggesting `${env:...}`.
+- A plain-text secret in `rulelink.toml` is rejected with a message suggesting `${env:...}`.
 
 ## 9. Open points
 
 No open points remain.
 
-- **Several sources in a monorepo**: not allowed. A project has exactly one source. Each rule lists the applications it applies to (`applications`, 01), and the `[applications]` table maps those names to paths. Splitting a monorepo into separate projects, each with its own `checkmate.toml`, stays possible but is not the supported model.
+- **Several sources in a monorepo**: not allowed. A project has exactly one source. Each rule lists the applications it applies to (`applications`, 01), and the `[applications]` table maps those names to paths. Splitting a monorepo into separate projects, each with its own `rulelink.toml`, stays possible but is not the supported model.

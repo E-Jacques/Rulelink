@@ -47,7 +47,7 @@ Mapping to the brief's phases: **MVP** covers phase 1 (developer), **V1** covers
 | Markdown, CSV, JSON export | [06](../architecture/06-publishing-export.md) | | ● | |
 | Confluence Cloud and Data Center publishing | [06](../architecture/06-publishing-export.md) | | ● | |
 | Static HTML export | [06](../architecture/06-publishing-export.md) | | | ● |
-| `checkmate context` | [07](../architecture/07-agent-integration.md) | ● | | |
+| `rulelink context` | [07](../architecture/07-agent-integration.md) | ● | | |
 | Consultation and retro-documentation skills | [07](../architecture/07-agent-integration.md) | ● | | |
 | Skills in the `skills/` folder, installed by hand with `npx skills add` or APM | [07](../architecture/07-agent-integration.md) | ● | | |
 | `skills install\|list\|update`, managed `AGENTS.md` section | [07](../architecture/07-agent-integration.md) | | ● | |
@@ -73,18 +73,18 @@ Taken from the brief, with the release that picks each item up:
 | Skills installer and managed `AGENTS.md` section | V1 |
 | Shell and PowerShell installers, Docker image | V1 |
 | Connectors other than the local JSON file | V1 (import, publishing), V2 (remote sources) |
-| AI analysis of implementation correctness | V2 (`checkmate-verify` skill, never part of `check`) |
+| AI analysis of implementation correctness | V2 (`rulelink-verify` skill, never part of `check`) |
 | Writing to a remote source | V2 |
-| Rule generation from a specification | V2 (`checkmate-spec` skill) |
+| Rule generation from a specification | V2 (`rulelink-spec` skill) |
 
 ## 4. Exit criteria
 
 
 | Release | Exit criterion, taken from the brief |
 |---|---|
-| MVP | Retro-documentation: at least 50% of rules accepted without rewriting. Installation: from `npx checkmate init` to a first clean `check` in under 15 minutes for 3 external developers, including one `check` run in a CI workflow the developer writes by hand. Agents: at least 8 tasks out of 10 with the right rules consulted and the code annotated, counted once the skills are installed by hand |
+| MVP | Retro-documentation: at least 50% of rules accepted without rewriting. Installation: from `npx rulelink init` to a first clean `check` in under 15 minutes for 3 external developers, including one `check` run in a CI workflow the developer writes by hand. Agents: at least 8 tasks out of 10 with the right rules consulted and the code annotated, counted once the skills are installed by hand |
 | V1 | Internal use: manual flow replaced on the recent build, `check` kept in CI for 4 weeks, at least 80% of validated rules linked to code. At least one external adapter written by someone else |
-| V2 | At least one team using Checkmate across several repositories |
+| V2 | At least one team using Rulelink across several repositories |
 
 ```mermaid
 flowchart LR

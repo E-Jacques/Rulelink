@@ -1,11 +1,11 @@
 ---
 name: input-boundaries
-description: Checklist for code that takes input from outside the process (CLI arguments, configuration, files). Use when planning or reviewing any command that reads user input, `checkmate.toml` or a Source file.
+description: Checklist for code that takes input from outside the process (CLI arguments, configuration, files). Use when planning or reviewing any command that reads user input, `rulelink.toml` or a Source file.
 ---
 
 # Input boundaries
 
-Everything that crosses into the program is untrusted: CLI arguments, `checkmate.toml`, Source files, paths. Go through this list for each input of the change, in the plan and again in the review. Each line is checked, or marked not applicable with a reason.
+Everything that crosses into the program is untrusted: CLI arguments, `rulelink.toml`, Source files, paths. Go through this list for each input of the change, in the plan and again in the review. Each line is checked, or marked not applicable with a reason.
 
 ## Parse at the edge
 

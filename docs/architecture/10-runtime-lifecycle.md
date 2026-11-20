@@ -32,7 +32,7 @@
 
 | Topic | Target |
 |---|---|
-| CLI cold start to first output (`checkmate version`) | < 30 ms |
+| CLI cold start to first output (`rulelink version`) | < 30 ms |
 | Graceful stop after first Ctrl-C (CLI) | < 1 s, no partially written file |
 | LSP server: `initialize` to `initialized` with cached index | < 2 s on 50,000 files |
 | Configuration reload in a server | < 500 ms, no request lost |
@@ -89,7 +89,7 @@ pub enum Outcome { Success, ChecksFailed, Failed(app::Error) }
 pub enum ShutdownReason { Completed, Interrupted, Terminated, ParentExited, ClientRequested }
 ```
 
-The `Entrypoint` trait and `Bootstrap` live in the `runtime` module of `checkmate-app`. `checkmate-cli` owns the only `main()`: it picks the `Entrypoint` from the subcommand (`CliEntrypoint`, or `LspEntrypoint`, implemented by the `checkmate-lsp` library crate) and hands it to `Bootstrap` ([repository/01](../repository/01-repository-structure.md), section 6.3).
+The `Entrypoint` trait and `Bootstrap` live in the `runtime` module of `rulelink-app`. `rulelink-cli` owns the only `main()`: it picks the `Entrypoint` from the subcommand (`CliEntrypoint`, or `LspEntrypoint`, implemented by the `rulelink-lsp` library crate) and hands it to `Bootstrap` ([repository/01](../repository/01-repository-structure.md), section 6.3).
 
 Fixed steps of `Bootstrap::execute`: install the panic hook → parse arguments → initialise tracing → install signal handlers bound to the cancellation token → build the context (discovery, configuration, wiring from 09) → run → shut down → map the outcome to an exit code (00, section 9.2).
 
@@ -104,7 +104,7 @@ sequenceDiagram
     participant CTX as AppContext (09)
     participant BUS as Command bus (09)
 
-    OS->>BS: checkmate check --changed
+    OS->>BS: rulelink check --changed
     BS->>BS: panic hook, tracing, Ctrl-C handler
     BS->>CLI: parse_args()
     BS->>CLI: build_context(args, cancel)
@@ -146,7 +146,7 @@ stateDiagram-v2
     Created --> Initializing : initialize request
     Initializing --> Ready : context built, index loaded
     Initializing --> Stopped : fatal configuration error
-    Ready --> Reloading : checkmate.toml or rules source changed
+    Ready --> Reloading : rulelink.toml or rules source changed
     Reloading --> Ready : new context swapped in
     Reloading --> Degraded : new configuration invalid
     Degraded --> Reloading : file changed again
@@ -188,7 +188,7 @@ classDiagram
 | `Initializing` | Rejected with "server not initialised" (LSP error `-32002`) | Builds the context and loads the index cache (03) |
 | `Ready` | Served with the current context | — |
 | `Reloading` | Served with the **previous** context | New context built in the background, then swapped atomically (`ArcSwap`); in-flight requests keep the context they started with |
-| `Degraded` | Served with the last valid context | A diagnostic on `checkmate.toml` explains the configuration error |
+| `Degraded` | Served with the last valid context | A diagnostic on `rulelink.toml` explains the configuration error |
 | `Draining` | New requests rejected | Waits for `TaskTracker` to empty, at most 5 s |
 
 Shutdown triggers:
@@ -240,7 +240,7 @@ flowchart LR
 ## 6. Tests and acceptance criteria
 
 - Interrupt tests: SIGINT sent at random points during `rules approve`, `import file` and `annotate`; the source and code files are always either unchanged or fully updated.
-- LSP lifecycle tests: initialize, reload with a valid then an invalid `checkmate.toml`, shutdown; no request lost during reload.
+- LSP lifecycle tests: initialize, reload with a valid then an invalid `rulelink.toml`, shutdown; no request lost during reload.
 - Killing the LSP client process makes the server exit within 15 s.
 
 ## 7. Open points

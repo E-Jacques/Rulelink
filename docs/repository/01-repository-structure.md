@@ -48,7 +48,7 @@
 
 **Use a Cargo workspace as the backbone, orchestrated by moon.** Cargo stays the build system for Rust; moon adds what Cargo lacks once the repository holds several languages: a project graph across Rust, TypeScript and Kotlin, task inheritance, affected-only runs in CI, output caching, and toolchain pinning for Node and pnpm.
 
-| Option | Strengths | Weaknesses for Checkmate | Verdict |
+| Option | Strengths | Weaknesses for Rulelink | Verdict |
 |---|---|---|---|
 | Cargo workspace alone + `just` | Native, zero learning cost | No project graph across languages, no affected detection, no caching outside Rust | Enough for the MVP only; rejected as the long-term base |
 | **Cargo workspace + moon** | Written in Rust, delegates to Cargo instead of replacing it, polyglot (Rust, TypeScript and others), affected-only CI, toolchain pinning | One more tool and configuration to learn | **Proposed** |
@@ -74,7 +74,7 @@ The exact name and schema of the moon toolchain file differ between moon v1 and 
 ## 5. Repository layout
 
 ```text
-checkmate/
+rulelink/
 ├── Cargo.toml                  # Cargo workspace: members, shared package settings, dependencies, lints, profiles
 ├── Cargo.lock
 ├── rust-toolchain.toml
@@ -88,17 +88,17 @@ checkmate/
 │       ├── rust.yml            # tasks inherited by every Rust project
 │       └── node.yml            # tasks inherited by every TypeScript project
 ├── crates/                     # domain, application and entry-point crates
-│   ├── model/                  # checkmate-model (published)
-│   ├── registry/               # checkmate-registry
-│   ├── link/                   # checkmate-link
-│   ├── check/                  # checkmate-check
-│   ├── import/                 # checkmate-import
-│   ├── publish/                # checkmate-publish
-│   ├── adapter-sdk/            # checkmate-adapter-sdk (published)
-│   ├── config/                 # checkmate-config
-│   ├── app/                    # checkmate-app
-│   ├── lsp/                    # checkmate-lsp (V1, library mounted by the CLI)
-│   └── cli/                    # checkmate-cli, binary "checkmate" (published)
+│   ├── model/                  # rulelink-model (published)
+│   ├── registry/               # rulelink-registry
+│   ├── link/                   # rulelink-link
+│   ├── check/                  # rulelink-check
+│   ├── import/                 # rulelink-import
+│   ├── publish/                # rulelink-publish
+│   ├── adapter-sdk/            # rulelink-adapter-sdk (published)
+│   ├── config/                 # rulelink-config
+│   ├── app/                    # rulelink-app
+│   ├── lsp/                    # rulelink-lsp (V1, library mounted by the CLI)
+│   └── cli/                    # rulelink-cli, binary "rulelink" (published)
 ├── adapters/                   # one crate per adapter family
 │   ├── json/  scan-fs/  git/  external/
 │   └── jira/  confluence/  csv/  github/  gitlab/      # V1
@@ -108,7 +108,7 @@ checkmate/
 ├── sdks/
 │   ├── python/                 # V1, external adapter helpers
 │   └── typescript/             # V1, external adapter helpers, pnpm package
-├── skills/                     # Agent Skills: checkmate-consult, checkmate-retrodoc, ...
+├── skills/                     # Agent Skills: rulelink-consult, rulelink-retrodoc, ...
 ├── ci/
 │   ├── github-action/          # action.yml, mirrored to its own repository
 │   └── gitlab-component/       # templates/, mirrored to a GitLab project
@@ -128,7 +128,7 @@ checkmate/
 └── .github/workflows/          # CI, release, mirrors
 ```
 
-Folder names are short; package names carry the `checkmate-` prefix (`crates/registry` → `checkmate-registry`, `adapters/jira` → `checkmate-adapter-jira`).
+Folder names are short; package names carry the `rulelink-` prefix (`crates/registry` → `rulelink-registry`, `adapters/jira` → `rulelink-adapter-jira`).
 
 ## 6. Project graph and layering
 
@@ -176,8 +176,8 @@ flowchart BT
     app --> check & import & publish & config
     app --> ajson & ascan & ajira & aext
     cli & lsp --> app
-    vscode -.->|"spawns checkmate lsp"| cli
-    intellij -.->|"spawns checkmate lsp"| cli
+    vscode -.->|"spawns rulelink lsp"| cli
+    intellij -.->|"spawns rulelink lsp"| cli
 ```
 
 ### 6.2 Enforcement
@@ -195,39 +195,39 @@ Each moon project carries a `layer` tag. The rules of [architecture/00](../archi
 
 ### 6.3 Libraries, applications and entry points
 
-A Rust package is a **library** when it has a `src/lib.rs` only, and an **application** when it has a `src/main.rs` and therefore produces an executable. Only applications need an entry point. The classification below answers where `main()` is needed: in a single place, `checkmate-cli`.
+A Rust package is a **library** when it has a `src/lib.rs` only, and an **application** when it has a `src/main.rs` and therefore produces an executable. Only applications need an entry point. The classification below answers where `main()` is needed: in a single place, `rulelink-cli`.
 
 | Package | Component | Kind | Entry point | Published | Release |
 |---|---|---|---|---|---|
-| `checkmate-model` | 01 | Library | None | crates.io | MVP |
-| `checkmate-registry` | 01 | Library | None | crates.io | MVP |
-| `checkmate-link` | 03 | Library | None | crates.io | MVP |
-| `checkmate-check` | 04 | Library | None | crates.io | MVP |
-| `checkmate-import` | 05 | Library | None | crates.io | MVP (file), V1 |
-| `checkmate-publish` | 06 | Library | None | crates.io | V1 |
-| `checkmate-adapter-sdk` | 02 | Library | None | crates.io | MVP |
-| `checkmate-config` | 09 | Library | None | crates.io | MVP |
-| `checkmate-app` | 09 | Library | None (hosts the `Entrypoint` trait and `Bootstrap`, see below) | crates.io | MVP |
-| `checkmate-adapter-*` (`json`, `scan-fs`, `git`, `external`, `jira`, `confluence`, `csv`, `github`, `gitlab`) | 02 to 06 | Library, one per adapter family | None | crates.io | MVP to V2 |
-| `checkmate-lsp` | 08 | Library (server loop) | None: mounted by `checkmate lsp` | crates.io | V1 |
-| `checkmate-cli` | 09 | **Application**, binary `checkmate` | **`src/main.rs`** | crates.io, binaries | MVP |
+| `rulelink-model` | 01 | Library | None | crates.io | MVP |
+| `rulelink-registry` | 01 | Library | None | crates.io | MVP |
+| `rulelink-link` | 03 | Library | None | crates.io | MVP |
+| `rulelink-check` | 04 | Library | None | crates.io | MVP |
+| `rulelink-import` | 05 | Library | None | crates.io | MVP (file), V1 |
+| `rulelink-publish` | 06 | Library | None | crates.io | V1 |
+| `rulelink-adapter-sdk` | 02 | Library | None | crates.io | MVP |
+| `rulelink-config` | 09 | Library | None | crates.io | MVP |
+| `rulelink-app` | 09 | Library | None (hosts the `Entrypoint` trait and `Bootstrap`, see below) | crates.io | MVP |
+| `rulelink-adapter-*` (`json`, `scan-fs`, `git`, `external`, `jira`, `confluence`, `csv`, `github`, `gitlab`) | 02 to 06 | Library, one per adapter family | None | crates.io | MVP to V2 |
+| `rulelink-lsp` | 08 | Library (server loop) | None: mounted by `rulelink lsp` | crates.io | V1 |
+| `rulelink-cli` | 09 | **Application**, binary `rulelink` | **`src/main.rs`** | crates.io, binaries | MVP |
 | `xtask` | Tooling | Application, run by `cargo xtask` | `src/main.rs` (maintainer tool, never distributed) | No | MVP |
-| `checkmate-e2e` (`tests/e2e`) | Tooling | Test crate, no executable of its own | None | No | MVP |
+| `rulelink-e2e` (`tests/e2e`) | Tooling | Test crate, no executable of its own | None | No | MVP |
 
 Outside the Cargo workspace:
 
 | Package | Kind | Entry point | Release |
 |---|---|---|---|
 | External adapters (any language) | Application started by the CLI as a child process, speaking the JSON-RPC protocol of 02 | Their own, owned by their author | V1 |
-| `editors/vscode`, `editors/intellij` | Extensions hosted by the IDE, spawning `checkmate lsp` | IDE manifest (`package.json`, `plugin.xml`) | V1, V2 |
+| `editors/vscode`, `editors/intellij` | Extensions hosted by the IDE, spawning `rulelink lsp` | IDE manifest (`package.json`, `plugin.xml`) | V1, V2 |
 | `sdks/typescript`, `sdks/python` | Libraries for external adapter authors | None | V1 |
 | `skills/*`, `ci/*` | Content (Markdown, YAML), not code | None | MVP |
 
 Consequences:
 
-- **One entry point, one `main()`.** ADR-004 (a single binary, with LSP as a subcommand) makes `checkmate-cli` the only product executable. `checkmate-lsp` stays a library: the CLI links it behind the `lsp` Cargo feature (section 7.2) and calls its `Entrypoint` implementation. A second binary is added only if a process must ship on its own, which nothing in the MVP or V1 requires.
+- **One entry point, one `main()`.** ADR-004 (a single binary, with LSP as a subcommand) makes `rulelink-cli` the only product executable. `rulelink-lsp` stays a library: the CLI links it behind the `lsp` Cargo feature (section 7.2) and calls its `Entrypoint` implementation. A second binary is added only if a process must ship on its own, which nothing in the MVP or V1 requires.
 - **No library creates a process.** Libraries never install signal handlers, build a Tokio runtime, initialise tracing or read `std::env::args`. This is what `cargo xtask arch` checks for the domain crates (section 6.2); it is extended to the server crates, which must not define `fn main`.
-- **Where the shared skeleton lives.** The `Entrypoint` trait and `Bootstrap` ([Runtime lifecycle](../architecture/10-runtime-lifecycle.md), section 4.1) are a module `runtime` of `checkmate-app`, because `checkmate-lsp` implements the trait and already depends on `app`. `main()` in `checkmate-cli` is then three lines: build the `Entrypoint` chosen by the subcommand, call `Bootstrap::execute`, exit with the returned code.
+- **Where the shared skeleton lives.** The `Entrypoint` trait and `Bootstrap` ([Runtime lifecycle](../architecture/10-runtime-lifecycle.md), section 4.1) are a module `runtime` of `rulelink-app`, because `rulelink-lsp` implements the trait and already depends on `app`. `main()` in `rulelink-cli` is then three lines: build the `Entrypoint` chosen by the subcommand, call `Bootstrap::execute`, exit with the returned code.
 - **Every library is published.** A library has no executable of its own, so its only distribution channel is crates.io. Each library crate therefore carries a complete manifest (`description`, `license`, `repository`, `readme`, `rust-version`), documented public items (`missing_docs` is already a warning) and a public API that is deliberate, not accidental. The crate names must be reserved on crates.io before the first release.
 - **A new executable needs a justification.** Candidates (a daemon, a standalone LSP binary) must name the distribution channel that the single binary cannot serve, and add a row to the table above.
 
@@ -246,11 +246,11 @@ version = "0.1.0"               # lockstep version of the binary and internal cr
 edition = "2024"
 rust-version = "1.85"           # MSRV, see 02-release-lifecycle for the policy
 license = "MIT"
-repository = "https://github.com/E-Jacques/checkmate"
+repository = "https://github.com/E-Jacques/rulelink"
 
 [workspace.dependencies]
-checkmate-model = { path = "crates/model", version = "1" }
-checkmate-adapter-sdk = { path = "crates/adapter-sdk", version = "1" }
+rulelink-model = { path = "crates/model", version = "1" }
+rulelink-adapter-sdk = { path = "crates/adapter-sdk", version = "1" }
 serde = { version = "1", features = ["derive"] }
 thiserror = "2"
 tokio = { version = "1", default-features = false }
@@ -275,16 +275,16 @@ inherits = "release"
 lto = "fat"
 ```
 
-Each member manifest inherits with `version.workspace = true`, `edition.workspace = true`, `lints.workspace = true`, and declares dependencies as `serde.workspace = true`. Every library crate and the CLI are published to crates.io (see [Release lifecycle](02-release-lifecycle.md)), so that third parties can build on them; only `xtask` and `checkmate-e2e` set `publish = false`.
+Each member manifest inherits with `version.workspace = true`, `edition.workspace = true`, `lints.workspace = true`, and declares dependencies as `serde.workspace = true`. Every library crate and the CLI are published to crates.io (see [Release lifecycle](02-release-lifecycle.md)), so that third parties can build on them; only `xtask` and `rulelink-e2e` set `publish = false`.
 
 ### 7.2 Cargo features
 
 | Crate | Feature | Effect | Release |
 |---|---|---|---|
-| `checkmate-cli` | `adapter-jira`, `adapter-confluence`, `adapter-csv`, `adapter-github`, `adapter-gitlab` | Compiles the matching adapter in; all enabled in distributed binaries | V1 |
-| `checkmate-cli` | `lsp` | Compiles the server subcommand in; enabled by default | V1 |
-| `checkmate-adapter-sdk` | `conformance` | Exposes the conformance kit to adapter test suites | V1 |
-| `checkmate-model` | `schema` | Derives `schemars::JsonSchema`; off for lightweight consumers | MVP |
+| `rulelink-cli` | `adapter-jira`, `adapter-confluence`, `adapter-csv`, `adapter-github`, `adapter-gitlab` | Compiles the matching adapter in; all enabled in distributed binaries | V1 |
+| `rulelink-cli` | `lsp` | Compiles the server subcommand in; enabled by default | V1 |
+| `rulelink-adapter-sdk` | `conformance` | Exposes the conformance kit to adapter test suites | V1 |
+| `rulelink-model` | `schema` | Derives `schemars::JsonSchema`; off for lightweight consumers | MVP |
 
 `cargo hack check --each-feature` (V1) guarantees that every feature compiles on its own.
 
@@ -295,7 +295,7 @@ Four crate templates cover the whole workspace.
 | Template | Layout | Rules |
 |---|---|---|
 | Domain crate (`registry`, `link`, `check`...) | `src/lib.rs` (public surface, re-exports only), `src/error.rs`, one module per mechanism (`lifecycle/`, `ids/`, `query/`), `tests/` for integration tests | Synchronous, no I/O; every public item documented |
-| Adapter crate (`adapters/*`) | `src/lib.rs` exposing one `AdapterFamily`, `src/client/` (remote API), `src/mapping/` (to the model), `tests/conformance.rs` | Depends only on `checkmate-adapter-sdk`; must pass the conformance kit |
+| Adapter crate (`adapters/*`) | `src/lib.rs` exposing one `AdapterFamily`, `src/client/` (remote API), `src/mapping/` (to the model), `tests/conformance.rs` | Depends only on `rulelink-adapter-sdk`; must pass the conformance kit |
 | Binary crate (`cli` only) | `src/main.rs`, one module per command group, no business logic | The only `main()` of the product. Translates arguments into `AppCommand`s (09); calls `Bootstrap::execute` ([Runtime lifecycle](../architecture/10-runtime-lifecycle.md)) |
 | Server crate (`lsp`) | `src/lib.rs` exposing an `Entrypoint` implementation, `src/server.rs`, one module per request family, no business logic | Library mounted by the CLI as the `lsp` subcommand (ADR-004); owns the server loop, not the process |
 
@@ -344,7 +344,7 @@ Workspace-level tasks (root project):
 | `schemas` | `cargo xtask schemas` | Regenerates `schemas/`; CI fails if the result differs from the committed files | MVP |
 | `arch` | `cargo xtask arch` | Dependency rules (section 6.2) | MVP |
 | `deny` | `cargo deny check` | Licences and advisories | MVP |
-| `e2e` | `cargo nextest run -p checkmate-e2e` | End-to-end tests | MVP |
+| `e2e` | `cargo nextest run -p rulelink-e2e` | End-to-end tests | MVP |
 | `docs-check` | Mermaid validation of every folder under `docs/` | Keeps this dossier renderable | MVP |
 | `release-plan` | `dist plan` | Dry run of the release on every PR (see [Release lifecycle](02-release-lifecycle.md)) | MVP |
 
@@ -372,7 +372,7 @@ Some distribution channels require a dedicated repository. The monorepo stays th
 | GitHub Action | GitHub Marketplace lists only actions whose `action.yml` is at the repository root | `E-Jacques/check-action`, tags `v1`, `v1.x.y` |
 | GitLab CI component | The GitLab CI/CD Catalog requires a GitLab project with `templates/` | `gitlab.com/<org>/ci`, tags `1.x.y` |
 | Homebrew formula | A tap is a separate repository | `E-Jacques/homebrew-tap`, updated by `dist` |
-| Skills | Not required: `npx skills` and APM can install from a repository path | Optional `E-Jacques/checkmate-skills` mirror if a tool needs a dedicated repository (to be verified at implementation time) |
+| Skills | Not required: `npx skills` and APM can install from a repository path | Optional `E-Jacques/rulelink-skills` mirror if a tool needs a dedicated repository (to be verified at implementation time) |
 
 Mirror repositories are read-only for humans; their README points to the monorepo for issues and contributions.
 
@@ -387,7 +387,7 @@ Mirror repositories are read-only for humans; their README points to the monorep
 ## 12. Tests and acceptance criteria
 
 - A fresh clone on Linux, macOS and Windows passes `moon run :test` and `cargo test --workspace`.
-- Adding `tokio` to `checkmate-registry` makes `cargo xtask arch` fail with a message naming the rule.
+- Adding `tokio` to `rulelink-registry` makes `cargo xtask arch` fail with a message naming the rule.
 - A change confined to `adapters/jira` triggers only the Jira, `app`, entry-point and workspace-level tasks in CI.
 - PR pipeline under 10 minutes for a single-crate change, measured over the last 20 merged PRs.
 

@@ -29,7 +29,7 @@
 | Homebrew, Scoop, winget | | ● | |
 | VS Code extension release (per-platform VSIX) | | ● | |
 | Nightly pre-release channel | | ● | |
-| `checkmate self update` for script-installed binaries | | ● | |
+| `rulelink self update` for script-installed binaries | | ● | |
 
 ## 3. Technical constraints
 
@@ -53,11 +53,11 @@ Public contracts are versioned independently of the binary, because they evolve 
 
 | Artefact | Scheme | Strategy | Published to |
 |---|---|---|---|
-| `checkmate` binary (`checkmate-cli`) | SemVer, `0.x` until the format is frozen | Lockstep with every internal crate (`workspace.package.version`) | GitHub releases, npm, crates.io (V1: shell and PowerShell installers, Docker, Homebrew) |
+| `rulelink` binary (`rulelink-cli`) | SemVer, `0.x` until the format is frozen | Lockstep with every internal crate (`workspace.package.version`) | GitHub releases, npm, crates.io (V1: shell and PowerShell installers, Docker, Homebrew) |
 | Other library crates (`registry`, `link`, `check`, `import`, `publish`, `config`, `app`, `lsp`, `adapters/*`) | Same as the binary | Lockstep, published in dependency order by release-plz | crates.io |
-| `xtask`, `checkmate-e2e` | — | `publish = false` | — |
-| `checkmate-model` | SemVer, `1.x` from the first public release | Independent, checked by `cargo-semver-checks` | crates.io |
-| `checkmate-adapter-sdk` | SemVer | Independent, checked by `cargo-semver-checks` | crates.io |
+| `xtask`, `rulelink-e2e` | — | `publish = false` | — |
+| `rulelink-model` | SemVer, `1.x` from the first public release | Independent, checked by `cargo-semver-checks` | crates.io |
+| `rulelink-adapter-sdk` | SemVer | Independent, checked by `cargo-semver-checks` | crates.io |
 | Rule file format | Integer (`"format": 1`) | Bumped only on breaking change | JSON Schema in `schemas/` |
 | External adapter protocol | `major.minor` (`1.0`) | Negotiated at `initialize` ([architecture/02](../architecture/02-sources-of-truth.md)) | JSON Schema |
 | JSON output schemas | `name/vN` | One version per breaking change | JSON Schema |
@@ -81,9 +81,9 @@ sequenceDiagram
     RP->>GH: opens or updates the release PR (versions, CHANGELOG.md)
     Dev->>GH: merges the release PR
     GH->>RP: push on main
-    RP->>GH: creates tags (checkmate-cli v0.4.0, checkmate-model v1.2.0...)
+    RP->>GH: creates tags (rulelink-cli v0.4.0, rulelink-model v1.2.0...)
     RP->>CH: publishes changed library crates to crates.io
-    GH->>DIST: tag checkmate-cli v0.4.0
+    GH->>DIST: tag rulelink-cli v0.4.0
     DIST->>DIST: build matrix (Linux musl x86_64 and arm64, macOS universal, Windows)
     DIST->>DIST: checksums, SBOM, signatures, provenance attestations
     DIST->>CH: GitHub release and npm package (V1: shell and PowerShell installers, Homebrew tap)
@@ -114,7 +114,7 @@ sequenceDiagram
 
 | Policy | Rule |
 |---|---|
-| Rule file format | A binary reads every earlier format; `checkmate migrate` rewrites to the current one. Writing an older format is not supported |
+| Rule file format | A binary reads every earlier format; `rulelink migrate` rewrites to the current one. Writing an older format is not supported |
 | External adapter protocol | A binary supports the current and the previous minor versions; a major change keeps the previous major for 12 months |
 | CLI flags and commands | Deprecated items print a warning for at least one minor release before removal; removals only in a major release (or a `0.x` minor before 1.0) |
 | JSON outputs | Stable within a schema version; a new version is opt-in (`--format json --schema-version 2`) for one minor release before becoming the default |
@@ -135,14 +135,14 @@ sequenceDiagram
 
 | Command | Options | Effect | Release |
 |---|---|---|---|
-| `checkmate version` | `--json` | Version, commit, build date, target, supported rule formats, protocol versions, JSON schema versions | MVP |
-| `checkmate self update` | `--channel stable\|nightly`, `--check` | Updates a binary installed by the shell or PowerShell installer; refuses and names the package manager otherwise | V1 |
+| `rulelink version` | `--json` | Version, commit, build date, target, supported rule formats, protocol versions, JSON schema versions | MVP |
+| `rulelink self update` | `--channel stable\|nightly`, `--check` | Updates a binary installed by the shell or PowerShell installer; refuses and names the package manager otherwise | V1 |
 
-Example `checkmate version --json`:
+Example `rulelink version --json`:
 
 ```json
 {
-  "schema": "checkmate/version/v1",
+  "schema": "rulelink/version/v1",
   "version": "0.4.0",
   "commit": "3f2c9ab",
   "target": "x86_64-unknown-linux-musl",
@@ -176,11 +176,11 @@ flowchart LR
 
 - `dist plan` succeeds on every PR; a full release dry run (`release-plz release --dry-run`) runs nightly.
 - `cargo xtask release-check` passes on every release PR.
-- The `smoke-test` workflow runs on every tag, between the build and the npm publish: the built archive starts on Linux, macOS (x86_64 and arm64) and Windows, and the npm tarball declares the `checkmate` binary. Once `init` and `check` exist, it also runs `init` then `check` in a clean repository (flip `FULL_FLOW`).
+- The `smoke-test` workflow runs on every tag, between the build and the npm publish: the built archive starts on Linux, macOS (x86_64 and arm64) and Windows, and the npm tarball declares the `rulelink` binary. Once `init` and `check` exist, it also runs `init` then `check` in a clean repository (flip `FULL_FLOW`).
 - Installation test from the brief: first `check` in under 15 minutes for 3 external developers, using the npm package, and including one `check` run in a CI workflow the developer writes by hand.
 
 ## 8. Open points
 
 No open points remain.
 
-- **`checkmate-model` 1.0**: released as soon as ADR-003 (English keys) is validated and the MVP has run on the internal-use build for 4 weeks.
+- **`rulelink-model` 1.0**: released as soon as ADR-003 (English keys) is validated and the MVP has run on the internal-use build for 4 weeks.

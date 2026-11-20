@@ -1,4 +1,4 @@
-/// Errors raised by `checkmate-adapter-csv`.
+/// Errors raised by `rulelink-adapter-csv`.
 #[derive(Debug, thiserror::Error)]
 pub enum Error {
     /// The requested capability is not implemented yet.

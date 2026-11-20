@@ -3,7 +3,7 @@ spec:
     stage:
       default: test
 ---
-checkmate:
+rulelink:
   stage: $[[ inputs.stage ]]
   script:
-    - checkmate check
+    - rulelink check

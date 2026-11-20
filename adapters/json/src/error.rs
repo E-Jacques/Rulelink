@@ -1,6 +1,6 @@
 use std::path::PathBuf;
 
-/// Errors raised by `checkmate-adapter-json`.
+/// Errors raised by `rulelink-adapter-json`.
 #[derive(Debug, thiserror::Error)]
 pub enum Error {
     /// The Source file already exists.

@@ -1,6 +1,6 @@
-# Checkmate documentation
+# Rulelink documentation
 
-Checkmate keeps every business rule attached to its code, even when the team changes. This documentation is organised in three parts, to be read in this order.
+Rulelink keeps every business rule attached to its code, even when the team changes. This documentation is organised in three parts, to be read in this order.
 
 ## 1. Product — what and why
 

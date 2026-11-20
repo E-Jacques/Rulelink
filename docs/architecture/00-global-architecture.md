@@ -1,4 +1,4 @@
-# Checkmate — Global Architecture
+# Rulelink — Global Architecture
 
 > Design dossier, without implementation. This document describes the systems, their responsibilities, their constraints and their interactions. Each business component has its own file with the detailed design, GoF patterns, APIs and entry points.
 >
@@ -32,7 +32,7 @@ Related documentation outside this folder:
 
 ## 1. Need and architecture drivers
 
-Checkmate answers two questions: **which business rule does this code implement**, and **which rules no longer have any code**. The product rests on three elements: a source of truth, a rule identifier in the code (`// @rule RULE-042`) and a deterministic check in CI.
+Rulelink answers two questions: **which business rule does this code implement**, and **which rules no longer have any code**. The product rests on three elements: a source of truth, a rule identifier in the code (`// @rule RULE-042`) and a deterministic check in CI.
 
 The drivers below come straight from the brief:
 
@@ -45,7 +45,7 @@ The drivers below come straight from the brief:
 | Public rule format | The model is a separate, versioned crate described by a JSON Schema |
 | Community-contributed connectors | Public adapter contract, native Rust or external process in any language |
 | AI only through skills run by the developer's agent | The binary embeds no LLM. Skills call the CLI with `--format json` |
-| Less than 15 minutes to the first `check` | `checkmate init` generates configuration and rules file; skills are installed by hand in the MVP |
+| Less than 15 minutes to the first `check` | `rulelink init` generates configuration and rules file; skills are installed by hand in the MVP |
 
 ## 2. Technology choice: Rust
 
@@ -86,8 +86,8 @@ flowchart LR
     agent["Developer's AI agent<br/>Claude Code, Codex, Copilot, Cursor..."]
     ci["CI: GitHub Actions, GitLab CI"]
 
-    subgraph CM["Checkmate"]
-        cli["checkmate CLI<br/>+ LSP"]
+    subgraph CM["Rulelink"]
+        cli["rulelink CLI<br/>+ LSP"]
     end
 
     repo[("Git repository<br/>code + rules.json")]
@@ -98,7 +98,7 @@ flowchart LR
     dev --> cli
     dev --> agent
     agent -->|"skills"| cli
-    ci -->|"checkmate check"| cli
+    ci -->|"rulelink check"| cli
     cli -->|"reads, annotates, writes"| repo
     cli -->|"import V1"| jira
     cli -->|"import V1"| issues
@@ -111,30 +111,30 @@ flowchart LR
 ```mermaid
 flowchart TB
     subgraph EP["Entry points"]
-        CLI["checkmate CLI<br/>Rust, clap"]
-        LSP["checkmate lsp<br/>Rust, tower-lsp-server"]
+        CLI["rulelink CLI<br/>Rust, clap"]
+        LSP["rulelink lsp<br/>Rust, tower-lsp-server"]
         GHA["GitHub Action / GitLab CI component"]
         VSC["VS Code extension<br/>TypeScript"]
         IJ["IntelliJ extension<br/>Kotlin, V2"]
         SK["Skills<br/>Agent Skills, Markdown"]
     end
 
-    subgraph APP["Application layer: checkmate-app"]
-        FAC["Checkmate facade"]
+    subgraph APP["Application layer: rulelink-app"]
+        FAC["Rulelink facade"]
         BUS["Command bus<br/>+ middleware"]
     end
 
     subgraph DOM["Domain"]
-        MOD["checkmate-model<br/>public format"]
-        REG["checkmate-registry<br/>lifecycle, queries"]
-        LNK["checkmate-link<br/>annotation index"]
-        CHK["checkmate-check<br/>check engine"]
-        IMP["checkmate-import<br/>import pipeline"]
-        PUB["checkmate-publish<br/>document, renderers"]
+        MOD["rulelink-model<br/>public format"]
+        REG["rulelink-registry<br/>lifecycle, queries"]
+        LNK["rulelink-link<br/>annotation index"]
+        CHK["rulelink-check<br/>check engine"]
+        IMP["rulelink-import<br/>import pipeline"]
+        PUB["rulelink-publish<br/>document, renderers"]
     end
 
     subgraph ADP["Adapters"]
-        SDK["checkmate-adapter-sdk<br/>public contract"]
+        SDK["rulelink-adapter-sdk<br/>public contract"]
         JSON["JSON source"]
         SCAN["code scanner"]
         JIRA["Jira"]
@@ -168,18 +168,18 @@ The domain depends on no I/O technology. It defines **ports** (Rust traits) that
 
 ```mermaid
 flowchart BT
-    model["checkmate-model"]
-    registry["checkmate-registry"]
-    sdk["checkmate-adapter-sdk"]
-    link["checkmate-link"]
-    check["checkmate-check"]
-    import["checkmate-import"]
-    publish["checkmate-publish"]
-    config["checkmate-config"]
-    app["checkmate-app"]
+    model["rulelink-model"]
+    registry["rulelink-registry"]
+    sdk["rulelink-adapter-sdk"]
+    link["rulelink-link"]
+    check["rulelink-check"]
+    import["rulelink-import"]
+    publish["rulelink-publish"]
+    config["rulelink-config"]
+    app["rulelink-app"]
     adapters["adapters/*<br/>json, scan-fs, jira, confluence,<br/>csv, github, gitlab, external, git"]
-    cli["checkmate-cli (binary)"]
-    lsp["checkmate-lsp"]
+    cli["rulelink-cli (binary)"]
+    lsp["rulelink-lsp"]
 
     registry --> model
     sdk --> model
@@ -200,26 +200,26 @@ flowchart BT
 
 Dependency rules, enforced in CI with `cargo deny` and an architecture test:
 
-1. `checkmate-model`, `checkmate-registry`, `checkmate-link` and `checkmate-check` have **no network or async dependency** (no `tokio`, no `reqwest`).
-2. An adapter depends only on `checkmate-adapter-sdk` (and therefore `checkmate-model`), never on `checkmate-app`.
-3. Only `checkmate-app` knows the concrete adapters. It wires them from the configuration (see 09).
+1. `rulelink-model`, `rulelink-registry`, `rulelink-link` and `rulelink-check` have **no network or async dependency** (no `tokio`, no `reqwest`).
+2. An adapter depends only on `rulelink-adapter-sdk` (and therefore `rulelink-model`), never on `rulelink-app`.
+3. Only `rulelink-app` knows the concrete adapters. It wires them from the configuration (see 09).
 4. Entry points contain no business rule logic.
 
-A single `checkmate` binary exposes the LSP server: `checkmate lsp` is a subcommand. One installation therefore covers the CLI and the IDE.
+A single `rulelink` binary exposes the LSP server: `rulelink lsp` is a subcommand. One installation therefore covers the CLI and the IDE.
 
 ## 6. Business component responsibilities
 
 | Component | Responsibility | Does not | Crates |
 |---|---|---|---|
-| 01 Rule registry | Defines the rule, its lifecycle (`proposed`, `validated`, `obsolete`), identifier allocation, rule set validation and search | Any I/O | `checkmate-model`, `checkmate-registry` |
-| 02 Sources of truth | Reads and writes the rule set in the configured source. Publishes the adapter contract and the external protocol | Decide status transitions | `checkmate-adapter-sdk`, `adapters/json`, `adapters/external` |
-| 03 Code linking | Finds `@rule` annotations in the code, builds the rule ↔ location index, answers `explain` and `where`, inserts annotations | Judge whether the code is correct | `checkmate-link`, `adapters/scan-fs` |
-| 04 Checks | Cross-references registry and index, produces findings with severities, renders CI reports | Any network call or AI | `checkmate-check`, `adapters/git` |
-| 05 Import | Fetches external items, extracts candidate rules, reconciles them with existing rules and produces a change set of `proposed` rules | Write a `validated` rule | `checkmate-import`, `adapters/jira`, `adapters/csv`, `adapters/github`, `adapters/gitlab` |
-| 06 Publishing and export | Builds a readable document (application, module, scope, status, links to code) and renders it as Markdown, HTML, CSV or Confluence | Read a publication back as a source | `checkmate-publish`, `adapters/confluence` |
-| 07 Agent integration | Serves context to agents (`checkmate context`), the skills, their installation | Embed an LLM | `skills/` folder of the monorepo ([repository/01](../repository/01-repository-structure.md)) |
-| 08 IDE integration | LSP server: hover, diagnostics, completion, navigation. VS Code and IntelliJ extensions | Duplicate logic in the extension | `checkmate-lsp`, `vscode-checkmate`, `intellij-checkmate` |
-| 09 Project and configuration | Discovers the workspace, loads layered configuration, wires adapters, exposes the facade and the command bus, `init` and `doctor` | Any business rule logic | `checkmate-config`, `checkmate-app`, `checkmate-cli` |
+| 01 Rule registry | Defines the rule, its lifecycle (`proposed`, `validated`, `obsolete`), identifier allocation, rule set validation and search | Any I/O | `rulelink-model`, `rulelink-registry` |
+| 02 Sources of truth | Reads and writes the rule set in the configured source. Publishes the adapter contract and the external protocol | Decide status transitions | `rulelink-adapter-sdk`, `adapters/json`, `adapters/external` |
+| 03 Code linking | Finds `@rule` annotations in the code, builds the rule ↔ location index, answers `explain` and `where`, inserts annotations | Judge whether the code is correct | `rulelink-link`, `adapters/scan-fs` |
+| 04 Checks | Cross-references registry and index, produces findings with severities, renders CI reports | Any network call or AI | `rulelink-check`, `adapters/git` |
+| 05 Import | Fetches external items, extracts candidate rules, reconciles them with existing rules and produces a change set of `proposed` rules | Write a `validated` rule | `rulelink-import`, `adapters/jira`, `adapters/csv`, `adapters/github`, `adapters/gitlab` |
+| 06 Publishing and export | Builds a readable document (application, module, scope, status, links to code) and renders it as Markdown, HTML, CSV or Confluence | Read a publication back as a source | `rulelink-publish`, `adapters/confluence` |
+| 07 Agent integration | Serves context to agents (`rulelink context`), the skills, their installation | Embed an LLM | `skills/` folder of the monorepo ([repository/01](../repository/01-repository-structure.md)) |
+| 08 IDE integration | LSP server: hover, diagnostics, completion, navigation. VS Code and IntelliJ extensions | Duplicate logic in the extension | `rulelink-lsp`, `vscode-rulelink`, `intellij-rulelink` |
+| 09 Project and configuration | Discovers the workspace, loads layered configuration, wires adapters, exposes the facade and the command bus, `init` and `doctor` | Any business rule logic | `rulelink-config`, `rulelink-app`, `rulelink-cli` |
 
 ## 7. Interactions between components
 
@@ -241,7 +241,7 @@ A single `checkmate` binary exposes the LSP server: `checkmate lsp` is a subcomm
 sequenceDiagram
     autonumber
     participant CI as CI (workflow written by the developer)
-    participant CLI as checkmate check
+    participant CLI as rulelink check
     participant APP as Facade / bus
     participant SRC as JSON source
     participant REG as Registry
@@ -249,7 +249,7 @@ sequenceDiagram
     participant CHK as Check engine
     participant REP as Reporter
 
-    CI->>CLI: checkmate check --format json
+    CI->>CLI: rulelink check --format json
     CLI->>APP: dispatch(RunCheck)
     APP->>SRC: load()
     SRC-->>APP: RuleSet + positions in the file
@@ -270,16 +270,16 @@ sequenceDiagram
     autonumber
     actor Dev as Developer
     participant AG as AI agent
-    participant SK as checkmate-consult skill
-    participant CLI as checkmate CLI
+    participant SK as rulelink-consult skill
+    participant CLI as rulelink CLI
 
     Dev->>AG: "Implement the discount calculation"
     AG->>SK: loads the skill (trigger: business code)
-    SK->>CLI: checkmate context --paths src/billing --query discount --format json
+    SK->>CLI: rulelink context --paths src/billing --query discount --format json
     CLI-->>AG: relevant validated rules + existing locations
     AG->>AG: implements according to the rules
-    AG->>CLI: checkmate annotate src/billing/discount.rs:42 RULE-042
-    AG->>CLI: checkmate check --changed --format json
+    AG->>CLI: rulelink annotate src/billing/discount.rs:42 RULE-042
+    AG->>CLI: rulelink check --changed --format json
     CLI-->>AG: findings (e.g. RULE-051 cited but only proposed)
     AG-->>Dev: summary + rules applied + warnings
 ```
@@ -290,21 +290,21 @@ sequenceDiagram
 sequenceDiagram
     autonumber
     actor Dev as Domain expert / developer
-    participant AG as Agent + checkmate-retrodoc skill
-    participant CLI as checkmate CLI
+    participant AG as Agent + rulelink-retrodoc skill
+    participant CLI as rulelink CLI
     participant SRC as rules.json
 
-    AG->>CLI: checkmate rules list --format json
+    AG->>CLI: rulelink rules list --format json
     AG->>AG: reads the module, infers candidate rules
-    AG->>CLI: checkmate import file .checkmate/proposals/billing.json --dry-run
+    AG->>CLI: rulelink import file .rulelink/proposals/billing.json --dry-run
     CLI-->>AG: change set preview (additions, likely duplicates)
     AG->>Dev: presents candidates with their locations
     Dev-->>AG: accepts, corrects or rejects
-    AG->>CLI: checkmate import file ... (status proposed, origin retrodoc)
+    AG->>CLI: rulelink import file ... (status proposed, origin retrodoc)
     CLI->>SRC: apply(ChangeSet)
-    Dev->>CLI: checkmate rules approve RULE-101 RULE-102
-    AG->>CLI: checkmate annotate ... for each location
-    AG->>CLI: checkmate check
+    Dev->>CLI: rulelink rules approve RULE-101 RULE-102
+    AG->>CLI: rulelink annotate ... for each location
+    AG->>CLI: rulelink check
 ```
 
 ### 7.5 V1 flow: Jira → JSON → Confluence
@@ -313,22 +313,22 @@ sequenceDiagram
 sequenceDiagram
     autonumber
     actor Dev
-    participant CLI as checkmate
+    participant CLI as rulelink
     participant JI as Jira adapter
     participant IMP as Import pipeline
     participant SRC as rules.json
     participant PUB as Publishing
     participant CF as Confluence
 
-    Dev->>CLI: checkmate import jira --jql "project = FAC AND updated >= -7d"
+    Dev->>CLI: rulelink import jira --jql "project = FAC AND updated >= -7d"
     CLI->>JI: fetch(query, cursor)
     JI-->>IMP: raw issues (ADF or wiki markup)
     IMP->>IMP: regex extraction, mapping, reconciliation
     IMP-->>Dev: preview: 4 new, 1 conflict
     Dev->>CLI: confirms
     CLI->>SRC: apply(ChangeSet) - status proposed
-    Note over Dev,SRC: review in a PR, then checkmate rules approve
-    Dev->>CLI: checkmate publish confluence
+    Note over Dev,SRC: review in a PR, then rulelink rules approve
+    Dev->>CLI: rulelink publish confluence
     CLI->>PUB: build(RuleSet, LinkIndex, latest report)
     PUB->>CF: compares the fingerprint, updates the page
     CF-->>Dev: single reference page, marked "generated"
@@ -343,7 +343,7 @@ sequenceDiagram
 | Adapter | Structural | 02, 05, 06: `JsonFileSource`, `JiraImporter`, `ConfluencePublisher` | Translate each tool to the rule model and the domain ports |
 | Proxy | Structural | 02: `ExternalAdapterProxy` | Represent an out-of-process adapter behind the same trait |
 | Decorator | Structural | 02: `CachedSource`, `ReadOnlySource`; 09: bus middleware | Add caching, read-only mode, tracing or locking without touching the classes |
-| Facade | Structural | 09: `Checkmate` | A single entry point for CLI and LSP |
+| Facade | Structural | 09: `Rulelink` | A single entry point for CLI and LSP |
 | Bridge | Structural | 05, 06: Atlassian client × Cloud or Data Center edition | Vary the use case and the remote API independently |
 | Composite | Structural | 04: `CheckSuite`; 06: document sections; 01: filter expression | Treat a check or a group, a section or a rule, uniformly |
 | Flyweight | Structural | 03: `LanguageProfile` shared per extension | Thousands of files share a handful of comment profiles |
@@ -376,7 +376,7 @@ The **Singleton** pattern is deliberately rejected: shared state (configuration,
 
 ### 9.1 CLI
 
-Binary name: `checkmate`. Noun or verb tree, in the style of `cargo` and `gh`.
+Binary name: `rulelink`. Noun or verb tree, in the style of `cargo` and `gh`.
 
 | Group | Commands | Release |
 |---|---|---|
@@ -410,7 +410,7 @@ Common global options: `-C, --directory <DIR>`, `--config <FILE>`, `--format <hu
 
 ### 9.3 Outputs
 
-- `human` by default in a terminal, `json` for agents and scripts. Every JSON output follows a published, versioned schema (`checkmate schema <name>`).
+- `human` by default in a terminal, `json` for agents and scripts. Every JSON output follows a published, versioned schema (`rulelink schema <name>`).
 - All lists are **sorted** (identifier in natural order, then path, then line). Two runs on the same state produce byte-identical output.
 - Human diagnostics use `miette`: code excerpt, underline, suggestion.
 
@@ -424,7 +424,7 @@ Common global options: `-C, --directory <DIR>`, `--config <FILE>`, `--format <hu
 
 | Topic | Rule |
 |---|---|
-| Secrets | Never in `checkmate.toml`. Environment variables (`CHECKMATE_JIRA_TOKEN`), `${env:VAR}` interpolation, or the OS keychain through `checkmate auth` (V1, `keyring` crate) |
+| Secrets | Never in `rulelink.toml`. Environment variables (`RULELINK_JIRA_TOKEN`), `${env:VAR}` interpolation, or the OS keychain through `rulelink auth` (V1, `keyring` crate) |
 | Network | Only remote adapters open connections. `check`, `explain`, `where` and `context` never call the network |
 | External adapters | Run only when declared in the configuration, with an explicit path or command. No automatic `PATH` discovery in CI |
 | Writes | Atomic writes (temporary file, then rename), file lock while writing |
@@ -442,9 +442,9 @@ Common global options: `-C, --directory <DIR>`, `--config <FILE>`, `--format <hu
 
 ### 9.7 Versioning and compatibility
 
-- The **rule format** has its own version (`"format": 1`), independent of the binary's. A binary reads all earlier formats, and `checkmate migrate` rewrites the file to the current format.
+- The **rule format** has its own version (`"format": 1`), independent of the binary's. A binary reads all earlier formats, and `rulelink migrate` rewrites the file to the current format.
 - The **external adapter protocol** is versioned (`protocol: "1.0"`) and negotiated at initialisation.
-- **Skills** declare the minimum CLI version. `checkmate doctor` checks compatibility.
+- **Skills** declare the minimum CLI version. `rulelink doctor` checks compatibility.
 - The binary follows SemVer. JSON outputs are stable within a major version.
 - The full versioning matrix, release pipeline and deprecation policy are specified in [Release lifecycle](../repository/02-release-lifecycle.md), section 4.
 
@@ -455,11 +455,11 @@ Common global options: `-C, --directory <DIR>`, `--config <FILE>`, `--format <hu
 | GitHub releases via release-plz + dist (see [Release lifecycle](../repository/02-release-lifecycle.md)) | Binaries for Linux x86_64 and arm64 (musl), macOS x86_64 and arm64, Windows x86_64 | MVP |
 | `curl \| sh` and PowerShell installers | Same | V1 |
 | Homebrew, Scoop, winget | Same | V1 |
-| npm (`npx checkmate`) | Thin package that downloads the platform binary. The only user-facing installer in the MVP | MVP |
-| Docker image `ghcr.io/.../checkmate` | For CI without a download step | V1 |
+| npm (`npx rulelink`) | Thin package that downloads the platform binary. The only user-facing installer in the MVP | MVP |
+| Docker image `ghcr.io/.../rulelink` | For CI without a download step | V1 |
 | GitHub Action, GitLab CI component | `check` in a few lines | V2 |
 | Skills | `skills/` folder of the monorepo, installable with `npx skills add` and `apm install` (see [Repository structure](../repository/01-repository-structure.md)) | MVP |
-| `cargo install checkmate-cli` | For contributors | MVP |
+| `cargo install rulelink-cli` | For contributors | MVP |
 
 ### 9.9 Test strategy
 
@@ -467,7 +467,7 @@ Common global options: `-C, --directory <DIR>`, `--config <FILE>`, `--format <hu
 |---|---|---|
 | Unit | `cargo test`, `proptest` | State transitions, `@rule` grammar, filters, ID allocation |
 | Snapshot | `insta` | CLI outputs (`human`, `json`, `sarif`), Markdown and Confluence renderings |
-| Adapter contract | `checkmate-adapter-sdk::conformance` kit | Every native or external adapter passes the same suite |
+| Adapter contract | `rulelink-adapter-sdk::conformance` kit | Every native or external adapter passes the same suite |
 | HTTP integration | `wiremock` | Jira and Confluence, Cloud and Data Center editions |
 | End to end | The brief's example repository | `init` → retro-documentation → `check` → publishing |
 | Architecture | Test reading `cargo metadata` | Dependency rules from section 5 |
@@ -502,7 +502,7 @@ Release frames (MVP, V1, V2), the feature-by-release table and the exit criteria
 
 | Topic | Risk | Way forward |
 |---|---|---|
-| Git conflicts on a single `rules.json` | Frequent in practice when several people add or edit rules | Canonical line-oriented formatting applied on every write (one property per line), `checkmate rules format` to repair a hand-merged file, `check` reports a non-canonical file; `json-dir` source in V1 |
+| Git conflicts on a single `rules.json` | Frequent in practice when several people add or edit rules | Canonical line-oriented formatting applied on every write (one property per line), `rulelink rules format` to repair a hand-merged file, `check` reports a non-canonical file; `json-dir` source in V1 |
 | False positives from the lexical scan | `@rule` inside a string literal or a documentation example | Language profiles restricted to comments; `scan.exclude`; tree-sitter in V2 |
 | Changes to Atlassian APIs | Jira Cloud search endpoints and the ADF format keep evolving | Bridge per edition, `wiremock` tests on recorded responses, documented minimum version |
 | Young skill tooling (`npx skills`, APM) | Changing flags and formats | Installer as a Strategy, fallback copy embedded in the binary |

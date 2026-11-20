@@ -1,4 +1,4 @@
-/// Errors raised by `checkmate-publish`.
+/// Errors raised by `rulelink-publish`.
 #[derive(Debug, thiserror::Error)]
 pub enum Error {
     /// The requested capability is not implemented yet.

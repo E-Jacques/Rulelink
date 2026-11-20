@@ -1,5 +1,5 @@
 [package]
-name = "checkmate-import"
+name = "rulelink-import"
 description = "Import of rules from files and external sources."
 version.workspace = true
 edition.workspace = true
@@ -13,5 +13,5 @@ workspace = true
 
 [dependencies]
 thiserror.workspace = true
-checkmate-registry.workspace = true
-checkmate-adapter-sdk.workspace = true
+rulelink-registry.workspace = true
+rulelink-adapter-sdk.workspace = true

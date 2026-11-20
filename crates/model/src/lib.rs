@@ -1,4 +1,4 @@
-//! Core domain model of Checkmate: rules, identifiers, statuses and links.
+//! Core domain model of Rulelink: rules, identifiers, statuses and links.
 
 mod draft;
 mod error;

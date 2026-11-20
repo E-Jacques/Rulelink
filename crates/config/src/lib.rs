@@ -1,4 +1,4 @@
-//! Project discovery and configuration (checkmate.toml).
+//! Project discovery and configuration (rulelink.toml).
 
 mod error;
 
@@ -6,17 +6,17 @@ use std::path::{Component, Path, PathBuf};
 
 use serde::Deserialize;
 
-pub use checkmate_model::{DEFAULT_ID_PREFIX, IdPrefix};
 pub use error::Error;
+pub use rulelink_model::{DEFAULT_ID_PREFIX, IdPrefix};
 
 /// Name of the configuration file at the project root.
-pub const CONFIG_FILE: &str = "checkmate.toml";
+pub const CONFIG_FILE: &str = "rulelink.toml";
 /// Default location of the Source, relative to the project root (always `/`-separated).
 pub const DEFAULT_SOURCE_PATH: &str = "rules/rules.json";
-/// Template of the `checkmate.toml` written by `init`, embedded at compile time.
-const INITIAL_TEMPLATE: &str = include_str!("../templates/checkmate.toml");
+/// Template of the `rulelink.toml` written by `init`, embedded at compile time.
+const INITIAL_TEMPLATE: &str = include_str!("../templates/rulelink.toml");
 
-/// Renders the `checkmate.toml` written by `init`.
+/// Renders the `rulelink.toml` written by `init`.
 #[must_use]
 pub fn render_initial(prefix: &IdPrefix) -> String {
     INITIAL_TEMPLATE
@@ -52,7 +52,7 @@ struct RawRules {
 }
 
 impl Config {
-    /// Reads and validates `checkmate.toml` in `root`.
+    /// Reads and validates `rulelink.toml` in `root`.
     ///
     /// Strict: an unknown `source.kind`, a missing section or a `source.path` that is not
     /// relative or leaves the project is an error. Nothing is defaulted silently.
@@ -182,10 +182,10 @@ mod tests {
 
     #[test]
     fn missing_file_points_to_init() {
-        let dir = std::env::temp_dir().join("checkmate-config-missing-test");
+        let dir = std::env::temp_dir().join("rulelink-config-missing-test");
         let err = Config::load(&dir)
             .expect_err("no config in an empty directory")
             .to_string();
-        assert!(err.contains("checkmate init"), "{err}");
+        assert!(err.contains("rulelink init"), "{err}");
     }
 }

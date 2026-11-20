@@ -1,8 +1,8 @@
-# Checkmate
+# Rulelink
 
 **Every business rule stays attached to its code, even when the team changes.**
 
-Checkmate answers two questions:
+Rulelink answers two questions:
 
 1. **Which business rule does this code implement?**
 2. **Which rules no longer have any code?**
@@ -47,10 +47,10 @@ AI only intervenes through skills run by the developer's own agent, always with 
 
 | Command | Purpose |
 |---|---|
-| `checkmate init` | Create the configuration and install the skills |
-| `checkmate check` | Run the checks (locally or in CI) |
-| `checkmate explain <file>` | List the rules implemented in a file |
-| `checkmate where <rule-id>` | List the code locations of a rule |
+| `rulelink init` | Create the configuration and install the skills |
+| `rulelink check` | Run the checks (locally or in CI) |
+| `rulelink explain <file>` | List the rules implemented in a file |
+| `rulelink where <rule-id>` | List the code locations of a rule |
 
 ## Roadmap
 

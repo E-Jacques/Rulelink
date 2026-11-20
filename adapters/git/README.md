@@ -1,5 +1,5 @@
-# checkmate-adapter-git
+# rulelink-adapter-git
 
 Git adapter.
 
-Part of the [Checkmate](https://github.com/E-Jacques/checkmate) monorepo.
+Part of the [Rulelink](https://github.com/E-Jacques/rulelink) monorepo.

@@ -8,5 +8,5 @@ name = "xtask"
 release = false
 
 [[package]]
-name = "checkmate-e2e"
+name = "rulelink-e2e"
 release = false

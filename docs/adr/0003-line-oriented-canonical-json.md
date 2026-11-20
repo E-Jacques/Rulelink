@@ -1,6 +1,6 @@
 # The rules file is written in a line-oriented canonical form
 
-Every write of the JSON source puts each object property and each array element on its own line, sorts rules in natural identifier order and keys in schema order, and never aligns or reflows. `checkmate rules format` rewrites a file into this form and `check` warns (`CM106`) when a file is not canonical.
+Every write of the JSON source puts each object property and each array element on its own line, sorts rules in natural identifier order and keys in schema order, and never aligns or reflows. `rulelink rules format` rewrites a file into this form and `check` warns (`CM106`) when a file is not canonical.
 
 Concurrent edits to business rules happen all the time in practice, so Git merge conflicts on the single `rules.json` are expected rather than exceptional. With one property per line, independent changes touch different lines and a real conflict is small enough to fix by hand; the formatter then normalises the result.
 

@@ -1,5 +1,5 @@
 [package]
-name = "checkmate-publish"
+name = "rulelink-publish"
 description = "Publishing and export of rules to external destinations."
 version.workspace = true
 edition.workspace = true
@@ -13,6 +13,6 @@ workspace = true
 
 [dependencies]
 thiserror.workspace = true
-checkmate-registry.workspace = true
-checkmate-link.workspace = true
-checkmate-adapter-sdk.workspace = true
+rulelink-registry.workspace = true
+rulelink-link.workspace = true
+rulelink-adapter-sdk.workspace = true
