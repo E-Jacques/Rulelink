@@ -14,7 +14,7 @@ use crate::runtime::AppError;
 ///
 /// # Errors
 /// [`AppError::Config`] for a missing or invalid `checkmate.toml`, [`AppError::Source`] for a
-/// missing, invalid or unsupported Source, [`AppError::Input`] if no Identifier is left,
+/// missing, invalid or unsupported Source, [`AppError::Source`] if no Identifier is left,
 /// [`AppError::Internal`] on I/O failure.
 pub fn add(root: &Path, draft: RuleDraft) -> Result<RuleId, AppError> {
     let config = Config::load(root)?;

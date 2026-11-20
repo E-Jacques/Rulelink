@@ -1,4 +1,4 @@
-use crate::{Error, RuleId};
+use crate::{InvalidIdPrefix, RuleId};
 
 /// Default Identifier prefix.
 pub const DEFAULT_ID_PREFIX: &str = "RULE";
@@ -11,15 +11,15 @@ impl IdPrefix {
     /// Validates a prefix.
     ///
     /// # Errors
-    /// Returns [`Error::InvalidIdPrefix`] if `raw` does not match `[A-Z][A-Z0-9_]*`.
-    pub fn parse(raw: &str) -> Result<Self, Error> {
+    /// Returns [`InvalidIdPrefix`] if `raw` does not match `[A-Z][A-Z0-9_]*`.
+    pub fn parse(raw: &str) -> Result<Self, InvalidIdPrefix> {
         let mut chars = raw.chars();
         let valid = chars.next().is_some_and(|c| c.is_ascii_uppercase())
             && chars.all(|c| c.is_ascii_uppercase() || c.is_ascii_digit() || c == '_');
         if valid {
             Ok(Self(raw.to_owned()))
         } else {
-            Err(Error::InvalidIdPrefix(raw.to_owned()))
+            Err(InvalidIdPrefix(raw.to_owned()))
         }
     }
 
@@ -64,10 +64,7 @@ mod tests {
     #[test]
     fn rejects_empty_lowercase_and_leading_digit() {
         for raw in ["", "br", "2BR", "B R", "B-R"] {
-            assert_eq!(
-                IdPrefix::parse(raw),
-                Err(Error::InvalidIdPrefix(raw.to_owned()))
-            );
+            assert_eq!(IdPrefix::parse(raw), Err(InvalidIdPrefix(raw.to_owned())));
         }
     }
 

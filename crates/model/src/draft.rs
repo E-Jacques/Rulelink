@@ -1,4 +1,4 @@
-use crate::{Error, Rule, RuleId, RuleStatus, Scope};
+use crate::{DraftError, Rule, RuleId, RuleStatus, Scope};
 
 /// Longest accepted title, in characters.
 pub const TITLE_MAX_CHARS: usize = 120;
@@ -22,8 +22,8 @@ impl RuleDraft {
     /// Text is trimmed before it is checked and stored. `module` is `None` when not given.
     ///
     /// # Errors
-    /// [`Error::Empty`] for an empty title, statement, module or list item,
-    /// [`Error::TitleTooLong`] past [`TITLE_MAX_CHARS`], [`Error::Duplicate`] for a repeated
+    /// [`DraftError::Empty`] for an empty title, statement, module or list item,
+    /// [`DraftError::TitleTooLong`] past [`TITLE_MAX_CHARS`], [`DraftError::Duplicate`] for a repeated
     /// list item.
     pub fn new(
         title: &str,
@@ -32,11 +32,11 @@ impl RuleDraft {
         module: Option<&str>,
         covered: &[String],
         excluded: &[String],
-    ) -> Result<Self, Error> {
+    ) -> Result<Self, DraftError> {
         let title = non_empty("title", title)?;
         let len = title.chars().count();
         if len > TITLE_MAX_CHARS {
-            return Err(Error::TitleTooLong {
+            return Err(DraftError::TitleTooLong {
                 len,
                 max: TITLE_MAX_CHARS,
             });
@@ -72,21 +72,21 @@ impl RuleDraft {
     }
 }
 
-fn non_empty(field: &'static str, raw: &str) -> Result<String, Error> {
+fn non_empty(field: &'static str, raw: &str) -> Result<String, DraftError> {
     let trimmed = raw.trim();
     if trimmed.is_empty() {
-        Err(Error::Empty { field })
+        Err(DraftError::Empty { field })
     } else {
         Ok(trimmed.to_owned())
     }
 }
 
-fn unique_items(field: &'static str, raw: &[String]) -> Result<Vec<String>, Error> {
+fn unique_items(field: &'static str, raw: &[String]) -> Result<Vec<String>, DraftError> {
     let mut items: Vec<String> = Vec::with_capacity(raw.len());
     for item in raw {
         let item = non_empty(field, item)?;
         if items.contains(&item) {
-            return Err(Error::Duplicate { field, value: item });
+            return Err(DraftError::Duplicate { field, value: item });
         }
         items.push(item);
     }
@@ -97,7 +97,7 @@ fn unique_items(field: &'static str, raw: &[String]) -> Result<Vec<String>, Erro
 mod tests {
     use super::*;
 
-    fn draft(title: &str, statement: &str) -> Result<RuleDraft, Error> {
+    fn draft(title: &str, statement: &str) -> Result<RuleDraft, DraftError> {
         RuleDraft::new(title, statement, &[], None, &[], &[])
     }
 
@@ -112,8 +112,11 @@ mod tests {
 
     #[test]
     fn blank_title_and_statement_are_refused() {
-        assert_eq!(draft(" ", "S"), Err(Error::Empty { field: "title" }));
-        assert_eq!(draft("T", "\t"), Err(Error::Empty { field: "statement" }));
+        assert_eq!(draft(" ", "S"), Err(DraftError::Empty { field: "title" }));
+        assert_eq!(
+            draft("T", "\t"),
+            Err(DraftError::Empty { field: "statement" })
+        );
     }
 
     #[test]
@@ -123,7 +126,7 @@ mod tests {
         let long = "é".repeat(TITLE_MAX_CHARS + 1);
         assert_eq!(
             draft(&long, "S"),
-            Err(Error::TitleTooLong { len: 121, max: 120 })
+            Err(DraftError::TitleTooLong { len: 121, max: 120 })
         );
     }
 
@@ -141,7 +144,7 @@ mod tests {
         let dup = vec!["a".to_owned(), " a".to_owned()];
         assert_eq!(
             RuleDraft::new("T", "S", &dup, None, &[], &[]),
-            Err(Error::Duplicate {
+            Err(DraftError::Duplicate {
                 field: "application",
                 value: "a".into()
             })

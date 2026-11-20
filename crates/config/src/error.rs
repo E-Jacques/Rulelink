@@ -2,11 +2,10 @@ use std::path::PathBuf;
 
 /// Errors raised by `checkmate-config`.
 #[derive(Debug, thiserror::Error)]
-#[non_exhaustive]
 pub enum Error {
     /// The Identifier prefix is malformed.
     #[error(transparent)]
-    InvalidIdPrefix(#[from] checkmate_model::Error),
+    InvalidIdPrefix(#[from] checkmate_model::InvalidIdPrefix),
     /// There is no `checkmate.toml` in the project root.
     #[error("{} not found: run `checkmate init` first", .0.display())]
     NotFound(PathBuf),

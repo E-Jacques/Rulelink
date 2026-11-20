@@ -165,15 +165,21 @@ impl Bootstrap {
     }
 }
 
-impl From<checkmate_model::Error> for AppError {
-    fn from(err: checkmate_model::Error) -> Self {
+/// Every variant is a refused user value.
+impl From<checkmate_model::DraftError> for AppError {
+    fn from(err: checkmate_model::DraftError) -> Self {
         Self::Input(err.to_string())
     }
 }
 
 impl From<checkmate_config::Error> for AppError {
     fn from(err: checkmate_config::Error) -> Self {
-        Self::Config(err.to_string())
+        use checkmate_config::Error as E;
+        match err {
+            E::InvalidIdPrefix(_) | E::NotFound(_) | E::Unreadable { .. } | E::Invalid { .. } => {
+                Self::Config(err.to_string())
+            }
+        }
     }
 }
 
@@ -185,7 +191,18 @@ impl From<checkmate_adapter_json::Error> for AppError {
             | E::Invalid { .. }
             | E::UnsupportedFormat { .. }
             | E::Unreadable { .. } => Self::Source(err.to_string()),
-            _ => Self::Internal(err.to_string()),
+            E::AlreadyExists | E::Io(_) => Self::Internal(err.to_string()),
+        }
+    }
+}
+
+impl From<checkmate_model::Error> for AppError {
+    fn from(err: checkmate_model::Error) -> Self {
+        use checkmate_model::Error as E;
+        match err {
+            // The Source holds the highest number: it is the Source that is full.
+            E::IdentifierSpaceExhausted(_) => Self::Source(err.to_string()),
+            E::NotImplemented(_) => Self::Internal(err.to_string()),
         }
     }
 }
