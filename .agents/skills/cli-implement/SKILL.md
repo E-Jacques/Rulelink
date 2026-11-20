@@ -26,7 +26,9 @@ Write them before any implementation, and only where applicable:
 
 ## 4. Plan
 
-Decide before coding: how data flows, where ownership is needed, and which traits and data types are required. Read `GLOSSARY.md` and the ADRs in `docs/adr/`, and use the `codebase-design` skill if a new module boundary is involved.
+Write `.scratch/<feature>/plan-<NN>.md` before coding. It follows the deliverables of the `strategic-programming` skill (interface, misuse, ownership, smells, reuse, dependent tickets). Run the `input-boundaries` checklist on every input of the command.
+
+Read `GLOSSARY.md` and the ADRs in `docs/adr/`, and read the `codebase-design` skill whenever you add a function that other code will call, not only for a new module. Commit the plan note with the documentation commit or on its own (`docs(plan): …`).
 
 ## 5. Implement
 
@@ -36,15 +38,22 @@ Commit: `feat(cli): …`
 
 ## 6. Refactor
 
-Ask what the change made awkward and what it would cost to fix. Do the cheap, worthwhile ones. Apply the `strategic-programming` skill.
+Ask what the change made awkward and what it would cost to fix. Apply the `strategic-programming` skill against the plan note: does the code still match it, and which smells appeared during implementation?
 
-Commit: `refactor(cli): …`
+Do the cheap, worthwhile fixes. Commit: `refactor(cli): …`
+
+If you change nothing, the review report must say `Refactor considered: none, because …`. Skipping this step silently is not allowed.
 
 ## 7. Review
 
-Run the `code-review` skill against the branch's merge-base with `main`. Also check Rust idioms (error handling, ownership, needless clones, clippy) and that the code still matches the documentation page from step 2. Fix what is worth fixing.
+Review in two passes, then record the findings.
 
-Record the findings with the `code-review-report` skill.
+1. **Correctness pass**: run the `code-review` skill against the merge-base with `main`. Also check Rust idioms (ownership, needless clones, clippy) and the `Errors` section of `input-boundaries` (one type per cause, no catch-all arm, no blanket `From`, each message names the value or path at fault) and that the code still matches the documentation page from step 2.
+2. **Design pass**: start a fresh subagent with no history of the implementation. Give it only the diff, the plan note, the `strategic-programming` skill, the `input-boundaries` checklist and the list of dependent tickets. Ask it to report smells and unchecked boundary lines. A fresh context is not anchored on the code you just wrote.
+
+Run `cargo xtask arch` and `cargo deny check` as well; they catch what no reviewer should have to.
+
+Fix what is worth fixing. Record the findings of both passes with the `code-review-report` skill.
 
 Commit: `refactor(cli): …` (or `fix(cli): …` if a bug was found)
 
@@ -54,4 +63,4 @@ Control that acceptance criteria have been fulfilled and check them out if yes. 
 
 ## 9. Pull request
 
-Follow the `create-pull-request` skill. Hand it the review report and anything that went wrong along the way.
+Follow the `create-pull-request` skill. Hand it the review report and anything that went wrong along the way. The title and type must match the diff: a `docs(...)` PR contains no implementation.

@@ -34,6 +34,7 @@ pub fn run() -> Result<(), String> {
     let mut errors = Vec::new();
     check_forbidden(&meta, &mut errors);
     check_main(&meta, &mut errors);
+    check_workspace_deps(&meta, &mut errors);
     if errors.is_empty() {
         Ok(())
     } else {
@@ -107,5 +108,73 @@ fn check_main(meta: &Value, errors: &mut Vec<String>) {
         if dir.join("src/main.rs").exists() {
             errors.push(format!("rule `single-main`: `{name}` has a src/main.rs"));
         }
+    }
+}
+
+/// Every dependency of a workspace member is inherited from `[workspace.dependencies]`
+/// (`name.workspace = true` or `name = { workspace = true }`), or is a path dependency.
+fn check_workspace_deps(meta: &Value, errors: &mut Vec<String>) {
+    let members: HashSet<&str> = meta["workspace_members"]
+        .as_array()
+        .into_iter()
+        .flatten()
+        .filter_map(Value::as_str)
+        .collect();
+    for pkg in meta["packages"].as_array().into_iter().flatten() {
+        let (Some(id), Some(name), Some(manifest)) = (
+            pkg["id"].as_str(),
+            pkg["name"].as_str(),
+            pkg["manifest_path"].as_str(),
+        ) else {
+            continue;
+        };
+        if !members.contains(id) {
+            continue;
+        }
+        let Ok(text) = std::fs::read_to_string(manifest) else {
+            continue;
+        };
+        for dep in local_dependencies(&text) {
+            errors.push(format!(
+                "rule `workspace-deps`: `{name}` declares `{dep}` itself; add it to [workspace.dependencies] and use `{dep}.workspace = true`"
+            ));
+        }
+    }
+}
+
+/// Names of dependencies declared with their own version in a member manifest.
+fn local_dependencies(manifest: &str) -> Vec<String> {
+    let mut in_deps = false;
+    let mut found = Vec::new();
+    for line in manifest.lines() {
+        let line = line.trim();
+        if line.starts_with('[') {
+            in_deps = line.ends_with("dependencies]");
+            continue;
+        }
+        if !in_deps || line.is_empty() || line.starts_with('#') {
+            continue;
+        }
+        let Some((name, value)) = line.split_once('=') else {
+            continue;
+        };
+        let (name, value) = (name.trim(), value.trim());
+        let inherited = name.ends_with(".workspace") || value.contains("workspace = true");
+        let local = value.contains("path =");
+        if !inherited && !local {
+            found.push(name.to_owned());
+        }
+    }
+    found
+}
+
+#[cfg(test)]
+mod tests {
+    use super::local_dependencies;
+
+    #[test]
+    fn flags_dependencies_that_bypass_the_workspace() {
+        let manifest = "[dependencies]\ntoml = \"0.8\"\nserde.workspace = true\nx = { workspace = true }\ny = { path = \"../y\" }\n[dev-dependencies]\nz = { version = \"1\" }\n";
+        assert_eq!(local_dependencies(manifest), vec!["toml", "z"]);
     }
 }

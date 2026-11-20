@@ -20,7 +20,11 @@ base: {{ merge-base sha }}
 
 <!-- If there are none, replace the table with: No findings. -->
 
-| # | severity | category | location | description |
-| - | -------- | -------- | -------- | ----------- |
-| 1 | {{ critical, high or minor }} | {{ category }} | `{{ path:line }}` | {{ one sentence }} |
+| # | severity | category | location | description | fixed | blocks |
+| - | -------- | -------- | -------- | ----------- | ----- | ------ |
+| 1 | {{ critical, high or minor }} | {{ category }} | `{{ path:line }}` | {{ one sentence }} | {{ yes or no }} | {{ ticket numbers or none }} |
 <!-- endif -->
+
+## Refactor considered
+
+{{ what the refactor step changed, or `none, because …` }}

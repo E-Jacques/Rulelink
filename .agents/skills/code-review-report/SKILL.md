@@ -27,6 +27,14 @@ Create the `code-review-reports/` directory if it does not exist.
 - Quote the location as `path:line`. Describe the problem in one sentence, and the fix in another if it is not obvious.
 - A clean review is a valid report: keep the summary at zero and write `No findings.` in the findings section.
 
+## Deferred findings
+
+A finding that is not fixed carries a `blocks` value: the dependent tickets that will hit the same problem (found with `grep -l "Blocked by:.*<NN>" .scratch/*/issues/*.md`), or `none`. "Out of scope" is only a valid reason when `blocks` is `none`.
+
+## Refactor considered
+
+End the report with one line: what the refactor step changed, or `none, because …`.
+
 ## Severity
 
 - `critical`: wrong behaviour, data loss, security, or a crash on a normal path.
@@ -43,7 +51,11 @@ Use one of these. When a finding fits several, pick the category of its root cau
 | `spec-gap`       | behaviour missing, partial or extra compared with the issue or spec       |
 | `rust-idiom`     | ownership, needless clones, iterator misuse, clippy-level problems        |
 | `error-handling` | swallowed errors, panics on user input, unhelpful messages                |
-| `design`         | duplication, wrong module boundary, primitive obsession, speculative code |
+| `design`         | duplication, speculative code, anything design-related not listed below   |
+| `temporal-coupling` | calls that must happen in a given order, or state changed before validation |
+| `layering`       | domain logic in `app` or `cli`, a layer that knows too much               |
+| `boundary`       | an unchecked line of the `input-boundaries` checklist                     |
+| `atomicity`      | a failure leaves a file or state half-changed; concurrent writers         |
 | `naming`         | names that do not match `GLOSSARY.md` or do not reveal intent             |
 | `tests`          | missing, brittle, or implementation-coupled tests                         |
 | `docs`           | CLI documentation page or other docs out of sync with the code            |
