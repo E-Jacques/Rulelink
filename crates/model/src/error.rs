@@ -5,6 +5,14 @@
 )]
 pub struct InvalidIdPrefix(pub String);
 
+/// An Identifier given on the command line is blank.
+#[derive(Debug, Clone, PartialEq, Eq, thiserror::Error)]
+#[error("{field} must not be empty or blank")]
+pub struct BlankRuleId {
+    /// Name of the offending value.
+    pub field: &'static str,
+}
+
 /// A value given for a new Rule is refused.
 #[derive(Debug, Clone, PartialEq, Eq, thiserror::Error)]
 pub enum DraftError {
@@ -30,6 +38,34 @@ pub enum DraftError {
         /// The repeated value.
         value: String,
     },
+}
+
+use crate::{RuleId, RuleStatus};
+
+/// A lifecycle command is refused. Every variant names the value or Rule at fault.
+#[derive(Debug, Clone, PartialEq, Eq, thiserror::Error)]
+pub enum LifecycleError {
+    /// No Rule has this Identifier.
+    #[error("no Rule has the Identifier `{0}`")]
+    RuleNotFound(RuleId),
+    /// The Rule is not in the status the transition starts from.
+    #[error("cannot {action} {id}: it is {status}, but a {required} Rule is required")]
+    TransitionRefused {
+        /// The Rule.
+        id: RuleId,
+        /// Its current status.
+        status: RuleStatus,
+        /// The only status the transition accepts.
+        required: RuleStatus,
+        /// The refused action (`approve`, `reject`, `obsolete`).
+        action: &'static str,
+    },
+    /// The replacement Rule does not exist.
+    #[error("cannot record `{0}` as the replacement: no Rule has this Identifier")]
+    ReplacementNotFound(RuleId),
+    /// A Rule cannot replace itself.
+    #[error("{0} cannot be its own replacement")]
+    SelfReplacement(RuleId),
 }
 
 /// Errors raised by `rulelink-model` outside input validation.

@@ -8,6 +8,7 @@ use clap::{Parser, Subcommand};
 
 mod init;
 mod rules_add;
+mod rules_lifecycle;
 
 use init::InitArgs;
 use rulelink_app::Error;
@@ -15,6 +16,7 @@ use rulelink_app::runtime::{
     AppContext, CancellationToken, Entrypoint, Outcome, ShutdownReason, TelemetryConfig, UsageError,
 };
 use rules_add::RulesAddArgs;
+use rules_lifecycle::{RuleRefArgs, RulesObsoleteArgs};
 
 /// Command line grammar, derived by `clap`.
 #[derive(Debug, Parser)]
@@ -42,6 +44,12 @@ pub enum Command {
 pub enum RulesAction {
     /// Create a `proposed` Rule with a newly allocated Identifier.
     Add(RulesAddArgs),
+    /// Mark a `proposed` Rule as `validated`.
+    Approve(RuleRefArgs),
+    /// Decline a `proposed` Rule and retire its Identifier.
+    Reject(RuleRefArgs),
+    /// Retire a `validated` Rule, optionally recording its replacement.
+    Obsolete(RulesObsoleteArgs),
 }
 
 /// Parsed command line.
@@ -106,6 +114,15 @@ fn dispatch(args: CliArgs) -> Result<(), Error> {
         CliArgs::Run(Command::Rules {
             action: RulesAction::Add(args),
         }) => rules_add::run(&args),
+        CliArgs::Run(Command::Rules {
+            action: RulesAction::Approve(args),
+        }) => rules_lifecycle::approve(&args),
+        CliArgs::Run(Command::Rules {
+            action: RulesAction::Reject(args),
+        }) => rules_lifecycle::reject(&args),
+        CliArgs::Run(Command::Rules {
+            action: RulesAction::Obsolete(args),
+        }) => rules_lifecycle::obsolete(&args),
     }
 }
 

@@ -1,26 +1,59 @@
-//! `rules add`: create a proposed Rule in the Source.
+//! Rule use cases: create a Rule and move it along its lifecycle.
 
 use std::path::Path;
 
 use rulelink_config::Config;
-use rulelink_model::{RuleDraft, RuleId};
+use rulelink_model::{RuleDraft, RuleId, RuleSet};
 
 use crate::Error;
 
-/// Appends `draft` to the Source as a `proposed` Rule and returns its new Identifier.
+/// Loads the configuration and the Source, applies `change`, then writes the Source once.
 ///
-/// Reads the configuration and the Source, allocates, then writes once at the end: any
-/// failure leaves the Source as it was.
+/// Any failure, including one from `change`, leaves the Source as it was.
+fn update_source<T>(
+    root: &Path,
+    change: impl FnOnce(&Config, &mut RuleSet) -> Result<T, Error>,
+) -> Result<T, Error> {
+    let config = Config::load(root)?;
+    let source_path = root.join(&config.source_path);
+    let mut rule_set = rulelink_adapter_json::read_source(&source_path)?;
+    let out = change(&config, &mut rule_set)?;
+    rulelink_adapter_json::write_source(&source_path, &rule_set)?;
+    Ok(out)
+}
+
+/// Appends `draft` to the Source as a `proposed` Rule and returns its new Identifier.
 ///
 /// # Errors
 /// [`Error::Config`] for a missing or invalid `rulelink.toml`, [`Error::Source`] for a
 /// missing, invalid or unsupported Source, [`Error::Source`] if no Identifier is left,
 /// [`Error::Internal`] on I/O failure.
 pub fn add(root: &Path, draft: RuleDraft) -> Result<RuleId, Error> {
-    let config = Config::load(root)?;
-    let source_path = root.join(&config.source_path);
-    let mut rule_set = rulelink_adapter_json::read_source(&source_path)?;
-    let id = rule_set.add(&config.id_prefix, draft)?;
-    rulelink_adapter_json::write_source(&source_path, &rule_set)?;
-    Ok(id)
+    update_source(root, |config, set| Ok(set.add(&config.id_prefix, draft)?))
+}
+
+/// Moves a `proposed` Rule to `validated`.
+///
+/// # Errors
+/// [`Error::Input`] if the Rule does not exist or is not `proposed`; otherwise as [`add`].
+pub fn approve(root: &Path, id: &RuleId) -> Result<(), Error> {
+    update_source(root, |_, set| Ok(set.approve(id)?))
+}
+
+/// Moves a `proposed` Rule to `rejected` and retires its Identifier.
+///
+/// # Errors
+/// [`Error::Input`] if the Rule does not exist or is not `proposed`; otherwise as [`add`].
+pub fn reject(root: &Path, id: &RuleId) -> Result<(), Error> {
+    update_source(root, |_, set| Ok(set.reject(id)?))
+}
+
+/// Moves a `validated` Rule to `obsolete`, retires its Identifier and records the Rule that
+/// replaces it, if any.
+///
+/// # Errors
+/// [`Error::Input`] if the Rule does not exist or is not `validated`, or the replacement is
+/// unknown or the Rule itself; otherwise as [`add`].
+pub fn obsolete(root: &Path, id: &RuleId, superseded_by: Option<&RuleId>) -> Result<(), Error> {
+    update_source(root, |_, set| Ok(set.obsolete(id, superseded_by)?))
 }

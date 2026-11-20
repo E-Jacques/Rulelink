@@ -34,6 +34,19 @@ impl From<rulelink_model::DraftError> for Error {
     }
 }
 
+impl From<rulelink_model::BlankRuleId> for Error {
+    fn from(err: rulelink_model::BlankRuleId) -> Self {
+        Self::Input(err.to_string())
+    }
+}
+
+/// Every variant is a Rule or replacement the user named, or a transition they asked for.
+impl From<rulelink_model::LifecycleError> for Error {
+    fn from(err: rulelink_model::LifecycleError) -> Self {
+        Self::Input(err.to_string())
+    }
+}
+
 impl From<rulelink_config::Error> for Error {
     fn from(err: rulelink_config::Error) -> Self {
         use rulelink_config::Error as E;

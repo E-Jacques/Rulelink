@@ -5,6 +5,28 @@ use serde::{Deserialize, Serialize};
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 pub struct RuleId(pub String);
 
+impl RuleId {
+    /// Reads an Identifier typed by a user: surrounding whitespace is dropped, blank is refused.
+    /// Whether a Rule has this Identifier is for the [`crate::RuleSet`] to say.
+    ///
+    /// # Errors
+    /// [`crate::BlankRuleId`] naming `field` if nothing is left after trimming.
+    pub fn parse(raw: &str, field: &'static str) -> Result<Self, crate::BlankRuleId> {
+        let trimmed = raw.trim();
+        if trimmed.is_empty() {
+            Err(crate::BlankRuleId { field })
+        } else {
+            Ok(Self(trimmed.to_owned()))
+        }
+    }
+}
+
+impl std::fmt::Display for RuleId {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        f.write_str(&self.0)
+    }
+}
+
 /// Lifecycle status of a rule.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
@@ -18,6 +40,17 @@ pub enum RuleStatus {
     Obsolete,
     /// Declined by a human; kept so it is not proposed again.
     Rejected,
+}
+
+impl std::fmt::Display for RuleStatus {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        f.write_str(match self {
+            Self::Proposed => "proposed",
+            Self::Validated => "validated",
+            Self::Obsolete => "obsolete",
+            Self::Rejected => "rejected",
+        })
+    }
 }
 
 /// Covered and excluded cases of a rule.
