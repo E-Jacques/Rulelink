@@ -11,9 +11,9 @@ pub enum Error {
     )]
     InvalidIdPrefix(String),
     /// A required text value is empty once trimmed.
-    #[error("{field} must not be empty")]
+    #[error("{field} must not be empty or blank")]
     Empty {
-        /// Name of the offending option.
+        /// The offending option, as typed on the command line.
         field: &'static str,
     },
     /// The title is longer than allowed.
@@ -27,7 +27,7 @@ pub enum Error {
     /// A list value appears twice.
     #[error("{field} lists `{value}` more than once")]
     Duplicate {
-        /// Name of the offending option.
+        /// The offending option, as typed on the command line.
         field: &'static str,
         /// The repeated value.
         value: String,
