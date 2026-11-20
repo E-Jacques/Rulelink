@@ -55,7 +55,7 @@ The roadmap is your best friend. Build each feature while keeping in mind what c
 
 Do this with commands, not intuition:
 
-1. List the tickets that depend on yours: `grep -l "Blocked by:.*<NN>" .scratch/*/issues/*.md`.
+1. List the tickets that depend on yours: `gh api repos/{owner}/{repo}/issues/<n>/dependencies/blocking --jq '.[].number'`.
 2. For each one, write what it will reuse from your change and what it will need that you do not provide.
 3. Whenever you defer a problem ("out of scope", "unrealistic"), check it against that list. If a dependent ticket hits the same problem, it is not out of scope: fix it, or record which ticket inherits it.
 
