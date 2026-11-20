@@ -41,8 +41,8 @@ Everything that crosses into the program is untrusted: CLI arguments, `checkmate
 Every error says what is wrong, where, and what to do next. Specific beats short.
 
 - **One type per cause.** An error type holds only the failures of one cause (`InvalidIdPrefix`, `DraftError`, not one `Error` for the whole model). A variant named `InvalidIdPrefix` never wraps a generic error of another crate.
-- **No catch-all.** Do not use `#[non_exhaustive]` on the error enums of this workspace: it is for published APIs, and here it forces a `_ =>` arm in the caller that files new variants under the wrong class without a compiler warning. Match every variant by name when converting to `AppError`.
-- **No blanket `From`.** A `From<X> for AppError` is allowed only when every variant of `X` has the same class (document it on the impl). Otherwise convert with an explicit `match`.
+- **No catch-all.** Do not use `#[non_exhaustive]` on the error enums of this workspace: it is for published APIs, and here it forces a `_ =>` arm in the caller that files new variants under the wrong class without a compiler warning. Match every variant by name when converting to `app::Error`.
+- **No blanket `From`.** A `From<X> for app::Error` is allowed only when every variant of `X` has the same class (document it on the impl). Otherwise convert with an explicit `match`.
 - **Class matches the cause**: invalid input, invalid configuration, unreadable Source, internal error. Each class has its own exit code, and "not implemented" or an unexpected I/O failure is never reported as user input.
 - A refused value names the option as the user typed it, a missing or unreadable file names its path, a parse failure gives line and column when the parser has them.
 - Messages are in English and tell the user what to do next.

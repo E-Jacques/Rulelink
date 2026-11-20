@@ -7,7 +7,7 @@ use std::future::Future;
 use std::sync::Arc;
 use std::sync::atomic::{AtomicBool, Ordering};
 
-pub use crate::error::AppError;
+use crate::Error;
 
 /// Cooperative cancellation flag shared between the signal handlers and the run loop.
 #[derive(Debug, Clone, Default)]
@@ -53,7 +53,7 @@ pub enum Outcome {
     /// At least one error-level finding.
     ChecksFailed,
     /// The run failed.
-    Failed(AppError),
+    Failed(Error),
 }
 
 /// Why the process is shutting down.
@@ -87,12 +87,12 @@ pub trait Entrypoint {
     /// Builds the shared context.
     ///
     /// # Errors
-    /// Returns [`AppError`] when discovery or configuration fails.
+    /// Returns [`Error`] when discovery or configuration fails.
     fn build_context(
         &self,
         args: &Self::Args,
         cancel: CancellationToken,
-    ) -> Result<AppContext, AppError>;
+    ) -> Result<AppContext, Error>;
     /// Runs the entry point.
     fn run(&self, ctx: &AppContext) -> impl Future<Output = Outcome>;
     /// Releases resources.

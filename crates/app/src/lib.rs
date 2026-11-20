@@ -5,7 +5,7 @@ pub mod init;
 pub mod rules;
 pub mod runtime;
 
-pub use error::AppError;
+pub use error::Error;
 
 pub use checkmate_config::DEFAULT_ID_PREFIX;
 pub use checkmate_model::{RuleDraft, RuleId};

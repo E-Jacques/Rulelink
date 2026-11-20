@@ -1,7 +1,7 @@
 //! Command groups of the CLI. No business logic here: arguments become application commands.
 //!
 //! Adding a command: add a variant to [`Command`] with its own `clap::Args` struct, a handler
-//! function returning `Result<(), AppError>`, and one line in [`dispatch`].
+//! function returning `Result<(), Error>`, and one line in [`dispatch`].
 
 use clap::error::ErrorKind;
 use clap::{Parser, Subcommand};
@@ -9,9 +9,9 @@ use clap::{Parser, Subcommand};
 mod init;
 mod rules_add;
 
+use checkmate_app::Error;
 use checkmate_app::runtime::{
-    AppContext, AppError, CancellationToken, Entrypoint, Outcome, ShutdownReason, TelemetryConfig,
-    UsageError,
+    AppContext, CancellationToken, Entrypoint, Outcome, ShutdownReason, TelemetryConfig, UsageError,
 };
 use init::InitArgs;
 use rules_add::RulesAddArgs;
@@ -76,7 +76,7 @@ impl Entrypoint for CliEntrypoint {
         &self,
         _args: &Self::Args,
         cancel: CancellationToken,
-    ) -> Result<AppContext, AppError> {
+    ) -> Result<AppContext, Error> {
         Ok(AppContext { cancel })
     }
 
@@ -84,7 +84,7 @@ impl Entrypoint for CliEntrypoint {
         // `Bootstrap` already validated the command line; parsing again is side-effect free.
         let result = match self.parse_args() {
             Ok(args) => dispatch(args),
-            Err(err) => Err(AppError::Internal(err.to_string())),
+            Err(err) => Err(Error::Internal(err.to_string())),
         };
         match result {
             Ok(()) => Outcome::Success,
@@ -96,7 +96,7 @@ impl Entrypoint for CliEntrypoint {
 }
 
 /// One line per command: the handlers hold the logic.
-fn dispatch(args: CliArgs) -> Result<(), AppError> {
+fn dispatch(args: CliArgs) -> Result<(), Error> {
     match args {
         CliArgs::Display(text) => {
             print!("{text}");

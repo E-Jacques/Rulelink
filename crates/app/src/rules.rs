@@ -5,7 +5,7 @@ use std::path::Path;
 use checkmate_config::Config;
 use checkmate_model::{RuleDraft, RuleId};
 
-use crate::runtime::AppError;
+use crate::Error;
 
 /// Appends `draft` to the Source as a `proposed` Rule and returns its new Identifier.
 ///
@@ -13,10 +13,10 @@ use crate::runtime::AppError;
 /// failure leaves the Source as it was.
 ///
 /// # Errors
-/// [`AppError::Config`] for a missing or invalid `checkmate.toml`, [`AppError::Source`] for a
-/// missing, invalid or unsupported Source, [`AppError::Source`] if no Identifier is left,
-/// [`AppError::Internal`] on I/O failure.
-pub fn add(root: &Path, draft: RuleDraft) -> Result<RuleId, AppError> {
+/// [`Error::Config`] for a missing or invalid `checkmate.toml`, [`Error::Source`] for a
+/// missing, invalid or unsupported Source, [`Error::Source`] if no Identifier is left,
+/// [`Error::Internal`] on I/O failure.
+pub fn add(root: &Path, draft: RuleDraft) -> Result<RuleId, Error> {
     let config = Config::load(root)?;
     let source_path = root.join(&config.source_path);
     let mut rule_set = checkmate_adapter_json::read_source(&source_path)?;

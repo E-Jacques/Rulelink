@@ -1,7 +1,7 @@
 //! `rules add`.
 
+use checkmate_app::Error;
 use checkmate_app::RuleDraft;
-use checkmate_app::runtime::AppError;
 use clap::Args;
 
 /// Arguments of `rules add`.
@@ -27,7 +27,7 @@ pub struct RulesAddArgs {
     pub(super) excluded: Vec<String>,
 }
 
-pub(super) fn run(args: &RulesAddArgs) -> Result<(), AppError> {
+pub(super) fn run(args: &RulesAddArgs) -> Result<(), Error> {
     let draft = RuleDraft::new(
         &args.title,
         &args.statement,
@@ -36,7 +36,7 @@ pub(super) fn run(args: &RulesAddArgs) -> Result<(), AppError> {
         &args.covered,
         &args.excluded,
     )?;
-    let root = std::env::current_dir().map_err(|e| AppError::Internal(e.to_string()))?;
+    let root = std::env::current_dir().map_err(|e| Error::Internal(e.to_string()))?;
     let id = checkmate_app::rules::add(&root, draft)?;
     println!("Created {} (proposed)", id.0);
     Ok(())

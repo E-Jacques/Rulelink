@@ -7,15 +7,15 @@ use std::path::Path;
 use checkmate_config::{CONFIG_FILE, DEFAULT_SOURCE_PATH, IdPrefix};
 use checkmate_model::RuleSet;
 
-use crate::runtime::AppError;
+use crate::Error;
 
 /// Initialises Checkmate in `root`. Refuses, touching nothing, if a setup already exists.
 ///
 /// # Errors
-/// Returns [`AppError::Config`] for an invalid prefix or an existing setup, and
-/// [`AppError::Internal`] on I/O failure.
-pub fn init(root: &Path, prefix: &str) -> Result<(), AppError> {
-    let prefix = IdPrefix::parse(prefix).map_err(|e| AppError::Config(e.to_string()))?;
+/// Returns [`Error::Config`] for an invalid prefix or an existing setup, and
+/// [`Error::Internal`] on I/O failure.
+pub fn init(root: &Path, prefix: &str) -> Result<(), Error> {
+    let prefix = IdPrefix::parse(prefix).map_err(|e| Error::Config(e.to_string()))?;
     let config_path = root.join(CONFIG_FILE);
     let source_path = root.join(DEFAULT_SOURCE_PATH);
     for (path, name) in [
@@ -23,7 +23,7 @@ pub fn init(root: &Path, prefix: &str) -> Result<(), AppError> {
         (&source_path, DEFAULT_SOURCE_PATH),
     ] {
         if path.exists() {
-            return Err(AppError::Config(format!(
+            return Err(Error::Config(format!(
                 "already initialised: {name} exists, nothing was changed"
             )));
         }
@@ -44,6 +44,6 @@ fn write_new(path: &Path, content: &str) -> std::io::Result<()> {
         .write_all(content.as_bytes())
 }
 
-fn internal(err: impl std::fmt::Display) -> AppError {
-    AppError::Internal(err.to_string())
+fn internal(err: impl std::fmt::Display) -> Error {
+    Error::Internal(err.to_string())
 }

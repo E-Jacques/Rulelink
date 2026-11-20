@@ -1,6 +1,6 @@
 /// Application-level failure.
 #[derive(Debug, thiserror::Error)]
-pub enum AppError {
+pub enum Error {
     /// Invalid input: a value the user supplied is refused.
     #[error("invalid input: {0}")]
     Input(String),
@@ -15,7 +15,7 @@ pub enum AppError {
     Internal(String),
 }
 
-impl AppError {
+impl Error {
     /// Exit code of the error (docs/architecture/00, section 9.2).
     #[must_use]
     pub fn exit_code(&self) -> u8 {
@@ -28,13 +28,13 @@ impl AppError {
 }
 
 /// Every variant is a refused user value.
-impl From<checkmate_model::DraftError> for AppError {
+impl From<checkmate_model::DraftError> for Error {
     fn from(err: checkmate_model::DraftError) -> Self {
         Self::Input(err.to_string())
     }
 }
 
-impl From<checkmate_config::Error> for AppError {
+impl From<checkmate_config::Error> for Error {
     fn from(err: checkmate_config::Error) -> Self {
         use checkmate_config::Error as E;
         match err {
@@ -45,7 +45,7 @@ impl From<checkmate_config::Error> for AppError {
     }
 }
 
-impl From<checkmate_adapter_json::Error> for AppError {
+impl From<checkmate_adapter_json::Error> for Error {
     fn from(err: checkmate_adapter_json::Error) -> Self {
         use checkmate_adapter_json::Error as E;
         match err {
@@ -58,7 +58,7 @@ impl From<checkmate_adapter_json::Error> for AppError {
     }
 }
 
-impl From<checkmate_model::Error> for AppError {
+impl From<checkmate_model::Error> for Error {
     fn from(err: checkmate_model::Error) -> Self {
         use checkmate_model::Error as E;
         match err {
