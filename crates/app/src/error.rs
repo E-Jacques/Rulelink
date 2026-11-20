@@ -28,15 +28,15 @@ impl Error {
 }
 
 /// Every variant is a refused user value.
-impl From<checkmate_model::DraftError> for Error {
-    fn from(err: checkmate_model::DraftError) -> Self {
+impl From<rulelink_model::DraftError> for Error {
+    fn from(err: rulelink_model::DraftError) -> Self {
         Self::Input(err.to_string())
     }
 }
 
-impl From<checkmate_config::Error> for Error {
-    fn from(err: checkmate_config::Error) -> Self {
-        use checkmate_config::Error as E;
+impl From<rulelink_config::Error> for Error {
+    fn from(err: rulelink_config::Error) -> Self {
+        use rulelink_config::Error as E;
         match err {
             E::InvalidIdPrefix(_) | E::NotFound(_) | E::Unreadable { .. } | E::Invalid { .. } => {
                 Self::Config(err.to_string())
@@ -45,9 +45,9 @@ impl From<checkmate_config::Error> for Error {
     }
 }
 
-impl From<checkmate_adapter_json::Error> for Error {
-    fn from(err: checkmate_adapter_json::Error) -> Self {
-        use checkmate_adapter_json::Error as E;
+impl From<rulelink_adapter_json::Error> for Error {
+    fn from(err: rulelink_adapter_json::Error) -> Self {
+        use rulelink_adapter_json::Error as E;
         match err {
             E::NotFound(_)
             | E::Invalid { .. }
@@ -58,9 +58,9 @@ impl From<checkmate_adapter_json::Error> for Error {
     }
 }
 
-impl From<checkmate_model::Error> for Error {
-    fn from(err: checkmate_model::Error) -> Self {
-        use checkmate_model::Error as E;
+impl From<rulelink_model::Error> for Error {
+    fn from(err: rulelink_model::Error) -> Self {
+        use rulelink_model::Error as E;
         match err {
             // The Source holds the highest number: it is the Source that is full.
             E::IdentifierSpaceExhausted(_) => Self::Source(err.to_string()),

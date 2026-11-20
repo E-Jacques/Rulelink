@@ -1,6 +1,6 @@
-//! `checkmate rules add`: create a proposed Rule with an allocated Identifier.
+//! `rulelink rules add`: create a proposed Rule with an allocated Identifier.
 
-use checkmate_e2e::Repo;
+use rulelink_e2e::Repo;
 
 fn initialised() -> Repo {
     let repo = Repo::new();
@@ -8,7 +8,7 @@ fn initialised() -> Repo {
     repo
 }
 
-fn add(repo: &Repo, title: &str) -> checkmate_e2e::Run {
+fn add(repo: &Repo, title: &str) -> rulelink_e2e::Run {
     repo.run(&[
         "rules",
         "add",
@@ -209,7 +209,7 @@ fn without_init_the_command_explains_what_to_do() {
     let run = add(&repo, "One");
     assert_eq!(run.code, 2);
     assert!(
-        run.stderr.contains("checkmate init"),
+        run.stderr.contains("rulelink init"),
         "stderr: {}",
         run.stderr
     );
@@ -218,9 +218,9 @@ fn without_init_the_command_explains_what_to_do() {
 #[test]
 fn unsupported_source_kind_is_refused() {
     let repo = initialised();
-    let config = repo.read("checkmate.toml").expect("config");
+    let config = repo.read("rulelink.toml").expect("config");
     repo.write(
-        "checkmate.toml",
+        "rulelink.toml",
         &config.replace("kind = \"json\"", "kind = \"csv\""),
     );
     let run = add(&repo, "One");
@@ -231,9 +231,9 @@ fn unsupported_source_kind_is_refused() {
 #[test]
 fn source_path_escaping_the_project_is_refused() {
     let repo = initialised();
-    let config = repo.read("checkmate.toml").expect("config");
+    let config = repo.read("rulelink.toml").expect("config");
     repo.write(
-        "checkmate.toml",
+        "rulelink.toml",
         &config.replace("rules/rules.json", "../outside.json"),
     );
     let run = add(&repo, "One");

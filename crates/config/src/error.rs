@@ -1,13 +1,13 @@
 use std::path::PathBuf;
 
-/// Errors raised by `checkmate-config`.
+/// Errors raised by `rulelink-config`.
 #[derive(Debug, thiserror::Error)]
 pub enum Error {
     /// The Identifier prefix is malformed.
     #[error(transparent)]
-    InvalidIdPrefix(#[from] checkmate_model::InvalidIdPrefix),
-    /// There is no `checkmate.toml` in the project root.
-    #[error("{} not found: run `checkmate init` first", .0.display())]
+    InvalidIdPrefix(#[from] rulelink_model::InvalidIdPrefix),
+    /// There is no `rulelink.toml` in the project root.
+    #[error("{} not found: run `rulelink init` first", .0.display())]
     NotFound(PathBuf),
     /// The file exists but cannot be read.
     #[error("cannot read {}: {message}", .path.display())]

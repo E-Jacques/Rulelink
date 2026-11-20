@@ -1,4 +1,4 @@
-/// Errors raised by `checkmate-link`.
+/// Errors raised by `rulelink-link`.
 #[derive(Debug, thiserror::Error)]
 pub enum Error {
     /// The requested capability is not implemented yet.

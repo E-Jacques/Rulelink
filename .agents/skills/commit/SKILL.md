@@ -27,7 +27,7 @@ Technical trailers for this commit. Replace `<model>` with the model you are run
 ```text
 feat(cli): add init command
 
-Register the `checkmate init` command and its `--id-prefix` option.
+Register the `rulelink init` command and its `--id-prefix` option.
 Hand-rolled argument parsing was producing too much code, so the CLI now uses `clap`.
 
 Assisted-by: <model>

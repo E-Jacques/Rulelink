@@ -44,14 +44,14 @@ Other languages use their own comment syntax: `//` (Go, TypeScript, C#, Kotlin, 
 
 ## Where to place it
 
-Put the annotation directly above the code that implements or tests the rule (a function, a block, a test). Use `checkmate annotate <path>:<line> <RULE-ID>` rather than editing by hand: it picks the right comment syntax for the language and prints the diff. Add `--dry-run` to preview, `--remove` to take an identifier out.
+Put the annotation directly above the code that implements or tests the rule (a function, a block, a test). Use `rulelink annotate <path>:<line> <RULE-ID>` rather than editing by hand: it picks the right comment syntax for the language and prints the diff. Add `--dry-run` to preview, `--remove` to take an identifier out.
 
 ## Rules to follow
 
 - Only cite rules that exist in the source. Never invent an identifier.
-- Do not cite a `rejected` or `obsolete` rule: `checkmate check` reports an error. See `statuses.md`.
+- Do not cite a `rejected` or `obsolete` rule: `rulelink check` reports an error. See `statuses.md`.
 - Never rename an identifier. It is immutable.
-- Run `checkmate check` after annotating.
+- Run `rulelink check` after annotating.
 
 ## Placement when documenting legacy code
 

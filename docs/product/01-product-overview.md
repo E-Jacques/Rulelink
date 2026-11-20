@@ -1,11 +1,11 @@
-# Checkmate — Product overview
+# Rulelink — Product overview
 
 > What the product is, who it is for and why it exists. This file restates the product brief (*Product brief — Business rule traceability*, 31 October 2026) in English; the brief remains the reference for product decisions.
 > See also: [Features and releases](02-features-and-releases.md), [Global architecture](../architecture/00-global-architecture.md).
 
 ## 1. Summary
 
-Checkmate (final name, confirmed) keeps a team from losing the business knowledge buried in its code. It answers two questions:
+Rulelink (final name, confirmed) keeps a team from losing the business knowledge buried in its code. It answers two questions:
 
 1. **Which business rule does this code implement?**
 2. **Which rules no longer have any code?**
@@ -40,7 +40,7 @@ The first user is always the same: a developer able to install the tool without 
 
 ### 3.1 Three entry points
 
-| Context | Where Checkmate starts |
+| Context | Where Rulelink starts |
 |---|---|
 | Legacy code | Bootstrapping through the retro-documentation skill. The most demanding test, and the closest to the pain described |
 | Active project (greenfield) | New rules, annotated as development goes, with agents |
@@ -53,7 +53,7 @@ The first user is always the same: a developer able to install the tool without 
 | The rule is the central object, with a public format | Every connector translates to one model; checks become possible |
 | One source of truth per project, declared in configuration | No synchronisation conflicts; imports create proposed rules, publications are generated and never edited |
 | The link is a comment in the code: `// @rule RULE-042` | Works in any language; one file can cite several rules, one rule can appear in several places, tests included |
-| The check proves the link, not the correctness | Stated explicitly to users; tests remain the best check of a rule, and Checkmate links them to rules rather than replacing them |
+| The check proves the link, not the correctness | Stated explicitly to users; tests remain the best check of a rule, and Rulelink links them to rules rather than replacing them |
 | Warnings do not block CI by default | Progressive adoption on existing code; each team can raise them to errors |
 | AI only through the developer's agent | No AI infrastructure to host; human validation of every proposed rule |
 
@@ -87,11 +87,11 @@ The technical format and its JSON keys are specified in [architecture/01](../arc
 
 | Journey | How |
 |---|---|
-| Initialise | `checkmate init` creates the configuration and installs the skills |
+| Initialise | `rulelink init` creates the configuration and installs the skills |
 | Bootstrap | The retro-documentation skill proposes rules with their locations; a human validates, then the skill adds the annotations |
 | Develop | The consultation skill gives the agent the relevant rules and asks it to annotate its code |
-| Check | `checkmate check` runs on every pull request |
-| Understand | `checkmate explain <file>` lists the rules of a file; `checkmate where RULE-042` lists the locations of a rule |
+| Check | `rulelink check` runs on every pull request |
+| Understand | `rulelink explain <file>` lists the rules of a file; `rulelink where RULE-042` lists the locations of a rule |
 
 ## 8. Needs coverage
 
@@ -110,7 +110,7 @@ The technical format and its JSON keys are specified in [architecture/01](../arc
 
 Linking by comment is not new. The difference must come from the complete flow: a source of the team's choice, a PO-readable output, AI agents and legacy bootstrapping.
 
-| Alternative | What it does | Room left for Checkmate |
+| Alternative | What it does | Room left for Rulelink |
 |---|---|---|
 | OpenFastTrace | Open-source requirement tracing in Java (GPL-3.0), with tags in the code | No Jira, no PO view, no AI agents |
 | Spec Kit | Specification process for AI agents (MIT) | No rule repository linked to code |
@@ -141,7 +141,7 @@ The first test is retro-documentation on code whose knowledge has been lost: it 
 | Retro-documentation | Extract the rules of one module, then have them reviewed by the person who knows the domain best | At least 50% of rules accepted without rewriting | Rework the skill, or reduce the promise to a writing aid |
 | Internal use | Replace the manual flow on the recent build, with `check` in CI for 4 weeks | CI kept, and at least 80% of validated rules linked to code | Find what slows annotation down before adding features |
 | Agents | Run 10 real tasks with the consultation skill | At least 8 tasks with the right rules consulted and the code annotated | Strengthen the skill, or add a stricter annotation check |
-| Installation | Have 3 external developers install the tool unaided | Under 15 minutes from `npx checkmate init` to a first clean `check`, including one run in a CI workflow written by hand | Simplify `init` and the documentation |
+| Installation | Have 3 external developers install the tool unaided | Under 15 minutes from `npx rulelink init` to a first clean `check`, including one run in a CI workflow written by hand | Simplify `init` and the documentation |
 
 **Main indicator:** number of repositories where `check` has run in CI for at least 30 days. It measures real use, unlike GitHub stars or installs.
 
@@ -155,7 +155,7 @@ The first test is retro-documentation on code whose knowledge has been lost: it 
 | Link with code | Comment in the code |
 | MVP check | Deterministic only |
 | Legacy bootstrap | Retro-documentation skill with human validation |
-| Name | Checkmate (confirmed) |
+| Name | Rulelink (confirmed) |
 | Rule identifier with a Jira source | Follows the project's standard: the ticket key or an in-house identifier; the link to the ticket goes in `origin` |
 | Recognising rules in a Jira ticket | Configurable regex per project; the default pattern "RULE XXXX_N : my business rule" extracts the code and the statement; a ticket can hold several rules |
 | Validation of proposed rules when the PO does not use Git | Developers add rules locally and an export gives the PO an extract |

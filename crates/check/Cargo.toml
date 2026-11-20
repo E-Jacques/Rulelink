@@ -1,5 +1,5 @@
 [package]
-name = "checkmate-check"
+name = "rulelink-check"
 description = "Checks: consistency between rules and code."
 version.workspace = true
 edition.workspace = true
@@ -13,5 +13,5 @@ workspace = true
 
 [dependencies]
 thiserror.workspace = true
-checkmate-registry.workspace = true
-checkmate-link.workspace = true
+rulelink-registry.workspace = true
+rulelink-link.workspace = true

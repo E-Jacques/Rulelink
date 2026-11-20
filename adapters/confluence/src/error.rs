@@ -1,4 +1,4 @@
-/// Errors raised by `checkmate-adapter-confluence`.
+/// Errors raised by `rulelink-adapter-confluence`.
 #[derive(Debug, thiserror::Error)]
 pub enum Error {
     /// The requested capability is not implemented yet.

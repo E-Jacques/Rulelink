@@ -6,7 +6,7 @@ use std::fs::{self, OpenOptions};
 use std::io::Write;
 use std::path::{Path, PathBuf};
 
-use checkmate_model::{FORMAT_VERSION, RuleSet};
+use rulelink_model::{FORMAT_VERSION, RuleSet};
 
 pub use error::Error;
 

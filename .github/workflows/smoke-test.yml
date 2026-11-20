@@ -13,7 +13,7 @@ on:
         type: string
 
 env:
-  # Flip to "true" as soon as `checkmate init` and `checkmate check` exist in the CLI.
+  # Flip to "true" as soon as `rulelink init` and `rulelink check` exist in the CLI.
   # Until then the job only proves that the binary starts on every platform.
   FULL_FLOW: "false"
 
@@ -42,7 +42,7 @@ jobs:
 
       - name: Unpack the binary for this platform
         run: |
-          archive="dist-artifacts/checkmate-cli-${{ matrix.target }}.${{ matrix.ext }}"
+          archive="dist-artifacts/rulelink-cli-${{ matrix.target }}.${{ matrix.ext }}"
           test -f "$archive" || { echo "missing $archive"; ls dist-artifacts; exit 1; }
           mkdir bin
           if [ "${{ matrix.ext }}" = "zip" ]; then
@@ -50,24 +50,24 @@ jobs:
           else
             tar -xJf "$archive" -C bin
           fi
-          bin_path="$(find "$PWD/bin" -type f \( -name checkmate -o -name checkmate.exe \) | head -n 1)"
-          test -n "$bin_path" || { echo "no checkmate binary in the archive"; exit 1; }
+          bin_path="$(find "$PWD/bin" -type f \( -name rulelink -o -name rulelink.exe \) | head -n 1)"
+          test -n "$bin_path" || { echo "no rulelink binary in the archive"; exit 1; }
           chmod +x "$bin_path"
-          echo "CHECKMATE=$bin_path" >> "$GITHUB_ENV"
+          echo "RULELINK=$bin_path" >> "$GITHUB_ENV"
 
-      - name: checkmate --version
+      - name: rulelink --version
         run: |
-          "$CHECKMATE" --version | tee version.txt
-          grep -q '^checkmate ' version.txt
+          "$RULELINK" --version | tee version.txt
+          grep -q '^rulelink ' version.txt
 
       - name: init then first check in a clean repository
         if: ${{ env.FULL_FLOW == 'true' }}
         run: |
           mkdir sandbox && cd sandbox
           git init -q
-          "$CHECKMATE" init --template greenfield --id-prefix RULE --yes
+          "$RULELINK" init --template greenfield --id-prefix RULE --yes
           # An empty Source must pass, with a "no rules yet" message (exit code 0).
-          "$CHECKMATE" check
+          "$RULELINK" check
 
   npm-package:
     name: npm package content
@@ -78,8 +78,8 @@ jobs:
           pattern: artifacts-*
           path: dist-artifacts
           merge-multiple: true
-      - name: The npm tarball is present and declares the checkmate binary
+      - name: The npm tarball is present and declares the rulelink binary
         run: |
           pkg="$(ls dist-artifacts/*-npm-package.tar.gz)"
           tar -xzf "$pkg" -O package/package.json | tee package.json
-          grep -q '"checkmate"' package.json
+          grep -q '"rulelink"' package.json

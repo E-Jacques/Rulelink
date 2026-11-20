@@ -1,4 +1,4 @@
-/// Errors raised by `checkmate-adapter-git`.
+/// Errors raised by `rulelink-adapter-git`.
 #[derive(Debug, thiserror::Error)]
 pub enum Error {
     /// The requested capability is not implemented yet.

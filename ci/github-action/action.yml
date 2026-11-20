@@ -1,7 +1,7 @@
-name: Checkmate
-description: Run `checkmate check` in CI.
+name: Rulelink
+description: Run `rulelink check` in CI.
 runs:
   using: composite
   steps:
     - shell: bash
-      run: checkmate check
+      run: rulelink check

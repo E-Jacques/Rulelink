@@ -1,5 +1,5 @@
 [package]
-name = "checkmate-adapter-scan-fs"
+name = "rulelink-adapter-scan-fs"
 description = "Filesystem code scanning adapter."
 version.workspace = true
 edition.workspace = true
@@ -13,4 +13,4 @@ workspace = true
 
 [dependencies]
 thiserror.workspace = true
-checkmate-adapter-sdk.workspace = true
+rulelink-adapter-sdk.workspace = true

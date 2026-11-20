@@ -7,5 +7,5 @@ pub mod runtime;
 
 pub use error::Error;
 
-pub use checkmate_config::DEFAULT_ID_PREFIX;
-pub use checkmate_model::{RuleDraft, RuleId};
+pub use rulelink_config::DEFAULT_ID_PREFIX;
+pub use rulelink_model::{RuleDraft, RuleId};

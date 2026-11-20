@@ -28,4 +28,4 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - uses: dtolnay/rust-toolchain@stable
-      - run: cargo test -p checkmate-e2e
+      - run: cargo test -p rulelink-e2e

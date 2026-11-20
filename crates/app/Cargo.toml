@@ -1,5 +1,5 @@
 [package]
-name = "checkmate-app"
+name = "rulelink-app"
 description = "Application layer: use cases, wiring and process runtime skeleton."
 version.workspace = true
 edition.workspace = true
@@ -13,12 +13,12 @@ workspace = true
 
 [dependencies]
 thiserror.workspace = true
-checkmate-check.workspace = true
-checkmate-import.workspace = true
-checkmate-publish.workspace = true
-checkmate-config.workspace = true
-checkmate-model.workspace = true
-checkmate-adapter-json.workspace = true
-checkmate-adapter-scan-fs.workspace = true
-checkmate-adapter-git.workspace = true
-checkmate-adapter-external.workspace = true
+rulelink-check.workspace = true
+rulelink-import.workspace = true
+rulelink-publish.workspace = true
+rulelink-config.workspace = true
+rulelink-model.workspace = true
+rulelink-adapter-json.workspace = true
+rulelink-adapter-scan-fs.workspace = true
+rulelink-adapter-git.workspace = true
+rulelink-adapter-external.workspace = true

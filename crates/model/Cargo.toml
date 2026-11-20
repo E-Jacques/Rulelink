@@ -1,6 +1,6 @@
 [package]
-name = "checkmate-model"
-description = "Core domain model of Checkmate: rules, identifiers, statuses and links."
+name = "rulelink-model"
+description = "Core domain model of Rulelink: rules, identifiers, statuses and links."
 version.workspace = true
 edition.workspace = true
 rust-version.workspace = true

@@ -1,3 +1,3 @@
-# checkmate-cli
+# rulelink-cli
 
-The `checkmate` binary.
+The `rulelink` binary.

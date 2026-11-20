@@ -1,7 +1,7 @@
 # 01 — Rule registry
 
 > The central business component: it defines **what a rule is**. Every other component translates to this model or reads it.
-> Crates: `checkmate-model` (public format) and `checkmate-registry` (domain services).
+> Crates: `rulelink-model` (public format) and `rulelink-registry` (domain services).
 > See also: [00 Global architecture](00-global-architecture.md).
 
 ## 1. Role and scope
@@ -38,8 +38,8 @@
 
 ## 3. Technical constraints
 
-- `checkmate-model` depends only on `serde`, `serde_json`, `schemars` and `thiserror`. It is published on crates.io so it can be reused without the rest of the tool.
-- `checkmate-registry` is synchronous, performs no I/O and knows no adapter.
+- `rulelink-model` depends only on `serde`, `serde_json`, `schemars` and `thiserror`. It is published on crates.io so it can be reused without the rest of the tool.
+- `rulelink-registry` is synchronous, performs no I/O and knows no adapter.
 - Every collection is ordered: rules sorted by identifier in **natural order** (`RULE-2` before `RULE-10`), JSON keys in a fixed order. The serialised file is **line-oriented** (see 02, canonical writes).
 - The model accepts unknown fields prefixed with `x-` under `extensions`, preserved on round trips. An adapter can therefore carry its own metadata without breaking the format.
 - Search: Unicode NFKD normalisation, diacritics removed, case ignored. "Énoncé" matches "enonce".
@@ -54,7 +54,7 @@
 | `titre` | `title` | string, 1 to 120 characters | Yes | |
 | `énoncé` | `statement` | string, restricted Markdown | Yes | |
 | `statut` | `status` | `proposed`, `validated`, `obsolete`, `rejected` | Yes | |
-| `application` | `applications` | list of strings | No | Names declared in `[applications]` of `checkmate.toml` (09). Empty or absent: the rule applies to the whole project |
+| `application` | `applications` | list of strings | No | Names declared in `[applications]` of `rulelink.toml` (09). Empty or absent: the rule applies to the whole project |
 | `module` | `module` | string | No | |
 | `périmètre` | `scope` | `{ covered: [], excluded: [] }` | No | Covered and excluded cases, as required by the brief |
 | `origine` | `origin` | `{ kind, ref?, url? }` | No | `kind`: `jira`, `github`, `gitlab`, `url`, `retrodoc`, `manual`, `spec`, or an adapter name |
@@ -69,7 +69,7 @@ All keys are English (ADR-003, accepted). The tool does not localise anything. V
 
 ```json
 {
-  "$schema": "https://checkmate.dev/schemas/rules/v1.json",
+  "$schema": "https://rulelink.dev/schemas/rules/v1.json",
   "format": 1,
   "sequences": { "RULE": 43 },
   "retired": ["RULE-007"],
@@ -311,7 +311,7 @@ classDiagram
 | `UnknownRelatedValidator` | `CM103` unknown related rule | Warning | MVP |
 | `SupersessionValidator` | `CM104` supersession to an unknown or obsolete rule, or in a cycle | Warning | V1 |
 | `RequiredFieldsValidator` | `CM105` empty required field | Error | MVP |
-| `CanonicalFormatValidator` | `CM106` source file not in canonical form (fix with `checkmate rules format`) | Warning | MVP |
+| `CanonicalFormatValidator` | `CM106` source file not in canonical form (fix with `rulelink rules format`) | Warning | MVP |
 
 The `sink` collects findings: validation does not stop at the first error.
 
@@ -396,7 +396,7 @@ pub enum RuleChange {
 
 ## 6. Public API
 
-### 6.1 `checkmate-registry` crate
+### 6.1 `rulelink-registry` crate
 
 ```rust
 pub struct Registry<'a> { /* borrowed RuleSet + policies */ }
@@ -423,27 +423,27 @@ The `plan_*` methods change nothing: they return a `ChangeSet`. Application-laye
 
 | Command | Arguments and options | Effect | Release |
 |---|---|---|---|
-| `checkmate rules list` | `--status`, `--app`, `--module`, `--label`, `--filter <EXPR>`, `--format human\|json\|csv` | Sorted list | MVP (`--filter`, `--label` in V1) |
-| `checkmate rules show <ID>...` | `--with-locations`, `--format` | Details; with code locations (03) | MVP |
-| `checkmate rules search <TEXT>` | `--limit <N>`, `--status`, `--format` | Ranked full-text search | MVP |
-| `checkmate rules add` | `--title`, `--statement`, `--app`, `--module`, `--covered <TXT>`..., `--excluded <TXT>`..., `--related <ID>`..., `--origin <KIND:REF>`, `--id <ID>`, `--status proposed\|validated`, `--dry-run` | Creates a rule; ID allocated if absent. Without options: interactive input | MVP |
-| `checkmate rules edit <ID>` | same fields as `add`, `--keep-validated`, `--dry-run` | Edits; may revert to `proposed` (V1) | MVP |
-| `checkmate rules approve <ID>...` | `--all-proposed`, `--dry-run` | `proposed` → `validated` | MVP |
-| `checkmate rules obsolete <ID>` | `--superseded-by <ID>`, `--dry-run` | `validated` → `obsolete` | MVP |
-| `checkmate rules format` | `--check` | Rewrites the source in canonical form; with `--check`, exits 1 if it is not canonical | MVP |
-| `checkmate rules reject <ID>...` | `--reason <TXT>`, `--dry-run` | `proposed` → `rejected`: the rule stays in the source, its ID is retired, a later import of the same candidate is reported as previously rejected | MVP |
-| `checkmate rules next-id` | `--count <N>`, `--hint <CODE>` | Shows the next IDs, without reserving them | MVP |
-| `checkmate rules lint` | `--format` | Runs only the validators from section 5.3 | MVP |
-| `checkmate labels list` | `--format` | Labels in use, with their rule count | V1 |
-| `checkmate labels add <ID> <LABEL>...` | `--dry-run` | Adds labels | V1 |
-| `checkmate labels remove <ID> <LABEL>...` | `--dry-run` | Removes labels | V1 |
-| `checkmate schema rules` | `--output <FILE>` | Writes the JSON Schema of the current format | MVP |
+| `rulelink rules list` | `--status`, `--app`, `--module`, `--label`, `--filter <EXPR>`, `--format human\|json\|csv` | Sorted list | MVP (`--filter`, `--label` in V1) |
+| `rulelink rules show <ID>...` | `--with-locations`, `--format` | Details; with code locations (03) | MVP |
+| `rulelink rules search <TEXT>` | `--limit <N>`, `--status`, `--format` | Ranked full-text search | MVP |
+| `rulelink rules add` | `--title`, `--statement`, `--app`, `--module`, `--covered <TXT>`..., `--excluded <TXT>`..., `--related <ID>`..., `--origin <KIND:REF>`, `--id <ID>`, `--status proposed\|validated`, `--dry-run` | Creates a rule; ID allocated if absent. Without options: interactive input | MVP |
+| `rulelink rules edit <ID>` | same fields as `add`, `--keep-validated`, `--dry-run` | Edits; may revert to `proposed` (V1) | MVP |
+| `rulelink rules approve <ID>...` | `--all-proposed`, `--dry-run` | `proposed` → `validated` | MVP |
+| `rulelink rules obsolete <ID>` | `--superseded-by <ID>`, `--dry-run` | `validated` → `obsolete` | MVP |
+| `rulelink rules format` | `--check` | Rewrites the source in canonical form; with `--check`, exits 1 if it is not canonical | MVP |
+| `rulelink rules reject <ID>...` | `--reason <TXT>`, `--dry-run` | `proposed` → `rejected`: the rule stays in the source, its ID is retired, a later import of the same candidate is reported as previously rejected | MVP |
+| `rulelink rules next-id` | `--count <N>`, `--hint <CODE>` | Shows the next IDs, without reserving them | MVP |
+| `rulelink rules lint` | `--format` | Runs only the validators from section 5.3 | MVP |
+| `rulelink labels list` | `--format` | Labels in use, with their rule count | V1 |
+| `rulelink labels add <ID> <LABEL>...` | `--dry-run` | Adds labels | V1 |
+| `rulelink labels remove <ID> <LABEL>...` | `--dry-run` | Removes labels | V1 |
+| `rulelink schema rules` | `--output <FILE>` | Writes the JSON Schema of the current format | MVP |
 
-Example output of `checkmate rules show RULE-042 --format json`:
+Example output of `rulelink rules show RULE-042 --format json`:
 
 ```json
 {
-  "schema": "checkmate/rule-show/v1",
+  "schema": "rulelink/rule-show/v1",
   "rules": [
     {
       "id": "RULE-042",

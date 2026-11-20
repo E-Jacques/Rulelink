@@ -1,5 +1,5 @@
 [package]
-name = "checkmate-lsp"
+name = "rulelink-lsp"
 description = "Language server loop, mounted by the CLI as the lsp subcommand."
 version.workspace = true
 edition.workspace = true
@@ -13,4 +13,4 @@ workspace = true
 
 [dependencies]
 thiserror.workspace = true
-checkmate-app.workspace = true
+rulelink-app.workspace = true

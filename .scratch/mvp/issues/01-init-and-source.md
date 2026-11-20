@@ -1,6 +1,6 @@
 # 01: Walking skeleton: `init` and the Source
 
-**What to build:** `npx checkmate init` in a repository creates a configuration (with the Identifier prefix, default `RULE`) and an empty Source written in Canonical form. It refuses to overwrite an existing setup. This slice also lays down the Rule model v1 (`"format": 1`), the generated JSON Schema verified in CI, the Canonical form writer, and the CLI-process test harness that runs the real binary against fixture repos in temp directories.
+**What to build:** `npx rulelink init` in a repository creates a configuration (with the Identifier prefix, default `RULE`) and an empty Source written in Canonical form. It refuses to overwrite an existing setup. This slice also lays down the Rule model v1 (`"format": 1`), the generated JSON Schema verified in CI, the Canonical form writer, and the CLI-process test harness that runs the real binary against fixture repos in temp directories.
 
 **Blocked by:** None (can start immediately).
 

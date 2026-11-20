@@ -12,4 +12,4 @@ workspace = true
 [dependencies]
 serde_json.workspace = true
 schemars.workspace = true
-checkmate-model = { workspace = true, features = ["schema"] }
+rulelink-model = { workspace = true, features = ["schema"] }

@@ -1,7 +1,7 @@
 //! Process skeleton shared by every entry point (`Entrypoint`, `Bootstrap`).
 //!
 //! See `docs/architecture/10-runtime-lifecycle.md`. Libraries never create a
-//! process: `main()` lives in `checkmate-cli` only.
+//! process: `main()` lives in `rulelink-cli` only.
 
 use std::future::Future;
 use std::sync::Arc;

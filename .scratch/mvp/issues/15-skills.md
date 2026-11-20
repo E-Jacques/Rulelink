@@ -1,6 +1,6 @@
-# 15: Skills: `checkmate-consult` and `checkmate-retrodoc`
+# 15: Skills: `rulelink-consult` and `rulelink-retrodoc`
 
-**What to build:** Two skills installable by hand (`npx skills add` or APM): `checkmate-consult` makes an agent read relevant Rules before changing code and annotate what it writes; `checkmate-retrodoc` makes an agent propose Rules from legacy code for human review. Skill text reserves `approve` to humans. Reference files (annotation grammar, statuses, report format) must match the real CLI.
+**What to build:** Two skills installable by hand (`npx skills add` or APM): `rulelink-consult` makes an agent read relevant Rules before changing code and annotate what it writes; `rulelink-retrodoc` makes an agent propose Rules from legacy code for human review. Skill text reserves `approve` to humans. Reference files (annotation grammar, statuses, report format) must match the real CLI.
 
 **Blocked by:** 09 (`check --format json`), 11 (`explain`), 12 (`annotate`), 13 (`context`), 14 (JSON file Import)
 

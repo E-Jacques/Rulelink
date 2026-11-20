@@ -1,7 +1,7 @@
 # 04 — Deterministic checks (`check`) and CI integration
 
-> The check is what keeps Checkmate from becoming "yet more documentation". It cross-references the registry and the code index, offline and without AI, and produces findings that a human, a CI pipeline or an agent can read.
-> Crates: `checkmate-check` (engine, checks, reports), `adapters/git` (changed files, via `gix`). Deliverables: pre-commit hook (V1), GitHub Action and GitLab CI component (V2).
+> The check is what keeps Rulelink from becoming "yet more documentation". It cross-references the registry and the code index, offline and without AI, and produces findings that a human, a CI pipeline or an agent can read.
+> Crates: `rulelink-check` (engine, checks, reports), `adapters/git` (changed files, via `gix`). Deliverables: pre-commit hook (V1), GitHub Action and GitLab CI component (V2).
 > See also: [01 Registry](01-rule-registry.md), [03 Code linking](03-code-linking.md).
 
 ## 1. Role and scope
@@ -16,7 +16,7 @@
 
 **Out of scope, and the stated promise**
 
-> `checkmate check` proves that **a link exists** between a rule and the code, **not that the implementation is correct**.
+> `rulelink check` proves that **a link exists** between a rule and the code, **not that the implementation is correct**.
 
 This sentence appears in the command help, in the CI summary and in the documentation. AI-assisted correctness checking (V2) is a separate skill and is never part of `check` (07).
 
@@ -30,7 +30,7 @@ This sentence appears in the command help, in the CI summary and in the document
 | `sarif`, `github` reports | | | ● |
 | GitHub Action (annotations, SARIF, summary) | | | ● |
 | GitLab CI component (codequality report) | | | ● |
-| `checkmate status`: coverage and counters | ● | | |
+| `rulelink status`: coverage and counters | ● | | |
 | `junit`, `gitlab`, `markdown` (PR comment) reports | | ● | |
 | `check --changed` (files changed since the PR base) | ● | | |
 | Baseline for adoption on legacy code | | ● | |
@@ -64,7 +64,7 @@ This sentence appears in the command help, in the CI summary and in the document
 
 On an empty Source (no rules yet, as right after `init`), `check` passes with exit code 0 and an info message ("no rules yet"). A missing or unreadable Source file still fails with exit code 3.
 
-`CM007` reflects a sentence from the brief: "a test remains the best check of a rule". Checkmate does not replace tests; it can flag rules that no test cites.
+`CM007` reflects a sentence from the brief: "a test remains the best check of a rule". Rulelink does not replace tests; it can flag rules that no test cites.
 
 ## 5. Detailed design
 
@@ -172,13 +172,13 @@ Levels: `error`, `warning`, `info`, `off`.
 
 ### 5.4 Baseline (V1) — **Memento** pattern
 
-`checkmate baseline create` records the current findings in `.checkmate/baseline.json` (versioned). Each finding is identified by a stable fingerprint (code, rule identifier, path, normalised line text) rather than a line number, so it survives line shifts. The baseline is a **Memento** of the findings' state: the engine does not know its internal format, it only asks whether a finding is in it.
+`rulelink baseline create` records the current findings in `.rulelink/baseline.json` (versioned). Each finding is identified by a stable fingerprint (code, rule identifier, path, normalised line text) rather than a line number, so it survives line shifts. The baseline is a **Memento** of the findings' state: the engine does not know its internal format, it only asks whether a finding is in it.
 
 | Command | Effect |
 |---|---|
-| `checkmate baseline create` | Writes the baseline from the current findings |
-| `checkmate baseline update` | Removes resolved findings, never adds any |
-| `checkmate baseline show` | Lists suppressed findings, by code |
+| `rulelink baseline create` | Writes the baseline from the current findings |
+| `rulelink baseline update` | Removes resolved findings, never adds any |
+| `rulelink baseline show` | Lists suppressed findings, by code |
 
 ### 5.5 Reports — **Strategy** + **Template Method**
 
@@ -213,13 +213,13 @@ classDiagram
     Reporter <|.. GitlabCodeQualityReporter
 ```
 
-- **Strategy**: the format is chosen with `--format`. Several formats can be produced in one run: `--format sarif=checkmate.sarif,github,markdown=summary.md`.
+- **Strategy**: the format is chosen with `--format`. Several formats can be produced in one run: `--format sarif=rulelink.sarif,github,markdown=summary.md`.
 - **Template Method**: text formats share the header → grouped findings → footer skeleton. The footer always restates the promise ("link verified, not correctness").
 
 | Format | Use | Release |
 |---|---|---|
 | `human` | Terminal, with colours and `miette` excerpts | MVP |
-| `json` | Agents, scripts. Schema `checkmate/check-report/v1` | MVP |
+| `json` | Agents, scripts. Schema `rulelink/check-report/v1` | MVP |
 | `sarif` | GitHub Code Scanning, SAST tools | V2 |
 | `github` | `::error file=...` commands: inline annotations on the PR | V2 |
 | `junit` | GitLab, Jenkins, Azure test reports | V1 |
@@ -260,7 +260,7 @@ With `--changed`, the scan stays complete, because a rule can become orphaned th
 
 ## 6. API and entry points
 
-### 6.1 `checkmate-check` crate
+### 6.1 `rulelink-check` crate
 
 ```rust
 pub struct CheckInput<'a> { pub rules: &'a RuleSet, pub index: &'a LinkIndex, pub scope: CheckScope }
@@ -285,9 +285,9 @@ pub struct CoverageStats { pub rules_by_status: BTreeMap<RuleStatus, usize>,
 
 | Command | Options | Effect | Release |
 |---|---|---|---|
-| `checkmate check` | `--format <F[=FILE]>...`, `--changed`, `--base <REF>`, `--paths <P>...`, `--rules <ID>...`, `--level <KEY>=<LEVEL>`, `--warnings-as-errors`, `--no-baseline`, `--fresh` (V2) | Runs the checks; exit code 0 or 1 | MVP (`--changed`, `--base` in V1) |
-| `checkmate status` | `--format human\|json\|markdown` | Counters by status, coverage of validated rules by code and by tests | MVP |
-| `checkmate baseline create\|update\|show` | `--format` | Baseline management | V1 |
+| `rulelink check` | `--format <F[=FILE]>...`, `--changed`, `--base <REF>`, `--paths <P>...`, `--rules <ID>...`, `--level <KEY>=<LEVEL>`, `--warnings-as-errors`, `--no-baseline`, `--fresh` (V2) | Runs the checks; exit code 0 or 1 | MVP (`--changed`, `--base` in V1) |
+| `rulelink status` | `--format human\|json\|markdown` | Counters by status, coverage of validated rules by code and by tests | MVP |
+| `rulelink baseline create\|update\|show` | `--format` | Baseline management | V1 |
 
 Example `human` output:
 
@@ -301,13 +301,13 @@ error[CM001] unknown reference: RULE-099
 warning[CM004] validated rule with no code: RULE-017 "Cumulative discount cap"
 
 2 findings (1 error, 1 warning) · 118 validated rules, 94 linked to code (80%)
-Checkmate verifies the link between a rule and the code, not the correctness of the implementation.
+Rulelink verifies the link between a rule and the code, not the correctness of the implementation.
 ```
 
 ### 6.3 GitHub Action (V2)
 
 ```yaml
-- uses: checkmate-dev/check-action@v1
+- uses: rulelink-dev/check-action@v1
   with:
     version: "0.4"            # CLI version, default: latest compatible
     args: "--changed"
@@ -315,22 +315,22 @@ Checkmate verifies the link between a rule and the code, not the correctness of 
     summary: true             # writes the job's Markdown summary
 ```
 
-Internal steps: download the binary (cached per version), run `checkmate check --format github,sarif=checkmate.sarif,markdown=$GITHUB_STEP_SUMMARY`, upload the SARIF if `security-events: write` is granted, propagate the exit code.
+Internal steps: download the binary (cached per version), run `rulelink check --format github,sarif=rulelink.sarif,markdown=$GITHUB_STEP_SUMMARY`, upload the SARIF if `security-events: write` is granted, propagate the exit code.
 
 ### 6.4 GitLab CI component (V2)
 
 ```yaml
 include:
-  - component: gitlab.com/checkmate-dev/ci/check@1
+  - component: gitlab.com/rulelink-dev/ci/check@1
     inputs:
       args: "--changed"
 ```
 
-The job produces `gl-code-quality-report.json` (`codequality` report) and `checkmate-junit.xml` (`junit` report, V1), both visible in the merge request.
+The job produces `gl-code-quality-report.json` (`codequality` report) and `rulelink-junit.xml` (`junit` report, V1), both visible in the merge request.
 
 ### 6.5 Pre-commit hook (V1)
 
-`.pre-commit-hooks.yaml` declaration in the tool's repository: `id: checkmate-check`, `entry: checkmate check --changed --base HEAD --format human`, `pass_filenames: false`. Same entry for lefthook.
+`.pre-commit-hooks.yaml` declaration in the tool's repository: `id: rulelink-check`, `entry: rulelink check --changed --base HEAD --format human`, `pass_filenames: false`. Same entry for lefthook.
 
 ## 7. Interactions
 
@@ -351,7 +351,7 @@ flowchart LR
 - One test repository per check, with the expected output snapshotted (`insta`) in every format.
 - The generated SARIF is validated against the SARIF 2.1.0 schema.
 - Same repository, two runs: byte-identical reports.
-- Brief criterion, measured by `checkmate status`: at least 80% of validated rules linked to code on the recent build after 4 weeks.
+- Brief criterion, measured by `rulelink status`: at least 80% of validated rules linked to code on the recent build after 4 weeks.
 
 ## 9. Open points
 

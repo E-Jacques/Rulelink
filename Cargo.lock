@@ -65,195 +65,6 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "4e7648175b45a9a48536d676f68d918270699102aa8dab5496df06904c914600"
 
 [[package]]
-name = "checkmate-adapter-confluence"
-version = "0.1.0"
-dependencies = [
- "checkmate-adapter-sdk",
- "thiserror",
-]
-
-[[package]]
-name = "checkmate-adapter-csv"
-version = "0.1.0"
-dependencies = [
- "checkmate-adapter-sdk",
- "thiserror",
-]
-
-[[package]]
-name = "checkmate-adapter-external"
-version = "0.1.0"
-dependencies = [
- "checkmate-adapter-sdk",
- "thiserror",
-]
-
-[[package]]
-name = "checkmate-adapter-git"
-version = "0.1.0"
-dependencies = [
- "checkmate-adapter-sdk",
- "thiserror",
-]
-
-[[package]]
-name = "checkmate-adapter-github"
-version = "0.1.0"
-dependencies = [
- "checkmate-adapter-sdk",
- "thiserror",
-]
-
-[[package]]
-name = "checkmate-adapter-gitlab"
-version = "0.1.0"
-dependencies = [
- "checkmate-adapter-sdk",
- "thiserror",
-]
-
-[[package]]
-name = "checkmate-adapter-jira"
-version = "0.1.0"
-dependencies = [
- "checkmate-adapter-sdk",
- "thiserror",
-]
-
-[[package]]
-name = "checkmate-adapter-json"
-version = "0.1.0"
-dependencies = [
- "checkmate-adapter-sdk",
- "checkmate-model",
- "serde",
- "serde_json",
- "tempfile",
- "thiserror",
-]
-
-[[package]]
-name = "checkmate-adapter-scan-fs"
-version = "0.1.0"
-dependencies = [
- "checkmate-adapter-sdk",
- "thiserror",
-]
-
-[[package]]
-name = "checkmate-adapter-sdk"
-version = "0.1.0"
-dependencies = [
- "checkmate-model",
- "thiserror",
-]
-
-[[package]]
-name = "checkmate-app"
-version = "0.1.0"
-dependencies = [
- "checkmate-adapter-external",
- "checkmate-adapter-git",
- "checkmate-adapter-json",
- "checkmate-adapter-scan-fs",
- "checkmate-check",
- "checkmate-config",
- "checkmate-import",
- "checkmate-model",
- "checkmate-publish",
- "thiserror",
-]
-
-[[package]]
-name = "checkmate-check"
-version = "0.1.0"
-dependencies = [
- "checkmate-link",
- "checkmate-registry",
- "thiserror",
-]
-
-[[package]]
-name = "checkmate-cli"
-version = "0.1.0"
-dependencies = [
- "checkmate-app",
- "checkmate-lsp",
- "clap",
- "tokio",
-]
-
-[[package]]
-name = "checkmate-config"
-version = "0.1.0"
-dependencies = [
- "checkmate-model",
- "serde",
- "thiserror",
- "toml",
-]
-
-[[package]]
-name = "checkmate-e2e"
-version = "0.1.0"
-dependencies = [
- "tempfile",
-]
-
-[[package]]
-name = "checkmate-import"
-version = "0.1.0"
-dependencies = [
- "checkmate-adapter-sdk",
- "checkmate-registry",
- "thiserror",
-]
-
-[[package]]
-name = "checkmate-link"
-version = "0.1.0"
-dependencies = [
- "checkmate-model",
- "thiserror",
-]
-
-[[package]]
-name = "checkmate-lsp"
-version = "0.1.0"
-dependencies = [
- "checkmate-app",
- "thiserror",
-]
-
-[[package]]
-name = "checkmate-model"
-version = "0.1.0"
-dependencies = [
- "schemars",
- "serde",
- "serde_json",
- "thiserror",
-]
-
-[[package]]
-name = "checkmate-publish"
-version = "0.1.0"
-dependencies = [
- "checkmate-adapter-sdk",
- "checkmate-link",
- "checkmate-registry",
- "thiserror",
-]
-
-[[package]]
-name = "checkmate-registry"
-version = "0.1.0"
-dependencies = [
- "checkmate-model",
- "thiserror",
-]
-
-[[package]]
 name = "clap"
 version = "4.6.7"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -428,6 +239,195 @@ dependencies = [
  "proc-macro2",
  "quote",
  "syn",
+]
+
+[[package]]
+name = "rulelink-adapter-confluence"
+version = "0.1.0"
+dependencies = [
+ "rulelink-adapter-sdk",
+ "thiserror",
+]
+
+[[package]]
+name = "rulelink-adapter-csv"
+version = "0.1.0"
+dependencies = [
+ "rulelink-adapter-sdk",
+ "thiserror",
+]
+
+[[package]]
+name = "rulelink-adapter-external"
+version = "0.1.0"
+dependencies = [
+ "rulelink-adapter-sdk",
+ "thiserror",
+]
+
+[[package]]
+name = "rulelink-adapter-git"
+version = "0.1.0"
+dependencies = [
+ "rulelink-adapter-sdk",
+ "thiserror",
+]
+
+[[package]]
+name = "rulelink-adapter-github"
+version = "0.1.0"
+dependencies = [
+ "rulelink-adapter-sdk",
+ "thiserror",
+]
+
+[[package]]
+name = "rulelink-adapter-gitlab"
+version = "0.1.0"
+dependencies = [
+ "rulelink-adapter-sdk",
+ "thiserror",
+]
+
+[[package]]
+name = "rulelink-adapter-jira"
+version = "0.1.0"
+dependencies = [
+ "rulelink-adapter-sdk",
+ "thiserror",
+]
+
+[[package]]
+name = "rulelink-adapter-json"
+version = "0.1.0"
+dependencies = [
+ "rulelink-adapter-sdk",
+ "rulelink-model",
+ "serde",
+ "serde_json",
+ "tempfile",
+ "thiserror",
+]
+
+[[package]]
+name = "rulelink-adapter-scan-fs"
+version = "0.1.0"
+dependencies = [
+ "rulelink-adapter-sdk",
+ "thiserror",
+]
+
+[[package]]
+name = "rulelink-adapter-sdk"
+version = "0.1.0"
+dependencies = [
+ "rulelink-model",
+ "thiserror",
+]
+
+[[package]]
+name = "rulelink-app"
+version = "0.1.0"
+dependencies = [
+ "rulelink-adapter-external",
+ "rulelink-adapter-git",
+ "rulelink-adapter-json",
+ "rulelink-adapter-scan-fs",
+ "rulelink-check",
+ "rulelink-config",
+ "rulelink-import",
+ "rulelink-model",
+ "rulelink-publish",
+ "thiserror",
+]
+
+[[package]]
+name = "rulelink-check"
+version = "0.1.0"
+dependencies = [
+ "rulelink-link",
+ "rulelink-registry",
+ "thiserror",
+]
+
+[[package]]
+name = "rulelink-cli"
+version = "0.1.0"
+dependencies = [
+ "clap",
+ "rulelink-app",
+ "rulelink-lsp",
+ "tokio",
+]
+
+[[package]]
+name = "rulelink-config"
+version = "0.1.0"
+dependencies = [
+ "rulelink-model",
+ "serde",
+ "thiserror",
+ "toml",
+]
+
+[[package]]
+name = "rulelink-e2e"
+version = "0.1.0"
+dependencies = [
+ "tempfile",
+]
+
+[[package]]
+name = "rulelink-import"
+version = "0.1.0"
+dependencies = [
+ "rulelink-adapter-sdk",
+ "rulelink-registry",
+ "thiserror",
+]
+
+[[package]]
+name = "rulelink-link"
+version = "0.1.0"
+dependencies = [
+ "rulelink-model",
+ "thiserror",
+]
+
+[[package]]
+name = "rulelink-lsp"
+version = "0.1.0"
+dependencies = [
+ "rulelink-app",
+ "thiserror",
+]
+
+[[package]]
+name = "rulelink-model"
+version = "0.1.0"
+dependencies = [
+ "schemars",
+ "serde",
+ "serde_json",
+ "thiserror",
+]
+
+[[package]]
+name = "rulelink-publish"
+version = "0.1.0"
+dependencies = [
+ "rulelink-adapter-sdk",
+ "rulelink-link",
+ "rulelink-registry",
+ "thiserror",
+]
+
+[[package]]
+name = "rulelink-registry"
+version = "0.1.0"
+dependencies = [
+ "rulelink-model",
+ "thiserror",
 ]
 
 [[package]]
@@ -676,7 +676,7 @@ checksum = "8c3b93199df0ab874cdf0c6a94f0a0dc3423fe41f1cafb62b8bd7b1deb277aef"
 name = "xtask"
 version = "0.1.0"
 dependencies = [
- "checkmate-model",
+ "rulelink-model",
  "schemars",
  "serde_json",
 ]

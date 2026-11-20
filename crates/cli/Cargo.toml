@@ -1,6 +1,6 @@
 [package]
-name = "checkmate-cli"
-description = "Checkmate command line: the only executable of the product."
+name = "rulelink-cli"
+description = "Rulelink command line: the only executable of the product."
 version.workspace = true
 edition.workspace = true
 rust-version.workspace = true
@@ -9,18 +9,18 @@ repository.workspace = true
 readme = "README.md"
 
 [[bin]]
-name = "checkmate"
+name = "rulelink"
 path = "src/main.rs"
 
 [features]
 default = ["lsp"]
-lsp = ["dep:checkmate-lsp"]
+lsp = ["dep:rulelink-lsp"]
 
 [lints]
 workspace = true
 
 [dependencies]
-checkmate-app.workspace = true
+rulelink-app.workspace = true
 clap.workspace = true
-checkmate-lsp = { workspace = true, optional = true }
+rulelink-lsp = { workspace = true, optional = true }
 tokio = { workspace = true, features = ["rt", "macros"] }

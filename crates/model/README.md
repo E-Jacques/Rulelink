@@ -1,5 +1,5 @@
-# checkmate-model
+# rulelink-model
 
-Core domain model of Checkmate: rules, identifiers, statuses and links.
+Core domain model of Rulelink: rules, identifiers, statuses and links.
 
-Part of the [Checkmate](https://github.com/E-Jacques/checkmate) monorepo.
+Part of the [Rulelink](https://github.com/E-Jacques/rulelink) monorepo.

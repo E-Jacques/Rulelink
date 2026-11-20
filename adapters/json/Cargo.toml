@@ -1,5 +1,5 @@
 [package]
-name = "checkmate-adapter-json"
+name = "rulelink-adapter-json"
 description = "JSON file adapter."
 version.workspace = true
 edition.workspace = true
@@ -13,8 +13,8 @@ workspace = true
 
 [dependencies]
 thiserror.workspace = true
-checkmate-adapter-sdk.workspace = true
-checkmate-model.workspace = true
+rulelink-adapter-sdk.workspace = true
+rulelink-model.workspace = true
 serde.workspace = true
 serde_json.workspace = true
 

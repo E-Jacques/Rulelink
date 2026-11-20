@@ -1,4 +1,4 @@
-/// Errors raised by `checkmate-adapter-scan-fs`.
+/// Errors raised by `rulelink-adapter-scan-fs`.
 #[derive(Debug, thiserror::Error)]
 pub enum Error {
     /// The requested capability is not implemented yet.

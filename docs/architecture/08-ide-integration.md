@@ -1,7 +1,7 @@
 # 08 — IDE integration: LSP server and extensions
 
-> The brief corrects `projet.svg`: TypeScript and the JVM cannot share one embedded library. All IDE intelligence therefore goes through an **LSP server** included in the binary (`checkmate lsp`). The VS Code and IntelliJ extensions are thin clients.
-> Crates and deliverables: `checkmate-lsp`, `vscode-checkmate` extension (TypeScript, V1), `intellij-checkmate` plugin (Kotlin, V2).
+> The brief corrects `projet.svg`: TypeScript and the JVM cannot share one embedded library. All IDE intelligence therefore goes through an **LSP server** included in the binary (`rulelink lsp`). The VS Code and IntelliJ extensions are thin clients.
+> Crates and deliverables: `rulelink-lsp`, `vscode-rulelink` extension (TypeScript, V1), `intellij-rulelink` plugin (Kotlin, V2).
 > See also: [03 Linking](03-code-linking.md), [04 Checks](04-checks.md).
 
 ## 1. Role and scope
@@ -40,7 +40,7 @@ The MVP deliberately stays CLI-only; `explain` and `where --format vimgrep` alre
 - Shared in-memory index (`Arc<LinkIndex>`), updated file by file (03, section 5.3). Target: hover and completion under 50 ms.
 - The server combines the content of open (unsaved) buffers with the disk: diagnostics reflect what the user is typing.
 - Expensive diagnostics (`orphan-rule`, which depends on the whole repository) are recomputed after a debounce delay (default: 500 ms after the last keystroke).
-- The VS Code extension is published as one VSIX per platform (`linux-x64`, `darwin-arm64`, `win32-x64`...) with the binary bundled. The `checkmate.path` setting allows an installed binary to be used instead.
+- The VS Code extension is published as one VSIX per platform (`linux-x64`, `darwin-arm64`, `win32-x64`...) with the binary bundled. The `rulelink.path` setting allows an installed binary to be used instead.
 - No network calls from the LSP server. A remote source goes through the snapshot (02).
 
 ## 4. Detailed design
@@ -60,12 +60,12 @@ classDiagram
         +code_action()
         +did_change()
     }
-    class CheckmateLsp {
+    class RulelinkLsp {
         -workspaces: Map~Url, WorkspaceState~
         -client: Client
     }
     class WorkspaceState {
-        -facade: Checkmate
+        -facade: Rulelink
         -rules: CachedSource
         -index: IndexStore
         -documents: DocumentStore
@@ -77,13 +77,13 @@ classDiagram
         +to_lsp_edit(text_edit) TextEdit
         +position_to_offset(doc, pos) usize
     }
-    LanguageServer <|.. CheckmateLsp
-    CheckmateLsp o-- WorkspaceState
-    CheckmateLsp ..> LspMapper
-    WorkspaceState --> Checkmate : facade from 09
+    LanguageServer <|.. RulelinkLsp
+    RulelinkLsp o-- WorkspaceState
+    RulelinkLsp ..> LspMapper
+    WorkspaceState --> Rulelink : facade from 09
 ```
 
-- `CheckmateLsp` **adapts** the LSP protocol to the `Checkmate` facade (09).
+- `RulelinkLsp` **adapts** the LSP protocol to the `Rulelink` facade (09).
 - `LspMapper` converts domain types (1-based lines, columns in characters) to LSP types (0-based lines, columns in UTF-16 code units by default). This is a classic source of bugs: it is isolated and covered by property tests.
 
 ### 4.2 Reactivity — **Observer**
@@ -92,7 +92,7 @@ classDiagram
 sequenceDiagram
     autonumber
     participant ED as Editor
-    participant LSP as CheckmateLsp
+    participant LSP as RulelinkLsp
     participant DS as DocumentStore
     participant IS as IndexStore (03)
     participant DP as DiagnosticsPublisher
@@ -127,15 +127,15 @@ When `rules.json` changes (on disk or in a buffer), `CachedSource` (02) reloads 
 | `workspace/symbol` | Rule search by identifier or title | 01 |
 | `documentSymbol` in `rules.json` | File outline by application, module, rule | 01 |
 
-Checkmate-specific requests (`checkmate/` prefix), used by the extension's views:
+Rulelink-specific requests (`rulelink/` prefix), used by the extension's views:
 
 | Method | Parameters | Result |
 |---|---|---|
-| `checkmate/listRules` | `filter?` | Rules with status and location count |
-| `checkmate/explainFile` | `uri` | Output of `explain` |
-| `checkmate/whereRule` | `ids` | Output of `where` |
-| `checkmate/runCheck` | `changed?` | Full report |
-| `checkmate/status` | — | Coverage, for the status bar |
+| `rulelink/listRules` | `filter?` | Rules with status and location count |
+| `rulelink/explainFile` | `uri` | Output of `explain` |
+| `rulelink/whereRule` | `ids` | Output of `where` |
+| `rulelink/runCheck` | `changed?` | Full report |
+| `rulelink/status` | — | Coverage, for the status bar |
 
 ### 4.4 VS Code extension — **Proxy** for the server
 
@@ -167,7 +167,7 @@ classDiagram
     Extension --> FileRulesTreeProvider
     Extension --> StatusBarItem
     Extension --> Commands
-    RulesTreeProvider ..> ServerLauncher : checkmate/listRules
+    RulesTreeProvider ..> ServerLauncher : rulelink/listRules
 ```
 
 The extension is a local **proxy** for the server: every view and command delegates to the LSP client (`vscode-languageclient`). It never reads `rules.json` itself.
@@ -176,10 +176,10 @@ The extension is a local **proxy** for the server: every view and command delega
 |---|---|
 | "Rules" view (side bar) | Application → module → rule tree, status icon, filter |
 | "Rules in this file" view | Rules cited in the active editor |
-| Status bar | "Checkmate: 94/118 linked"; click: run `check` |
-| Commands | `Checkmate: Run check`, `Explain current file`, `Where is rule…`, `Annotate selection with rule…`, `Open rule definition` |
-| Settings | `checkmate.path`, `checkmate.inlayHints.enabled`, `checkmate.diagnostics.debounceMs`, `checkmate.trace.server` |
-| Activation | Presence of `checkmate.toml` in the workspace |
+| Status bar | "Rulelink: 94/118 linked"; click: run `check` |
+| Commands | `Rulelink: Run check`, `Explain current file`, `Where is rule…`, `Annotate selection with rule…`, `Open rule definition` |
+| Settings | `rulelink.path`, `rulelink.inlayHints.enabled`, `rulelink.diagnostics.debounceMs`, `rulelink.trace.server` |
+| Activation | Presence of `rulelink.toml` in the workspace |
 
 ### 4.5 IntelliJ plugin (V2)
 
@@ -190,29 +190,29 @@ Same principle: a thin LSP client, in Kotlin. Two integration options:
 | LSP4IJ (Red Hat) | Also works on Community editions, supports CodeLens and inlay hints | Depends on a third-party plugin |
 | JetBrains platform LSP API | Native, maintained by JetBrains | Availability and feature coverage vary by IDE and edition |
 
-Recommendation: LSP4IJ, to cover IntelliJ IDEA Community, which part of the Java teams use. The "Rules" view is a `ToolWindow` fed by `checkmate/listRules`.
+Recommendation: LSP4IJ, to cover IntelliJ IDEA Community, which part of the Java teams use. The "Rules" view is a `ToolWindow` fed by `rulelink/listRules`.
 
 ## 5. Entry points
 
 | Entry point | Description | Release |
 |---|---|---|
-| `checkmate lsp` | Starts the server over stdio. Options: `--log-file <F>`, `--root <DIR>` | V1 |
-| `vscode-checkmate` | VS Code Marketplace and Open VSX extension | V1 |
-| `intellij-checkmate` | JetBrains Marketplace plugin | V2 |
+| `rulelink lsp` | Starts the server over stdio. Options: `--log-file <F>`, `--root <DIR>` | V1 |
+| `vscode-rulelink` | VS Code Marketplace and Open VSX extension | V1 |
+| `intellij-rulelink` | JetBrains Marketplace plugin | V2 |
 | Other editors | Neovim, Helix, Zed, Emacs: documented LSP configuration, no extension | V1 |
 
 Example Neovim configuration:
 
 ```lua
-vim.lsp.config("checkmate", { cmd = { "checkmate", "lsp" }, root_markers = { "checkmate.toml" } })
-vim.lsp.enable("checkmate")
+vim.lsp.config("rulelink", { cmd = { "rulelink", "lsp" }, root_markers = { "rulelink.toml" } })
+vim.lsp.enable("rulelink")
 ```
 
 ## 6. Interactions
 
 ```mermaid
 flowchart LR
-    VSC["VS Code"] -->|"LSP stdio"| LSP["checkmate lsp"]
+    VSC["VS Code"] -->|"LSP stdio"| LSP["rulelink lsp"]
     IJ["IntelliJ V2"] -->|"LSP stdio"| LSP
     NV["Neovim, Helix, Zed"] -->|"LSP stdio"| LSP
     LSP --> FAC["Facade (09)"]

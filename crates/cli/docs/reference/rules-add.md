@@ -1,11 +1,11 @@
-# checkmate rules add
+# rulelink rules add
 
-Creates a new Rule in the Source with the status `proposed` and prints its Identifier. The Identifier is allocated for you (`RULE-001`, `RULE-002`, …) and is never reused, even if a Rule was retired or deleted by hand. Run it from the project root, after `checkmate init`.
+Creates a new Rule in the Source with the status `proposed` and prints its Identifier. The Identifier is allocated for you (`RULE-001`, `RULE-002`, …) and is never reused, even if a Rule was retired or deleted by hand. Run it from the project root, after `rulelink init`.
 
 ## Example
 
 ```bash
-checkmate rules add --title "Line-level VAT rounding" --statement "VAT is rounded to the cent on each invoice line, then summed."
+rulelink rules add --title "Line-level VAT rounding" --statement "VAT is rounded to the cent on each invoice line, then summed."
 ```
 
 ## Options

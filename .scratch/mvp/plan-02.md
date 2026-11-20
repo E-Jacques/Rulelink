@@ -30,7 +30,7 @@ One sentence: `rules::add` appends a validated draft to the Source as a `propose
 | Decision | Owner |
 | --- | --- |
 | Prefix syntax, Identifier format, never-reuse allocation, draft validation | model |
-| Reading `checkmate.toml` (strict, relative path inside the project) | config |
+| Reading `rulelink.toml` (strict, relative path inside the project) | config |
 | Reading/writing the file, atomic write, Canonical form | adapter-json |
 | Orchestration, error class mapping | app |
 | Arguments, printing the new Identifier | cli |
@@ -44,7 +44,7 @@ Allocation takes the max of `sequences[prefix]`, the numbers of the Rules still 
 | `--title`, `--statement` | trimmed, non-empty, title 1–120 chars (counted on stored value) |
 | `--app`, `--covered`, `--excluded` | each item trimmed, non-empty, no duplicates |
 | `--module` | trimmed; empty is refused |
-| `checkmate.toml` | version 1, `source.kind = "json"` only, `source.path` relative without `..`, prefix valid, missing section is an error |
+| `rulelink.toml` | version 1, `source.kind = "json"` only, `source.path` relative without `..`, prefix valid, missing section is an error |
 | Source file | not found vs unreadable vs invalid JSON vs unsupported `format`; never overwritten when invalid |
 | Sequence numbers | `checked_add`, named error on overflow |
 | Failure | nothing is written; atomic temp-file + rename |

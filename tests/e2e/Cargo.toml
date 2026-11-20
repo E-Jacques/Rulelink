@@ -1,5 +1,5 @@
 [package]
-name = "checkmate-e2e"
+name = "rulelink-e2e"
 version.workspace = true
 edition.workspace = true
 rust-version.workspace = true

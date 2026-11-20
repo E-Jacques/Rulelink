@@ -32,7 +32,7 @@ pub enum DraftError {
     },
 }
 
-/// Errors raised by `checkmate-model` outside input validation.
+/// Errors raised by `rulelink-model` outside input validation.
 #[derive(Debug, Clone, PartialEq, Eq, thiserror::Error)]
 pub enum Error {
     /// The requested capability is not implemented yet.
