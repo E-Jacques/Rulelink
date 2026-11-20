@@ -51,20 +51,20 @@ This sentence appears in the command help, in the CI summary and in the document
 
 | Code | Name (config key) | Detected case | Default level | Release |
 |---|---|---|---|---|
-| `CM001` | `unknown-reference` | The code cites an identifier missing from the source | Error | MVP |
-| `CM002` | `obsolete-reference` | The code still cites an `obsolete` rule (the message suggests `superseded_by` when present) | Error | MVP |
-| `CM003` | `duplicate-id` | Two rules share the same identifier | Error | MVP |
-| `CM004` | `orphan-rule` | A `validated` rule is cited nowhere | Warning | MVP |
-| `CM005` | `unvalidated-reference` | The code cites a rule that is still `proposed` | Warning | MVP |
-| `CM006` | `malformed-annotation` | `@rule` without a valid identifier | Warning | V1 |
-| `CM007` | `untested-rule` | `validated` rule cited in the implementation but in no test | Off | V1 |
-| `CM008` | `wrong-application` | Rule cited in a path mapped to an application not listed in the rule's `applications` | Off | V1 |
-| `CM009` | `retired-reference` | The code cites a `rejected` rule, or an identifier retired without a rule in the source (an `obsolete` rule is reported by `CM002`) | Error | MVP |
-| `CM100`–`CM106` | source integrity | See 01, section 5.3 | As in 01 | MVP / V1 |
+| `RL001` | `unknown-reference` | The code cites an identifier missing from the source | Error | MVP |
+| `RL002` | `obsolete-reference` | The code still cites an `obsolete` rule (the message suggests `superseded_by` when present) | Error | MVP |
+| `RL003` | `duplicate-id` | Two rules share the same identifier | Error | MVP |
+| `RL004` | `orphan-rule` | A `validated` rule is cited nowhere | Warning | MVP |
+| `RL005` | `unvalidated-reference` | The code cites a rule that is still `proposed` | Warning | MVP |
+| `RL006` | `malformed-annotation` | `@rule` without a valid identifier | Warning | V1 |
+| `RL007` | `untested-rule` | `validated` rule cited in the implementation but in no test | Off | V1 |
+| `RL008` | `wrong-application` | Rule cited in a path mapped to an application not listed in the rule's `applications` | Off | V1 |
+| `RL009` | `retired-reference` | The code cites a `rejected` rule, or an identifier retired without a rule in the source (an `obsolete` rule is reported by `RL002`) | Error | MVP |
+| `RL100`–`RL106` | source integrity | See 01, section 5.3 | As in 01 | MVP / V1 |
 
 On an empty Source (no rules yet, as right after `init`), `check` passes with exit code 0 and an info message ("no rules yet"). A missing or unreadable Source file still fails with exit code 3.
 
-`CM007` reflects a sentence from the brief: "a test remains the best check of a rule". Rulelink does not replace tests; it can flag rules that no test cites.
+`RL007` reflects a sentence from the brief: "a test remains the best check of a rule". Rulelink does not replace tests; it can flag rules that no test cites.
 
 ## 5. Detailed design
 
@@ -292,13 +292,13 @@ pub struct CoverageStats { pub rules_by_status: BTreeMap<RuleStatus, usize>,
 Example `human` output:
 
 ```
-error[CM001] unknown reference: RULE-099
+error[RL001] unknown reference: RULE-099
   ┌─ src/billing/discount.rs:42:12
 42 │     // @rule RULE-099
    │              ^^^^^^ not found in rules/rules.json
    = help: similar rules: RULE-090, RULE-009
 
-warning[CM004] validated rule with no code: RULE-017 "Cumulative discount cap"
+warning[RL004] validated rule with no code: RULE-017 "Cumulative discount cap"
 
 2 findings (1 error, 1 warning) · 118 validated rules, 94 linked to code (80%)
 Rulelink verifies the link between a rule and the code, not the correctness of the implementation.

@@ -19,7 +19,7 @@ Mapping to the brief's phases: **MVP** covers phase 1 (developer), **V1** covers
 |---|---|:-:|:-:|:-:|
 | Rule model v1 + JSON Schema | [01](../architecture/01-rule-registry.md) | ● | | |
 | Lifecycle (with `rejected` state) and `rules *` commands | [01](../architecture/01-rule-registry.md) | ● | | |
-| Line-oriented canonical JSON writes, `rules format`, `CM106` | [01](../architecture/01-rule-registry.md), [02](../architecture/02-sources-of-truth.md) | ● | | |
+| Line-oriented canonical JSON writes, `rules format`, `RL106` | [01](../architecture/01-rule-registry.md), [02](../architecture/02-sources-of-truth.md) | ● | | |
 | Keyword search and filtering | [01](../architecture/01-rule-registry.md) | ● basic | ● filter language | |
 | Labels | [01](../architecture/01-rule-registry.md), [03](../architecture/03-code-linking.md) | | ● | |
 | Skills' agent contract: `context`, `annotate`, `check --changed --format json`, `import file`; `rules approve` reserved to the human by skill text | [07](../architecture/07-agent-integration.md) | ● | | |

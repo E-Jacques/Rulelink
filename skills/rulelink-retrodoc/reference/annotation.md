@@ -14,7 +14,7 @@ An annotation links a piece of code to a business rule. It is a tag followed by 
 - Identifiers match the project's pattern, `RULE-[A-Z0-9_]+` by default. Separate several with a comma or a space.
 - An optional note follows ` -- ` and runs to the end of the line. `check` ignores it.
 - Several annotations per file, and one rule in several places (tests included), are normal.
-- A tag without a valid identifier is reported as malformed (`CM006`).
+- A tag without a valid identifier is reported as malformed (`RL006`).
 - Only comments are scanned. `@rule` inside a string literal is not an annotation.
 
 ## Examples per comment style
@@ -55,4 +55,4 @@ Put the annotation directly above the code that implements or tests the rule (a 
 
 ## Placement when documenting legacy code
 
-When retro-documenting, annotate the code that actually enforces each rule, not the file header or the module declaration. If a rule is spread across several places, annotate each one. Annotate only after a human has validated the rule: before that, the rule is `proposed` and an annotation produces a warning (`CM005`).
+When retro-documenting, annotate the code that actually enforces each rule, not the file header or the module declaration. If a rule is spread across several places, annotate each one. Annotate only after a human has validated the rule: before that, the rule is `proposed` and an annotation produces a warning (`RL005`).

@@ -304,14 +304,14 @@ classDiagram
 
 | Validator | Finding code | Default level | Release |
 |---|---|---|---|
-| `SchemaValidator` | `CM100` invalid schema | Error | MVP |
-| `DuplicateIdValidator` | `CM003` duplicate identifier (brief) | Error | MVP |
-| `IdPatternValidator` | `CM101` identifier outside the pattern | Error | MVP |
-| `RetiredReuseValidator` | `CM102` retired identifier reused | Error | MVP |
-| `UnknownRelatedValidator` | `CM103` unknown related rule | Warning | MVP |
-| `SupersessionValidator` | `CM104` supersession to an unknown or obsolete rule, or in a cycle | Warning | V1 |
-| `RequiredFieldsValidator` | `CM105` empty required field | Error | MVP |
-| `CanonicalFormatValidator` | `CM106` source file not in canonical form (fix with `rulelink rules format`) | Warning | MVP |
+| `SchemaValidator` | `RL100` invalid schema | Error | MVP |
+| `DuplicateIdValidator` | `RL003` duplicate identifier (brief) | Error | MVP |
+| `IdPatternValidator` | `RL101` identifier outside the pattern | Error | MVP |
+| `RetiredReuseValidator` | `RL102` retired identifier reused | Error | MVP |
+| `UnknownRelatedValidator` | `RL103` unknown related rule | Warning | MVP |
+| `SupersessionValidator` | `RL104` supersession to an unknown or obsolete rule, or in a cycle | Warning | V1 |
+| `RequiredFieldsValidator` | `RL105` empty required field | Error | MVP |
+| `CanonicalFormatValidator` | `RL106` source file not in canonical form (fix with `rulelink rules format`) | Warning | MVP |
 
 The `sink` collects findings: validation does not stop at the first error.
 

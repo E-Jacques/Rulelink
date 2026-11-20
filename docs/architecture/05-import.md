@@ -219,7 +219,7 @@ flowchart TD
     Q4 -->|"yes"| UPD["Update according to the policy"]
     Q3 -->|"validated"| CONF["Conflict: reported<br/>--update-validated reverts it to proposed"]
     Q3 -->|"obsolete"| OBS["Ignored, reported"]
-    Q1 -->|"retired identifier"| RET["Rejected (CM102)"]
+    Q1 -->|"retired identifier"| RET["Rejected (RL102)"]
 ```
 
 | Policy (`--merge`) | Existing proposed rule, different content |

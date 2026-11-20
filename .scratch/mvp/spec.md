@@ -45,14 +45,14 @@ The MVP is done when: at least 50% of retro-documented Rules are accepted withou
 17. As a developer, I want a `related` field on Rules, so that I can record connections between Rules (cycle detection comes later).
 18. As a developer, I want the Source always written in Canonical form, so that two people editing different Rules produce small, non-conflicting diffs.
 19. As a developer, I want `rules format` to rewrite a file into Canonical form, so that I can normalise after resolving a merge conflict.
-20. As a developer, I want `check` to warn (`CM106`) when the Source is not canonical, so that format drift is visible.
-21. As a developer, I want source-integrity findings (`CM100`–`CM106`) for malformed or inconsistent Source files, so that a broken Source is detected before the code is checked.
-22. As a developer, I want `check` to raise an error (`CM001`) when code cites an Identifier absent from the Source, so that typos and phantom Rules are caught.
-23. As a developer, I want an error (`CM002`) when code cites an `obsolete` Rule, with `superseded_by` suggested, so that I migrate to the replacement.
-24. As a developer, I want an error (`CM003`) when two Rules share an Identifier, so that merges cannot corrupt the Source.
-25. As a developer, I want a warning (`CM004`) for each `validated` Rule cited nowhere, so that I see which Rules have no code.
-26. As a developer, I want a warning (`CM005`) when code cites a `proposed` Rule, so that unreviewed Rules do not go unnoticed.
-27. As a developer, I want an error (`CM009`) when code cites a `rejected` or otherwise retired Identifier, so that dead references are removed.
+20. As a developer, I want `check` to warn (`RL106`) when the Source is not canonical, so that format drift is visible.
+21. As a developer, I want source-integrity findings (`RL100`–`RL106`) for malformed or inconsistent Source files, so that a broken Source is detected before the code is checked.
+22. As a developer, I want `check` to raise an error (`RL001`) when code cites an Identifier absent from the Source, so that typos and phantom Rules are caught.
+23. As a developer, I want an error (`RL002`) when code cites an `obsolete` Rule, with `superseded_by` suggested, so that I migrate to the replacement.
+24. As a developer, I want an error (`RL003`) when two Rules share an Identifier, so that merges cannot corrupt the Source.
+25. As a developer, I want a warning (`RL004`) for each `validated` Rule cited nowhere, so that I see which Rules have no code.
+26. As a developer, I want a warning (`RL005`) when code cites a `proposed` Rule, so that unreviewed Rules do not go unnoticed.
+27. As a developer, I want an error (`RL009`) when code cites a `rejected` or otherwise retired Identifier, so that dead references are removed.
 28. As a team lead, I want warnings not to fail CI by default and errors to fail it, so that adoption on legacy code is progressive.
 29. As a team lead, I want to raise chosen Findings to errors in configuration, so that my team can tighten the check over time.
 30. As a developer, I want a human-readable `check` report with severity, code, message and location, so that I can act on it.
@@ -92,7 +92,7 @@ The MVP is done when: at least 50% of retro-documented Rules are accepted withou
 - **Lifecycle transitions** are enforced by the registry: `proposed→validated|rejected`, `validated→obsolete`; anything else is refused. Only humans approve (skill text, not a technical gate in the MVP).
 - **Source**: a single JSON file behind the native adapter contract. Writes always go through the Canonical form (one property or array element per line, natural Identifier order, schema key order, no alignment). The adapter contract stays internal in the MVP.
 - **Code linking**: a lexical, language-agnostic scan for `@rule <ID>` in comments; no tree-sitter and no enclosing-symbol resolution. `explain`, `where` and `annotate` are built on this scan.
-- **Check**: findings `CM001`–`CM005`, `CM009` and source-integrity `CM100`–`CM106` (those marked MVP). Severities are configurable; errors fail the process, warnings do not by default. `CM006`–`CM008` are V1.
+- **Check**: findings `RL001`–`RL005`, `RL009` and source-integrity `RL100`–`RL106` (those marked MVP). Severities are configurable; errors fail the process, warnings do not by default. `RL006`–`RL008` are V1.
 - **`check --changed`** limits reporting to files changed according to Git, to serve the agent loop. It is independent of any CI platform.
 - **Reports**: `human` and `json` only. The JSON report schema is a contract consumed by the skills.
 - **Import**: JSON file only; produces `proposed` Rules, never `validated`; imported text is untrusted.
@@ -112,7 +112,7 @@ The MVP is done when: at least 50% of retro-documented Rules are accepted withou
 
 ## Out of Scope
 
-- Anything marked V1 or V2 in the features table: labels, filter language, directory source, `source migrate`, external adapters, Jira/CSV/GitHub/GitLab import, Markdown/CSV/JSON export, Confluence publishing, LSP and IDE extensions, baseline, pre-commit hook, self-approval warning, cycle detection, `CM006`–`CM008`, onboarding and other skills, tree-sitter, remote sources.
+- Anything marked V1 or V2 in the features table: labels, filter language, directory source, `source migrate`, external adapters, Jira/CSV/GitHub/GitLab import, Markdown/CSV/JSON export, Confluence publishing, LSP and IDE extensions, baseline, pre-commit hook, self-approval warning, cycle detection, `RL006`–`RL008`, onboarding and other skills, tree-sitter, remote sources.
 - GitHub Action, GitLab CI component, SARIF and `github` reporters, workflow generation by `init`.
 - The `rulelink skills` installer, managed `AGENTS.md` section, shell/PowerShell installers, Homebrew/Scoop/winget, Docker image.
 - Judging whether code correctly implements a Rule: `check` proves the link, not correctness.
