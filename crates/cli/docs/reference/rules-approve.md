@@ -10,6 +10,6 @@ rulelink rules approve RULE-001
 
 ## Arguments
 
-| name    | description                                | example    |
-| ------- | ------------------------------------------ | ---------- |
-| `<id>`  | Names the Identifier of the Rule to approve. | `RULE-001` |
+| name   | description                                  | example    |
+| ------ | -------------------------------------------- | ---------- |
+| `<id>` | Names the Identifier of the Rule to approve. | `RULE-001` |

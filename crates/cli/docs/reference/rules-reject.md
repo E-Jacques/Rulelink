@@ -10,6 +10,6 @@ rulelink rules reject RULE-002
 
 ## Arguments
 
-| name   | description                                | example    |
-| ------ | ------------------------------------------ | ---------- |
+| name   | description                                 | example    |
+| ------ | ------------------------------------------- | ---------- |
 | `<id>` | Names the Identifier of the Rule to reject. | `RULE-002` |

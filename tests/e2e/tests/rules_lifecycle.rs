@@ -135,6 +135,18 @@ fn approve_is_refused_unless_proposed() {
 }
 
 #[test]
+fn refusal_message_reads_naturally() {
+    let repo = with_rule("rejected");
+    let run = repo.run(&["rules", "reject", "RULE-001"]);
+    assert!(
+        run.stderr
+            .contains("cannot reject RULE-001: it is rejected, but a proposed Rule is required"),
+        "stderr: {}",
+        run.stderr
+    );
+}
+
+#[test]
 fn reject_is_refused_unless_proposed() {
     for from in ["validated", "rejected", "obsolete"] {
         refused(from, &["rules", "reject", "RULE-001"]);

@@ -10,12 +10,12 @@ rulelink rules obsolete RULE-001 --superseded-by RULE-007
 
 ## Arguments
 
-| name   | description                                  | example    |
-| ------ | -------------------------------------------- | ---------- |
-| `<id>` | Names the Identifier of the Rule to retire.  | `RULE-001` |
+| name   | description                                 | example    |
+| ------ | ------------------------------------------- | ---------- |
+| `<id>` | Names the Identifier of the Rule to retire. | `RULE-001` |
 
 ## Options
 
-| name              | description                                                                              | example                    |
-| ----------------- | ---------------------------------------------------------------------------------------- | -------------------------- |
+| name              | description                                                                                      | example                    |
+| ----------------- | ------------------------------------------------------------------------------------------------ | -------------------------- |
 | `--superseded-by` | Records the Identifier of the Rule that replaces this one. It must exist and differ from `<id>`. | `--superseded-by RULE-007` |

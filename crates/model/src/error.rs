@@ -41,7 +41,7 @@ pub enum LifecycleError {
     #[error("no Rule has the Identifier `{0}`")]
     RuleNotFound(RuleId),
     /// The Rule is not in the status the transition starts from.
-    #[error("cannot {action} {id}: it is {status}, only a {required} Rule can be {action}d")]
+    #[error("cannot {action} {id}: it is {status}, but a {required} Rule is required")]
     TransitionRefused {
         /// The Rule.
         id: RuleId,
