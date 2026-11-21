@@ -9,6 +9,7 @@ use clap::{Parser, Subcommand};
 mod init;
 mod rules_add;
 mod rules_lifecycle;
+mod rules_query;
 
 use init::InitArgs;
 use rulelink_app::Error;
@@ -17,6 +18,7 @@ use rulelink_app::runtime::{
 };
 use rules_add::RulesAddArgs;
 use rules_lifecycle::{RuleRefArgs, RulesObsoleteArgs};
+use rules_query::{RulesListArgs, RulesSearchArgs};
 
 /// Command line grammar, derived by `clap`.
 #[derive(Debug, Parser)]
@@ -50,6 +52,10 @@ pub enum RulesAction {
     Reject(RuleRefArgs),
     /// Retire a `validated` Rule, optionally recording its replacement.
     Obsolete(RulesObsoleteArgs),
+    /// List the Rules, optionally only those in one status.
+    List(RulesListArgs),
+    /// Find the Rules that contain a text, ignoring case and accents.
+    Search(RulesSearchArgs),
 }
 
 /// Parsed command line.
@@ -103,6 +109,11 @@ impl Entrypoint for CliEntrypoint {
     async fn shutdown(&self, _ctx: &AppContext, _reason: ShutdownReason) {}
 }
 
+/// The project root: the directory the command is run from.
+fn project_root() -> Result<std::path::PathBuf, Error> {
+    std::env::current_dir().map_err(|e| Error::Internal(e.to_string()))
+}
+
 /// One line per command: the handlers hold the logic.
 fn dispatch(args: CliArgs) -> Result<(), Error> {
     match args {
@@ -123,6 +134,12 @@ fn dispatch(args: CliArgs) -> Result<(), Error> {
         CliArgs::Run(Command::Rules {
             action: RulesAction::Obsolete(args),
         }) => rules_lifecycle::obsolete(&args),
+        CliArgs::Run(Command::Rules {
+            action: RulesAction::List(args),
+        }) => rules_query::list(&args),
+        CliArgs::Run(Command::Rules {
+            action: RulesAction::Search(args),
+        }) => rules_query::search(&args),
     }
 }
 
@@ -193,6 +210,24 @@ mod tests {
         };
         assert_eq!(add.applications, ["a", "b"]);
         assert_eq!(add.module, None);
+    }
+
+    #[test]
+    fn rules_list_and_search_parse_the_status() {
+        let parsed = parse(args(&["rules", "search", "tva", "--status", "validated"]))
+            .unwrap_or_else(|e| panic!("{e}"));
+        let CliArgs::Run(Command::Rules {
+            action: RulesAction::Search(search),
+        }) = parsed
+        else {
+            panic!("expected rules search");
+        };
+        assert_eq!(
+            (search.text.as_str(), search.status),
+            ("tva", Some(rulelink_app::RuleStatus::Validated))
+        );
+        assert!(parse(args(&["rules", "list", "--status", "draft"])).is_err());
+        assert!(parse(args(&["rules", "search"])).is_err());
     }
 
     #[test]

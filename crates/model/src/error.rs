@@ -46,7 +46,7 @@ use crate::{RuleId, RuleStatus};
 #[derive(Debug, Clone, PartialEq, Eq, thiserror::Error)]
 pub enum LifecycleError {
     /// No Rule has this Identifier.
-    #[error("no Rule has the Identifier `{0}`")]
+    #[error("no Rule has the Identifier `{0}`: run `rulelink rules list` to see the Identifiers")]
     RuleNotFound(RuleId),
     /// The Rule is not in the status the transition starts from.
     #[error("cannot {action} {id}: it is {status}, but a {required} Rule is required")]
@@ -61,7 +61,9 @@ pub enum LifecycleError {
         action: &'static str,
     },
     /// The replacement Rule does not exist.
-    #[error("cannot record `{0}` as the replacement: no Rule has this Identifier")]
+    #[error(
+        "cannot record `{0}` as the replacement (--superseded-by): no Rule has this Identifier; run `rulelink rules list` to see the Identifiers"
+    )]
     ReplacementNotFound(RuleId),
     /// A Rule cannot replace itself.
     #[error("{0} cannot be its own replacement")]
@@ -74,7 +76,30 @@ pub enum Error {
     /// The requested capability is not implemented yet.
     #[error("not implemented: {0}")]
     NotImplemented(&'static str),
-    /// No more Identifiers can be allocated for the prefix.
+}
+
+/// A new Rule cannot be added to the Source.
+#[derive(Debug, Clone, PartialEq, Eq, thiserror::Error)]
+pub enum AddError {
+    /// No more Identifiers can be allocated for the prefix: the Source is full.
     #[error("no Identifier is left for prefix `{0}`")]
     IdentifierSpaceExhausted(String),
+    /// A `--related` Identifier names no Rule of the Source.
+    #[error(
+        "cannot record `{0}` as a related Rule (--related): no Rule has this Identifier; run `rulelink rules list` to see the Identifiers"
+    )]
+    UnknownRelated(RuleId),
 }
+
+/// A status given by the user is not one of the four.
+#[derive(Debug, Clone, PartialEq, Eq, thiserror::Error)]
+#[error("unknown status `{value}`: use proposed, validated, obsolete or rejected")]
+pub struct UnknownStatus {
+    /// The value as typed.
+    pub value: String,
+}
+
+/// The text to search for is empty once trimmed.
+#[derive(Debug, Clone, PartialEq, Eq, thiserror::Error)]
+#[error("the search text must not be empty or blank")]
+pub struct BlankSearchText;

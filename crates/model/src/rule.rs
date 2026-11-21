@@ -42,6 +42,16 @@ pub enum RuleStatus {
     Rejected,
 }
 
+impl RuleStatus {
+    /// Every status, in lifecycle order.
+    pub const ALL: [Self; 4] = [
+        Self::Proposed,
+        Self::Validated,
+        Self::Obsolete,
+        Self::Rejected,
+    ];
+}
+
 impl std::fmt::Display for RuleStatus {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         f.write_str(match self {
@@ -49,6 +59,25 @@ impl std::fmt::Display for RuleStatus {
             Self::Validated => "validated",
             Self::Obsolete => "obsolete",
             Self::Rejected => "rejected",
+        })
+    }
+}
+
+impl std::str::FromStr for RuleStatus {
+    type Err = crate::UnknownStatus;
+
+    /// Reads a status typed by a user, exactly as [`Display`](std::fmt::Display) writes it.
+    fn from_str(raw: &str) -> Result<Self, Self::Err> {
+        [
+            Self::Proposed,
+            Self::Validated,
+            Self::Obsolete,
+            Self::Rejected,
+        ]
+        .into_iter()
+        .find(|status| status.to_string() == raw)
+        .ok_or_else(|| crate::UnknownStatus {
+            value: raw.to_owned(),
         })
     }
 }
@@ -112,4 +141,26 @@ pub struct Rule {
     /// Replacement of an obsolete rule.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub superseded_by: Option<RuleId>,
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn a_status_reads_back_what_it_displays() {
+        for status in RuleStatus::ALL {
+            assert_eq!(status.to_string().parse(), Ok(status));
+        }
+    }
+
+    #[test]
+    fn an_unknown_status_names_the_value_and_the_allowed_ones() {
+        let err = "draft"
+            .parse::<RuleStatus>()
+            .expect_err("refused")
+            .to_string();
+        assert!(err.contains("`draft`") && err.contains("proposed"), "{err}");
+        assert!("Proposed".parse::<RuleStatus>().is_err());
+    }
 }

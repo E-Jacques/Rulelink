@@ -20,6 +20,9 @@ pub struct RuleDraft {
     covered: Vec<String>,
     /// Cases the Rule explicitly excludes, trimmed, without duplicates.
     excluded: Vec<String>,
+    /// Related Rules, without duplicates. Whether they exist is for the
+    /// [`RuleSet`](crate::RuleSet) to say.
+    related: Vec<RuleId>,
 }
 
 impl RuleDraft {
@@ -30,7 +33,7 @@ impl RuleDraft {
     /// # Errors
     /// [`DraftError::Empty`] for an empty title, statement, module or list item,
     /// [`DraftError::TitleTooLong`] past [`TITLE_MAX_CHARS`], [`DraftError::Duplicate`] for a repeated
-    /// list item.
+    /// list item or related Rule.
     pub fn new(
         title: &str,
         statement: &str,
@@ -38,6 +41,7 @@ impl RuleDraft {
         module: Option<&str>,
         covered: &[String],
         excluded: &[String],
+        related: &[RuleId],
     ) -> Result<Self, DraftError> {
         let title = non_empty("title", title)?;
         let len = title.chars().count();
@@ -54,7 +58,13 @@ impl RuleDraft {
             module: module.map(|m| non_empty("module", m)).transpose()?,
             covered: unique_items("covered case", covered)?,
             excluded: unique_items("excluded case", excluded)?,
+            related: unique_ids("related Rule", related)?,
         })
+    }
+
+    /// The Rules this draft points at, to be checked against the Source before it is added.
+    pub(crate) fn related(&self) -> &[RuleId] {
+        &self.related
     }
 
     /// The `proposed` Rule this draft becomes under `id`.
@@ -72,7 +82,7 @@ impl RuleDraft {
             module: self.module,
             scope,
             origin: None,
-            related: Vec::new(),
+            related: self.related,
             superseded_by: None,
         }
     }
@@ -99,12 +109,26 @@ fn unique_items(field: &'static str, raw: &[String]) -> Result<Vec<String>, Draf
     Ok(items)
 }
 
+fn unique_ids(field: &'static str, raw: &[RuleId]) -> Result<Vec<RuleId>, DraftError> {
+    let mut ids: Vec<RuleId> = Vec::with_capacity(raw.len());
+    for id in raw {
+        if ids.contains(id) {
+            return Err(DraftError::Duplicate {
+                field,
+                value: id.0.clone(),
+            });
+        }
+        ids.push(id.clone());
+    }
+    Ok(ids)
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
 
     fn draft(title: &str, statement: &str) -> Result<RuleDraft, DraftError> {
-        RuleDraft::new(title, statement, &[], None, &[], &[])
+        RuleDraft::new(title, statement, &[], None, &[], &[], &[])
     }
 
     #[test]
@@ -139,17 +163,17 @@ mod tests {
     #[test]
     fn blank_list_items_and_module_are_refused() {
         let blank = vec![" ".to_owned()];
-        assert!(RuleDraft::new("T", "S", &blank, None, &[], &[]).is_err());
-        assert!(RuleDraft::new("T", "S", &[], None, &blank, &[]).is_err());
-        assert!(RuleDraft::new("T", "S", &[], None, &[], &blank).is_err());
-        assert!(RuleDraft::new("T", "S", &[], Some(""), &[], &[]).is_err());
+        assert!(RuleDraft::new("T", "S", &blank, None, &[], &[], &[]).is_err());
+        assert!(RuleDraft::new("T", "S", &[], None, &blank, &[], &[]).is_err());
+        assert!(RuleDraft::new("T", "S", &[], None, &[], &blank, &[]).is_err());
+        assert!(RuleDraft::new("T", "S", &[], Some(""), &[], &[], &[]).is_err());
     }
 
     #[test]
     fn duplicate_items_are_refused_after_trimming() {
         let dup = vec!["a".to_owned(), " a".to_owned()];
         assert_eq!(
-            RuleDraft::new("T", "S", &dup, None, &[], &[]),
+            RuleDraft::new("T", "S", &dup, None, &[], &[], &[]),
             Err(DraftError::Duplicate {
                 field: "application",
                 value: "a".into()
@@ -167,9 +191,21 @@ mod tests {
         );
         let cases = vec!["x".to_owned()];
         let some =
-            RuleDraft::new("T", "S", &[], None, &cases, &[]).unwrap_or_else(|e| panic!("{e}"));
+            RuleDraft::new("T", "S", &[], None, &cases, &[], &[]).unwrap_or_else(|e| panic!("{e}"));
         let rule = some.into_proposed(RuleId("RULE-001".into()));
         assert_eq!(rule.scope.map(|s| s.covered), Some(cases));
         assert_eq!(rule.status, RuleStatus::Proposed);
+    }
+
+    #[test]
+    fn a_repeated_related_rule_is_refused_naming_it() {
+        let related = [RuleId("RULE-001".into()), RuleId("RULE-001".into())];
+        assert_eq!(
+            RuleDraft::new("T", "S", &[], None, &[], &[], &related),
+            Err(DraftError::Duplicate {
+                field: "related Rule",
+                value: "RULE-001".into()
+            })
+        );
     }
 }
