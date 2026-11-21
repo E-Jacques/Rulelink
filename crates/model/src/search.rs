@@ -17,11 +17,13 @@ impl SearchText {
     /// # Errors
     /// [`BlankSearchText`] if nothing is left after trimming.
     pub fn parse(raw: &str) -> Result<Self, BlankSearchText> {
-        let trimmed = raw.trim();
-        if trimmed.is_empty() {
+        // Fold first: a text made only of accents folds to nothing, and an empty needle
+        // would match every Rule.
+        let folded = fold(raw.trim());
+        if folded.is_empty() {
             Err(BlankSearchText)
         } else {
-            Ok(Self(fold(trimmed)))
+            Ok(Self(folded))
         }
     }
 
@@ -32,9 +34,10 @@ impl SearchText {
 
 /// Lower case, with accents removed: `Énoncé` → `enonce`.
 fn fold(text: &str) -> String {
-    text.nfd()
+    // Lower-casing first: `İ` becomes `i` plus a combining dot, which stripping then removes.
+    text.to_lowercase()
+        .nfd()
         .filter(|c| !is_combining_mark(*c))
-        .flat_map(char::to_lowercase)
         .collect()
 }
 
@@ -70,6 +73,16 @@ mod tests {
         assert!(found("enonce", "Énoncé du devis"));
         assert!(found("ÉNONCÉ", "enonce"));
         assert!(found("naïve", "NAIVE"));
+    }
+
+    #[test]
+    fn a_lower_case_that_adds_an_accent_still_matches_the_plain_letter() {
+        assert!(found("istanbul", "İstanbul"));
+    }
+
+    #[test]
+    fn a_text_of_accents_only_is_blank() {
+        assert_eq!(SearchText::parse("\u{301}"), Err(BlankSearchText));
     }
 
     #[test]

@@ -125,7 +125,7 @@ fn blank_search_text_is_refused_with_the_input_exit_code() {
 #[test]
 fn unknown_status_is_a_usage_error_naming_the_value() {
     let run = three_rules().run(&["rules", "list", "--status", "draft"]);
-    assert_ne!(run.code, 0);
+    assert_eq!(run.code, 2);
     assert!(run.stderr.contains("draft"), "stderr: {}", run.stderr);
     assert!(run.stderr.contains("proposed"), "stderr: {}", run.stderr);
 }

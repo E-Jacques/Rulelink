@@ -34,6 +34,7 @@ impl From<rulelink_model::DraftError> for Error {
     }
 }
 
+/// The only cause is a search text the user typed.
 impl From<rulelink_model::BlankSearchText> for Error {
     fn from(err: rulelink_model::BlankSearchText) -> Self {
         Self::Input(err.to_string())

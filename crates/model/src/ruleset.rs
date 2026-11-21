@@ -40,7 +40,9 @@ impl RuleSet {
 
     /// Adds `draft` as a `proposed` Rule under the next free Identifier of `prefix`.
     ///
-    /// Every related Rule of `draft` must exist in the Source. The number follows the highest of: the recorded sequence, the Rules present and the
+    /// Every related Rule of `draft` must exist in the Source.
+    ///
+    /// The number follows the highest of: the recorded sequence, the Rules present and the
     /// retired Identifiers. A Rule removed from the Source by hand therefore never has its
     /// Identifier reused, and `sequences` never decreases. Nothing changes on error.
     ///

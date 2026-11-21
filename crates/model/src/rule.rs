@@ -42,6 +42,16 @@ pub enum RuleStatus {
     Rejected,
 }
 
+impl RuleStatus {
+    /// Every status, in lifecycle order.
+    pub const ALL: [Self; 4] = [
+        Self::Proposed,
+        Self::Validated,
+        Self::Obsolete,
+        Self::Rejected,
+    ];
+}
+
 impl std::fmt::Display for RuleStatus {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         f.write_str(match self {
@@ -139,12 +149,7 @@ mod tests {
 
     #[test]
     fn a_status_reads_back_what_it_displays() {
-        for status in [
-            RuleStatus::Proposed,
-            RuleStatus::Validated,
-            RuleStatus::Obsolete,
-            RuleStatus::Rejected,
-        ] {
+        for status in RuleStatus::ALL {
             assert_eq!(status.to_string().parse(), Ok(status));
         }
     }
