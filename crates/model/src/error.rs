@@ -74,7 +74,28 @@ pub enum Error {
     /// The requested capability is not implemented yet.
     #[error("not implemented: {0}")]
     NotImplemented(&'static str),
-    /// No more Identifiers can be allocated for the prefix.
+}
+
+/// A new Rule cannot be added to the Source.
+#[derive(Debug, Clone, PartialEq, Eq, thiserror::Error)]
+pub enum AddError {
+    /// No more Identifiers can be allocated for the prefix: the Source is full.
     #[error("no Identifier is left for prefix `{0}`")]
     IdentifierSpaceExhausted(String),
+    /// A `--related` Identifier names no Rule of the Source.
+    #[error("cannot record `{0}` as a related Rule: no Rule has this Identifier")]
+    UnknownRelated(RuleId),
 }
+
+/// A status given by the user is not one of the four.
+#[derive(Debug, Clone, PartialEq, Eq, thiserror::Error)]
+#[error("unknown status `{value}`: use proposed, validated, obsolete or rejected")]
+pub struct UnknownStatus {
+    /// The value as typed.
+    pub value: String,
+}
+
+/// The text to search for is empty once trimmed.
+#[derive(Debug, Clone, PartialEq, Eq, thiserror::Error)]
+#[error("the search text must not be empty or blank")]
+pub struct BlankSearchText;

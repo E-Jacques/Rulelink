@@ -3,7 +3,7 @@
 use std::path::Path;
 
 use rulelink_config::Config;
-use rulelink_model::{RuleDraft, RuleId, RuleSet};
+use rulelink_model::{Rule, RuleDraft, RuleId, RuleSet, RuleStatus, SearchText};
 
 use crate::Error;
 
@@ -25,11 +25,27 @@ fn update_source<T>(
 /// Appends `draft` to the Source as a `proposed` Rule and returns its new Identifier.
 ///
 /// # Errors
-/// [`Error::Config`] for a missing or invalid `rulelink.toml`, [`Error::Source`] for a
-/// missing, invalid or unsupported Source, [`Error::Source`] if no Identifier is left,
-/// [`Error::Internal`] on I/O failure.
+/// [`Error::Input`] if a related Rule does not exist, [`Error::Config`] for a missing or
+/// invalid `rulelink.toml`, [`Error::Source`] for a missing, invalid or unsupported Source or
+/// if no Identifier is left, [`Error::Internal`] on I/O failure.
 pub fn add(root: &Path, draft: RuleDraft) -> Result<RuleId, Error> {
     update_source(root, |config, set| Ok(set.add(&config.id_prefix, draft)?))
+}
+
+/// The Rules that contain `text` (any, if `None`) and are in `status` (any, if `None`), in
+/// Identifier order. Reads the Source; never writes it.
+///
+/// # Errors
+/// [`Error::Config`] for a missing or invalid `rulelink.toml`, [`Error::Source`] for a
+/// missing, invalid or unsupported Source.
+pub fn select(
+    root: &Path,
+    text: Option<&SearchText>,
+    status: Option<RuleStatus>,
+) -> Result<Vec<Rule>, Error> {
+    let config = Config::load(root)?;
+    let rule_set = rulelink_adapter_json::read_source(&root.join(&config.source_path))?;
+    Ok(rule_set.select(text, status).into_iter().cloned().collect())
 }
 
 /// Moves a `proposed` Rule to `validated`.

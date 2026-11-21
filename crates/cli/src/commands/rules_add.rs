@@ -2,7 +2,7 @@
 
 use clap::Args;
 use rulelink_app::Error;
-use rulelink_app::RuleDraft;
+use rulelink_app::{RuleDraft, RuleId};
 
 /// Arguments of `rules add`.
 #[derive(Debug, Args)]
@@ -25,9 +25,17 @@ pub struct RulesAddArgs {
     /// Case the Rule explicitly excludes; repeat for several.
     #[arg(long)]
     pub(super) excluded: Vec<String>,
+    /// Identifier of a related Rule; repeat for several.
+    #[arg(long)]
+    pub(super) related: Vec<String>,
 }
 
 pub(super) fn run(args: &RulesAddArgs) -> Result<(), Error> {
+    let related = args
+        .related
+        .iter()
+        .map(|raw| RuleId::parse(raw, "--related"))
+        .collect::<Result<Vec<_>, _>>()?;
     let draft = RuleDraft::new(
         &args.title,
         &args.statement,
@@ -35,6 +43,7 @@ pub(super) fn run(args: &RulesAddArgs) -> Result<(), Error> {
         args.module.as_deref(),
         &args.covered,
         &args.excluded,
+        &related,
     )?;
     let root = std::env::current_dir().map_err(|e| Error::Internal(e.to_string()))?;
     let id = rulelink_app::rules::add(&root, draft)?;

@@ -44,7 +44,12 @@ fn documented_list_example_shows_only_proposed_rules() {
     let repo = three_rules();
     let run = repo.run(&["rules", "list", "--status", "proposed"]);
     ok(&run);
-    assert_eq!(ids(&run), ["RULE-002", "RULE-003"], "stdout: {}", run.stdout);
+    assert_eq!(
+        ids(&run),
+        ["RULE-002", "RULE-003"],
+        "stdout: {}",
+        run.stdout
+    );
     assert!(run.stdout.contains("Late fees"));
 }
 
@@ -64,7 +69,13 @@ fn list_without_options_shows_every_rule_in_identifier_order() {
     let run = repo.run(&["rules", "list"]);
     ok(&run);
     assert_eq!(ids(&run), ["RULE-001", "RULE-002", "RULE-003"]);
-    assert!(run.stdout.lines().next().unwrap_or("").contains("validated"));
+    assert!(
+        run.stdout
+            .lines()
+            .next()
+            .unwrap_or("")
+            .contains("validated")
+    );
 }
 
 #[test]
@@ -81,7 +92,10 @@ fn search_ignores_case_and_accents_in_both_directions() {
     let repo = three_rules();
     assert_eq!(ids(&repo.run(&["rules", "search", "ENONCE"])), ["RULE-003"]);
     assert_eq!(ids(&repo.run(&["rules", "search", "énoncé"])), ["RULE-003"]);
-    assert_eq!(ids(&repo.run(&["rules", "search", "LATE FEE"])), ["RULE-002"]);
+    assert_eq!(
+        ids(&repo.run(&["rules", "search", "LATE FEE"])),
+        ["RULE-002"]
+    );
 }
 
 #[test]
@@ -122,7 +136,15 @@ fn unknown_status_is_a_usage_error_naming_the_value() {
 fn a_rule_records_its_related_identifiers_in_canonical_form() {
     let repo = three_rules();
     ok(&repo.run(&[
-        "rules", "add", "--title", "T", "--statement", "S", "--related", "RULE-001", "--related",
+        "rules",
+        "add",
+        "--title",
+        "T",
+        "--statement",
+        "S",
+        "--related",
+        "RULE-001",
+        "--related",
         "RULE-003",
     ]));
     let source = source(&repo);
@@ -137,7 +159,14 @@ fn an_unknown_related_identifier_is_refused_and_nothing_is_written() {
     let repo = three_rules();
     let before = source(&repo);
     let run = repo.run(&[
-        "rules", "add", "--title", "T", "--statement", "S", "--related", "RULE-999",
+        "rules",
+        "add",
+        "--title",
+        "T",
+        "--statement",
+        "S",
+        "--related",
+        "RULE-999",
     ]);
     assert_eq!(run.code, 2, "stdout: {}", run.stdout);
     assert!(run.stderr.contains("RULE-999"), "stderr: {}", run.stderr);
@@ -148,14 +177,33 @@ fn an_unknown_related_identifier_is_refused_and_nothing_is_written() {
 fn a_repeated_or_blank_related_identifier_is_refused() {
     let repo = three_rules();
     let dup = repo.run(&[
-        "rules", "add", "--title", "T", "--statement", "S", "--related", "RULE-001", "--related",
+        "rules",
+        "add",
+        "--title",
+        "T",
+        "--statement",
+        "S",
+        "--related",
+        "RULE-001",
+        "--related",
         " RULE-001 ",
     ]);
     assert_eq!(dup.code, 2);
     assert!(dup.stderr.contains("RULE-001"), "stderr: {}", dup.stderr);
     let blank = repo.run(&[
-        "rules", "add", "--title", "T", "--statement", "S", "--related", " ",
+        "rules",
+        "add",
+        "--title",
+        "T",
+        "--statement",
+        "S",
+        "--related",
+        " ",
     ]);
     assert_eq!(blank.code, 2);
-    assert!(blank.stderr.contains("--related"), "stderr: {}", blank.stderr);
+    assert!(
+        blank.stderr.contains("--related"),
+        "stderr: {}",
+        blank.stderr
+    );
 }

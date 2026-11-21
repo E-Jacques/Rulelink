@@ -34,6 +34,23 @@ impl From<rulelink_model::DraftError> for Error {
     }
 }
 
+impl From<rulelink_model::BlankSearchText> for Error {
+    fn from(err: rulelink_model::BlankSearchText) -> Self {
+        Self::Input(err.to_string())
+    }
+}
+
+impl From<rulelink_model::AddError> for Error {
+    fn from(err: rulelink_model::AddError) -> Self {
+        use rulelink_model::AddError as E;
+        match err {
+            E::UnknownRelated(_) => Self::Input(err.to_string()),
+            // The Source holds the highest number: it is the Source that is full.
+            E::IdentifierSpaceExhausted(_) => Self::Source(err.to_string()),
+        }
+    }
+}
+
 impl From<rulelink_model::BlankRuleId> for Error {
     fn from(err: rulelink_model::BlankRuleId) -> Self {
         Self::Input(err.to_string())
@@ -75,8 +92,6 @@ impl From<rulelink_model::Error> for Error {
     fn from(err: rulelink_model::Error) -> Self {
         use rulelink_model::Error as E;
         match err {
-            // The Source holds the highest number: it is the Source that is full.
-            E::IdentifierSpaceExhausted(_) => Self::Source(err.to_string()),
             E::NotImplemented(_) => Self::Internal(err.to_string()),
         }
     }
