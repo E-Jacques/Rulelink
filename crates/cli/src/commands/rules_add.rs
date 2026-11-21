@@ -4,6 +4,8 @@ use clap::Args;
 use rulelink_app::Error;
 use rulelink_app::{RuleDraft, RuleId};
 
+use super::project_root;
+
 /// Arguments of `rules add`.
 #[derive(Debug, Args)]
 pub struct RulesAddArgs {
@@ -45,8 +47,7 @@ pub(super) fn run(args: &RulesAddArgs) -> Result<(), Error> {
         &args.excluded,
         &related,
     )?;
-    let root = std::env::current_dir().map_err(|e| Error::Internal(e.to_string()))?;
-    let id = rulelink_app::rules::add(&root, draft)?;
+    let id = rulelink_app::rules::add(&project_root()?, draft)?;
     println!("Created {} (proposed)", id.0);
     Ok(())
 }

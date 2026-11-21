@@ -3,6 +3,8 @@
 use clap::Args;
 use rulelink_app::{Error, Rule, RuleStatus, SearchText};
 
+use super::project_root;
+
 /// Arguments of `rules list`.
 #[derive(Debug, Args)]
 pub struct RulesListArgs {
@@ -31,8 +33,7 @@ pub(super) fn search(args: &RulesSearchArgs) -> Result<(), Error> {
 }
 
 fn print_selection(text: Option<&SearchText>, status: Option<RuleStatus>) -> Result<(), Error> {
-    let root = std::env::current_dir().map_err(|e| Error::Internal(e.to_string()))?;
-    for rule in rulelink_app::rules::select(&root, text, status)? {
+    for rule in rulelink_app::rules::select(&project_root()?, text, status)? {
         println!("{}", line(&rule));
     }
     Ok(())

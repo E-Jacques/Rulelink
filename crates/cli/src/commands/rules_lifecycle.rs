@@ -3,6 +3,8 @@
 use clap::Args;
 use rulelink_app::{Error, RuleId};
 
+use super::project_root;
+
 /// Arguments of `rules approve` and `rules reject`.
 #[derive(Debug, Args)]
 pub struct RuleRefArgs {
@@ -20,20 +22,16 @@ pub struct RulesObsoleteArgs {
     pub(super) superseded_by: Option<String>,
 }
 
-fn root() -> Result<std::path::PathBuf, Error> {
-    std::env::current_dir().map_err(|e| Error::Internal(e.to_string()))
-}
-
 pub(super) fn approve(args: &RuleRefArgs) -> Result<(), Error> {
     let id = RuleId::parse(&args.id, "the Rule Identifier")?;
-    rulelink_app::rules::approve(&root()?, &id)?;
+    rulelink_app::rules::approve(&project_root()?, &id)?;
     println!("{id} is now validated");
     Ok(())
 }
 
 pub(super) fn reject(args: &RuleRefArgs) -> Result<(), Error> {
     let id = RuleId::parse(&args.id, "the Rule Identifier")?;
-    rulelink_app::rules::reject(&root()?, &id)?;
+    rulelink_app::rules::reject(&project_root()?, &id)?;
     println!("{id} is now rejected; its Identifier is retired");
     Ok(())
 }
@@ -45,7 +43,7 @@ pub(super) fn obsolete(args: &RulesObsoleteArgs) -> Result<(), Error> {
         .as_deref()
         .map(|raw| RuleId::parse(raw, "--superseded-by"))
         .transpose()?;
-    rulelink_app::rules::obsolete(&root()?, &id, replacement.as_ref())?;
+    rulelink_app::rules::obsolete(&project_root()?, &id, replacement.as_ref())?;
     println!("{id} is now obsolete; its Identifier is retired");
     Ok(())
 }

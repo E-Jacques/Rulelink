@@ -46,7 +46,7 @@ use crate::{RuleId, RuleStatus};
 #[derive(Debug, Clone, PartialEq, Eq, thiserror::Error)]
 pub enum LifecycleError {
     /// No Rule has this Identifier.
-    #[error("no Rule has the Identifier `{0}`")]
+    #[error("no Rule has the Identifier `{0}`: run `rulelink rules list` to see the Identifiers")]
     RuleNotFound(RuleId),
     /// The Rule is not in the status the transition starts from.
     #[error("cannot {action} {id}: it is {status}, but a {required} Rule is required")]
@@ -61,7 +61,9 @@ pub enum LifecycleError {
         action: &'static str,
     },
     /// The replacement Rule does not exist.
-    #[error("cannot record `{0}` as the replacement: no Rule has this Identifier")]
+    #[error(
+        "cannot record `{0}` as the replacement (--superseded-by): no Rule has this Identifier; run `rulelink rules list` to see the Identifiers"
+    )]
     ReplacementNotFound(RuleId),
     /// A Rule cannot replace itself.
     #[error("{0} cannot be its own replacement")]
@@ -83,7 +85,9 @@ pub enum AddError {
     #[error("no Identifier is left for prefix `{0}`")]
     IdentifierSpaceExhausted(String),
     /// A `--related` Identifier names no Rule of the Source.
-    #[error("cannot record `{0}` as a related Rule: no Rule has this Identifier")]
+    #[error(
+        "cannot record `{0}` as a related Rule (--related): no Rule has this Identifier; run `rulelink rules list` to see the Identifiers"
+    )]
     UnknownRelated(RuleId),
 }
 

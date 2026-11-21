@@ -109,6 +109,11 @@ impl Entrypoint for CliEntrypoint {
     async fn shutdown(&self, _ctx: &AppContext, _reason: ShutdownReason) {}
 }
 
+/// The project root: the directory the command is run from.
+fn project_root() -> Result<std::path::PathBuf, Error> {
+    std::env::current_dir().map_err(|e| Error::Internal(e.to_string()))
+}
+
 /// One line per command: the handlers hold the logic.
 fn dispatch(args: CliArgs) -> Result<(), Error> {
     match args {
