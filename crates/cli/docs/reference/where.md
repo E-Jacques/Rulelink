@@ -1,6 +1,6 @@
 # rulelink where
 
-Lists the places in your code that cite a Rule, one `file:line` per Annotation. It finds `@rule <ID>` Annotations in the comments of your files, whatever the language (`//`, `#`, `--`, `/* */`, `<!-- -->`, …), tests included. Files ignored by `.gitignore`, `.ignore` or `.rulelinkignore`, and files matching `scan.exclude` in `rulelink.toml`, are skipped. Run it from the project root.
+Lists the places in your code that cite a Rule, one `file:line` per Annotation. It finds `@rule <ID>` Annotations in the comments of your files, whatever the language (`//`, `#`, `--`, `/* */`, `<!-- -->`, …), tests included. Files ignored by `.gitignore`, `.ignore` or `.rulelinkignore`, and files matching `scan.exclude` in `rulelink.toml`, are skipped, as are hidden files, binary files, files that are not UTF-8 and files over 2 MB. Run it from the project root.
 
 ## Example
 

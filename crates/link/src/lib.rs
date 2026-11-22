@@ -60,6 +60,7 @@ fn in_comment(before: &str) -> bool {
 fn identifier_list(text: &str) -> impl Iterator<Item = RuleId> + '_ {
     text.split(|c: char| c.is_whitespace() || c == ',')
         .filter(|token| !token.is_empty())
+        .map(|token| token.trim_end_matches(['.', ':', ';', ')', ']', '"', '\'']))
         .map_while(|token| is_identifier(token).then(|| RuleId(token.to_owned())))
 }
 
@@ -145,6 +146,17 @@ mod tests {
     fn an_identifier_list_stops_at_a_note_or_a_closer() {
         assert_eq!(ids("// @rule RULE-1, RULE-2 RULE-3 -- RULE-4").len(), 3);
         assert_eq!(ids("/* @rule RULE-1 */ RULE-9").len(), 1);
+    }
+
+    #[test]
+    fn trailing_punctuation_does_not_hide_an_annotation() {
+        for line in [
+            "// @rule RULE-1.",
+            "// @rule RULE-1: why",
+            "// see (@rule RULE-1)",
+        ] {
+            assert_eq!(ids(line), [("RULE-1".to_owned(), 1)], "{line}");
+        }
     }
 
     #[test]

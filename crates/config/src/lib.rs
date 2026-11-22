@@ -111,9 +111,20 @@ impl Config {
             .rules
             .and_then(|r| r.prefix)
             .ok_or_else(|| invalid("missing `rules.prefix`"))?;
-        let scan_exclude = raw.scan.and_then(|s| s.exclude).unwrap_or_default();
-        if scan_exclude.iter().any(|p| p.trim().is_empty()) {
+        let scan_exclude: Vec<String> = raw
+            .scan
+            .and_then(|s| s.exclude)
+            .unwrap_or_default()
+            .iter()
+            .map(|p| p.trim().to_owned())
+            .collect();
+        if scan_exclude.iter().any(String::is_empty) {
             return Err(invalid("`scan.exclude` must not contain an empty pattern"));
+        }
+        if let Some(negated) = scan_exclude.iter().find(|p| p.starts_with('!')) {
+            return Err(invalid(&format!(
+                "`scan.exclude` pattern \"{negated}\" starts with `!`: list only what to skip"
+            )));
         }
         Ok(Self {
             id_prefix: IdPrefix::parse(&prefix)?,
@@ -202,6 +213,16 @@ mod tests {
             Config::parse(&with).expect("valid").scan_exclude,
             ["vendor/", "*.gen.rs"]
         );
+        let padded = format!("{base}[scan]\nexclude = [\" vendor/ \"]\n");
+        assert_eq!(
+            Config::parse(&padded).expect("valid").scan_exclude,
+            ["vendor/"]
+        );
+        let negated = format!("{base}[scan]\nexclude = [\"!src/\"]\n");
+        assert!(matches!(
+            Config::parse(&negated),
+            Err(Error::Invalid { .. })
+        ));
         let blank = format!("{base}[scan]\nexclude = [\" \"]\n");
         assert!(matches!(Config::parse(&blank), Err(Error::Invalid { .. })));
     }
