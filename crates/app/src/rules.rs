@@ -5,7 +5,7 @@ use std::path::{Path, PathBuf};
 use rulelink_config::Config;
 use rulelink_model::{Rule, RuleDraft, RuleId, RuleSet, RuleStatus, SearchText};
 
-use crate::Error;
+use crate::{Error, Rewrite};
 
 /// Loads the configuration, then reads the Source it points to.
 ///
@@ -53,6 +53,30 @@ pub fn select(
 ) -> Result<Vec<Rule>, Error> {
     let (_, _, rule_set) = read_source(root)?;
     Ok(rule_set.select(text, status).into_iter().cloned().collect())
+}
+
+/// Rewrites the Source into Canonical form, leaving it untouched if it already is.
+///
+/// # Errors
+/// [`Error::Config`] for a missing or invalid `rulelink.toml`, [`Error::Source`] for a
+/// missing, invalid or unsupported Source (which is left as it was), [`Error::Internal`] on
+/// I/O failure.
+pub fn format(root: &Path) -> Result<Formatted, Error> {
+    let config = Config::load(root)?;
+    let rewrite = rulelink_adapter_json::rewrite_source(&root.join(&config.source_path))?;
+    Ok(Formatted {
+        path: config.source_path,
+        rewrite,
+    })
+}
+
+/// Result of [`format`].
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct Formatted {
+    /// The Source, as `rulelink.toml` names it (relative to the project root).
+    pub path: PathBuf,
+    /// Whether the file had to change.
+    pub rewrite: Rewrite,
 }
 
 /// Moves a `proposed` Rule to `validated`.

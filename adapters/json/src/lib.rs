@@ -38,10 +38,43 @@ pub fn create_source(path: &Path, rules: &RuleSet) -> Result<(), Error> {
 /// [`Error::NotFound`], [`Error::Invalid`] for malformed content, [`Error::UnsupportedFormat`],
 /// [`Error::Io`] for other I/O failures.
 pub fn read_source(path: &Path) -> Result<RuleSet, Error> {
-    let text = fs::read_to_string(path).map_err(|e| Error::from_read(path, &e))?;
-    check_format(path, &text)?;
-    let set: RuleSet = serde_json::from_str(&text).map_err(|e| Error::invalid(path, e))?;
-    Ok(set)
+    let text = read_text(path)?;
+    parse_source(path, &text)
+}
+
+fn read_text(path: &Path) -> Result<String, Error> {
+    fs::read_to_string(path).map_err(|e| Error::from_read(path, &e))
+}
+
+/// Parses the content of the Source file at `path`; `path` only names the file in errors.
+fn parse_source(path: &Path, text: &str) -> Result<RuleSet, Error> {
+    check_format(path, text)?;
+    serde_json::from_str(text).map_err(|e| Error::invalid(path, e))
+}
+
+/// What [`rewrite_source`] did to the file.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum Rewrite {
+    /// The file was already in Canonical form and was not touched.
+    Unchanged,
+    /// The file was replaced by its Canonical form.
+    Rewritten,
+}
+
+/// Rewrites the Source file at `path` into Canonical form, if it is not already.
+///
+/// A file that cannot be read as a Source is refused and left as it was.
+///
+/// # Errors
+/// As [`read_source`], and [`Error::Io`] if the file cannot be replaced.
+pub fn rewrite_source(path: &Path) -> Result<Rewrite, Error> {
+    let text = read_text(path)?;
+    let canonical = parse_source(path, &text)?.to_canonical();
+    if text == canonical {
+        return Ok(Rewrite::Unchanged);
+    }
+    write_text(path, &canonical)?;
+    Ok(Rewrite::Rewritten)
 }
 
 /// Reads `format` alone first, so a file of another format is reported as such rather than as
@@ -71,8 +104,12 @@ fn check_format(path: &Path, text: &str) -> Result<(), Error> {
 /// # Errors
 /// [`Error::Io`] on I/O failure.
 pub fn write_source(path: &Path, rules: &RuleSet) -> Result<(), Error> {
+    write_text(path, &rules.to_canonical())
+}
+
+fn write_text(path: &Path, text: &str) -> Result<(), Error> {
     let tmp = temporary_sibling(path);
-    let result = fs::write(&tmp, rules.to_canonical()).and_then(|()| fs::rename(&tmp, path));
+    let result = fs::write(&tmp, text).and_then(|()| fs::rename(&tmp, path));
     if result.is_err() {
         let _ = fs::remove_file(&tmp);
     }
@@ -104,6 +141,39 @@ mod tests {
             set
         );
         assert_eq!(fs::read_dir(dir.path()).map_or(0, Iterator::count), 1);
+    }
+
+    #[test]
+    fn rewriting_normalises_once_then_leaves_the_file_alone() {
+        let dir = tempfile::tempdir().unwrap_or_else(|e| panic!("{e}"));
+        fs::write(path(&dir), "{\"format\":1}").unwrap_or_else(|e| panic!("{e}"));
+        assert_eq!(
+            rewrite_source(&path(&dir)).unwrap_or_else(|e| panic!("{e}")),
+            Rewrite::Rewritten
+        );
+        assert_eq!(
+            fs::read_to_string(path(&dir)).unwrap_or_default(),
+            RuleSet::empty().to_canonical()
+        );
+        assert_eq!(
+            rewrite_source(&path(&dir)).unwrap_or_else(|e| panic!("{e}")),
+            Rewrite::Unchanged
+        );
+        assert_eq!(fs::read_dir(dir.path()).map_or(0, Iterator::count), 1);
+    }
+
+    #[test]
+    fn rewriting_an_invalid_source_leaves_it_as_it_was() {
+        let dir = tempfile::tempdir().unwrap_or_else(|e| panic!("{e}"));
+        fs::write(path(&dir), "<<<<<<< HEAD").unwrap_or_else(|e| panic!("{e}"));
+        assert!(matches!(
+            rewrite_source(&path(&dir)),
+            Err(Error::Invalid { .. })
+        ));
+        assert_eq!(
+            fs::read_to_string(path(&dir)).unwrap_or_default(),
+            "<<<<<<< HEAD"
+        );
     }
 
     #[test]
