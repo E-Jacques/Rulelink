@@ -190,6 +190,10 @@ fn git(repo: &Repo, args: &[&str]) -> std::process::Output {
             "commit.gpgsign=false",
             "-c",
             "init.defaultBranch=main",
+            // A global `core.autocrlf=true` (Git for Windows) would turn the Canonical LF file
+            // into CRLF.
+            "-c",
+            "core.autocrlf=false",
         ])
         .args(args)
         .current_dir(repo.path())
