@@ -12,7 +12,7 @@ pub struct InitArgs {
 }
 
 pub(super) fn run(args: &InitArgs) -> Result<(), Error> {
-    let root = std::env::current_dir().map_err(|e| Error::Internal(e.to_string()))?;
+    let root = super::project_root()?;
     rulelink_app::init::init(&root, &args.id_prefix)?;
     println!("Initialised Rulelink: wrote rulelink.toml and rules/rules.json");
     Ok(())

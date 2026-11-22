@@ -11,7 +11,7 @@ mod reject;
 use crate::{LifecycleError, Rule, RuleId, RuleSet, RuleStatus};
 
 impl RuleSet {
-    fn find(&self, id: &RuleId) -> Option<&Rule> {
+    pub(crate) fn find(&self, id: &RuleId) -> Option<&Rule> {
         self.rules.iter().find(|r| &r.id == id)
     }
 
@@ -61,8 +61,8 @@ mod support {
     pub(super) fn set_with(status: RuleStatus) -> RuleSet {
         let mut set = RuleSet::empty();
         for _ in 0..2 {
-            let draft =
-                RuleDraft::new("T", "S", &[], None, &[], &[]).unwrap_or_else(|e| panic!("{e}"));
+            let draft = RuleDraft::new("T", "S", &[], None, &[], &[], &[])
+                .unwrap_or_else(|e| panic!("{e}"));
             set.add(&IdPrefix::default(), draft)
                 .unwrap_or_else(|e| panic!("{e}"));
         }

@@ -18,5 +18,6 @@ rulelink rules add --title "Line-level VAT rounding" --statement "VAT is rounded
 | `--module`    | Sets the functional module of the Rule.                                                         | `--module "VAT calculation"`             |
 | `--covered`   | Adds a case the Rule covers. Repeat it for several.                                             | `--covered "B2B invoices"`               |
 | `--excluded`  | Adds a case the Rule explicitly excludes. Repeat it for several.                                | `--excluded "Non-EU export invoices"`    |
+| `--related`   | Records the Identifier of a related Rule. It must exist. Repeat it for several.                 | `--related RULE-001`                     |
 
-Values can be written in any language. The command stops without changing anything if a value is empty or the title is too long.
+Values can be written in any language. The command stops without changing anything if a value is empty, repeated, or the title is too long, or if a `--related` Identifier does not exist.

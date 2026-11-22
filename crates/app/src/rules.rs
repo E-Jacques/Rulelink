@@ -1,11 +1,21 @@
 //! Rule use cases: create a Rule and move it along its lifecycle.
 
-use std::path::Path;
+use std::path::{Path, PathBuf};
 
 use rulelink_config::Config;
-use rulelink_model::{RuleDraft, RuleId, RuleSet};
+use rulelink_model::{Rule, RuleDraft, RuleId, RuleSet, RuleStatus, SearchText};
 
 use crate::Error;
+
+/// Loads the configuration, then reads the Source it points to.
+///
+/// Returns the configuration, the Source's path and its Rules.
+fn read_source(root: &Path) -> Result<(Config, PathBuf, RuleSet), Error> {
+    let config = Config::load(root)?;
+    let source_path = root.join(&config.source_path);
+    let rule_set = rulelink_adapter_json::read_source(&source_path)?;
+    Ok((config, source_path, rule_set))
+}
 
 /// Loads the configuration and the Source, applies `change`, then writes the Source once.
 ///
@@ -14,9 +24,7 @@ fn update_source<T>(
     root: &Path,
     change: impl FnOnce(&Config, &mut RuleSet) -> Result<T, Error>,
 ) -> Result<T, Error> {
-    let config = Config::load(root)?;
-    let source_path = root.join(&config.source_path);
-    let mut rule_set = rulelink_adapter_json::read_source(&source_path)?;
+    let (config, source_path, mut rule_set) = read_source(root)?;
     let out = change(&config, &mut rule_set)?;
     rulelink_adapter_json::write_source(&source_path, &rule_set)?;
     Ok(out)
@@ -25,11 +33,26 @@ fn update_source<T>(
 /// Appends `draft` to the Source as a `proposed` Rule and returns its new Identifier.
 ///
 /// # Errors
-/// [`Error::Config`] for a missing or invalid `rulelink.toml`, [`Error::Source`] for a
-/// missing, invalid or unsupported Source, [`Error::Source`] if no Identifier is left,
-/// [`Error::Internal`] on I/O failure.
+/// [`Error::Input`] if a related Rule does not exist, [`Error::Config`] for a missing or
+/// invalid `rulelink.toml`, [`Error::Source`] for a missing, invalid or unsupported Source or
+/// if no Identifier is left, [`Error::Internal`] on I/O failure.
 pub fn add(root: &Path, draft: RuleDraft) -> Result<RuleId, Error> {
     update_source(root, |config, set| Ok(set.add(&config.id_prefix, draft)?))
+}
+
+/// The Rules that contain `text` (any, if `None`) and are in `status` (any, if `None`), in
+/// Identifier order. Reads the Source; never writes it.
+///
+/// # Errors
+/// [`Error::Config`] for a missing or invalid `rulelink.toml`, [`Error::Source`] for a
+/// missing, invalid or unsupported Source.
+pub fn select(
+    root: &Path,
+    text: Option<&SearchText>,
+    status: Option<RuleStatus>,
+) -> Result<Vec<Rule>, Error> {
+    let (_, _, rule_set) = read_source(root)?;
+    Ok(rule_set.select(text, status).into_iter().cloned().collect())
 }
 
 /// Moves a `proposed` Rule to `validated`.
