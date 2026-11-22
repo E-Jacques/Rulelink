@@ -14,6 +14,7 @@ Work in an isolated git worktree, never in the main checkout. Name the branch af
 1. Open the worktree with the `EnterWorktree` tool, using the issue name as its `name` (for example `12-rules-format`). The tool switches the session into the worktree.
 2. Rename the worktree's branch to the convention if the tool chose another name: `git branch -m <feature|fix|support>/<issue-name>`.
 3. Run every later step from inside the worktree. At the end of step 9, leave it with `ExitWorktree` (`keep` while the pull request is open).
+4. Inside the worktree, write files with Write or Edit, and give Bash one plain command per call: no `cd`, no heredoc, no `python3 -` script. The harness refuses a compound command it cannot confirm stays inside the worktree, and a heredoc without input hangs the shell.
 
 ## 2. Document first
 
@@ -38,6 +39,8 @@ Read `GLOSSARY.md` and the ADRs in `docs/adr/`, and read the `codebase-design` s
 
 Use the `tdd` skill (red → green) at the seams you planned. Run the smoke tests from step 3 until they pass.
 
+Gate before every commit from here on: `cargo fmt --all`, `cargo test --workspace` and `cargo clippy --workspace --all-targets` all pass, with no new clippy warning in the files you touched.
+
 Commit: `feat(cli): …`
 
 ## 6. Refactor
@@ -57,7 +60,7 @@ Review in two passes, then record the findings.
 
 Run `cargo xtask arch` and `cargo deny check` as well; they catch what no reviewer should have to.
 
-Fix what is worth fixing. Record the findings of both passes with the `code-review-report` skill.
+Fix what is worth fixing. Record the findings of both passes with the `code-review-report` skill. The review is done only when the report's `Review passes` line names the `code-review` run and the design subagent; a self-review does not count as the correctness pass.
 
 Commit: `refactor(cli): …` (or `fix(cli): …` if a bug was found)
 

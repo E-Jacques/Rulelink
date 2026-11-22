@@ -25,6 +25,10 @@ base: {{ merge-base sha }}
 | 1 | {{ critical, high or minor }} | {{ category }} | `{{ path:line }}` | {{ one sentence }} | {{ yes or no }} | {{ ticket numbers or none }} |
 <!-- endif -->
 
+## Review passes
+
+Correctness: {{ the `code-review` run and its level, or `not run, because …` }}. Design: {{ the fresh subagent, or `not run, because …` }}.
+
 ## Refactor considered
 
 {{ what the refactor step changed, or `none, because …` }}
