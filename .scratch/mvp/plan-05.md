@@ -7,7 +7,9 @@
 pub enum Rewrite { Unchanged, Rewritten }
 pub fn rewrite_source(path: &Path) -> Result<Rewrite, Error>;   // read, then write Canonical form only if different
 // app
-pub fn rules::format(root: &Path) -> Result<Rewrite, Error>;   // re-exported as `rulelink_app::Rewrite`
+pub fn rules::format(root: &Path) -> Result<Formatted { path, rewrite }, Error>;  // the CLI prints the path
+// model
+impl RuleSet { pub fn is_canonical(&self, text: &str) -> bool; }   // owned by the model, reused by #15 (RL106)
 // cli
 rules format        (no argument, no option)
 ```
@@ -18,7 +20,8 @@ One sentence: `format` rewrites the Source into Canonical form if it is not alre
 
 - No caller can format "a different file": the path comes from `rulelink.toml` via the same `Config::load` as every command; there is no path argument.
 - A file that is not valid JSON of the right shape (conflict markers, wrong `format`) is refused by `read_source`'s code path and never overwritten: the formatter does not try to repair.
-- The unchanged case does not touch the file (no mtime change, no editor reload), and the write is the existing atomic `write_source`, so a failure leaves the previous file.
+- The unchanged case does not touch the file (no mtime change, no editor reload), and the write is the existing atomic `write_source` (the one writer, no second path), so a failure leaves the previous file.
+- `format` only changes layout and never repairs or judges content: a Source with duplicate Identifiers or a dangling `related` parses, keeps its content and is only re-laid-out; reporting those is `check`'s job (#15, RL003/RL103). Tested by neither, by design.
 - Reading and parsing share one function with `read_source`; there is no second parser that could accept something `check` rejects.
 
 ## Ownership
@@ -56,6 +59,13 @@ Errors: reuses `adapter-json::Error` and its explicit `match` in `app`; no new e
 
 | Ticket | Reuses | Missing |
 | --- | --- | --- |
-| #15 RL106 "not canonical" Finding | the text-vs-canonical comparison | `rewrite_source` writes; #15 only needs the comparison. The comparison is a private helper here; #15 should extract `is_canonical(path)` from it rather than copy it. Recorded, not built now (no caller yet). |
+| #15 RL106 "not canonical" Finding | the text-vs-canonical comparison | `rewrite_source` writes; #15 only needs the comparison. `RuleSet::is_canonical(text)` is built now, in the model, and used by `rewrite_source`; #15 reads the file text and calls it. |
 
 Deferred: `--check` (report without writing; `check` does it through RL106), formatting several files (`json-dir` is V1), `--path`.
+
+## Deferred after review
+
+- Permissions and symlink of the Source are lost by the atomic rename (pre-existing in `write_source`, all write commands). Blocks none.
+- `adapter-json::Error::Io` mixes causes and write failures carry no path (pre-existing). Blocks none.
+- `Rewrite` lives in the adapter and is re-exported by `app`; moving it into `app` is cosmetic.
+- Lost update between read and rename: accepted, no lock.

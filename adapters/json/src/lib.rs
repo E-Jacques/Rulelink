@@ -69,11 +69,11 @@ pub enum Rewrite {
 /// As [`read_source`], and [`Error::Io`] if the file cannot be replaced.
 pub fn rewrite_source(path: &Path) -> Result<Rewrite, Error> {
     let text = read_text(path)?;
-    let canonical = parse_source(path, &text)?.to_canonical();
-    if text == canonical {
+    let rules = parse_source(path, &text)?;
+    if rules.is_canonical(&text) {
         return Ok(Rewrite::Unchanged);
     }
-    write_text(path, &canonical)?;
+    write_source(path, &rules)?;
     Ok(Rewrite::Rewritten)
 }
 
@@ -104,12 +104,8 @@ fn check_format(path: &Path, text: &str) -> Result<(), Error> {
 /// # Errors
 /// [`Error::Io`] on I/O failure.
 pub fn write_source(path: &Path, rules: &RuleSet) -> Result<(), Error> {
-    write_text(path, &rules.to_canonical())
-}
-
-fn write_text(path: &Path, text: &str) -> Result<(), Error> {
     let tmp = temporary_sibling(path);
-    let result = fs::write(&tmp, text).and_then(|()| fs::rename(&tmp, path));
+    let result = fs::write(&tmp, rules.to_canonical()).and_then(|()| fs::rename(&tmp, path));
     if result.is_err() {
         let _ = fs::remove_file(&tmp);
     }
@@ -160,6 +156,33 @@ mod tests {
             Rewrite::Unchanged
         );
         assert_eq!(fs::read_dir(dir.path()).map_or(0, Iterator::count), 1);
+    }
+
+    #[test]
+    fn an_unchanged_source_is_not_written_at_all() {
+        let dir = tempfile::tempdir().unwrap_or_else(|e| panic!("{e}"));
+        write_source(&path(&dir), &RuleSet::empty()).unwrap_or_else(|e| panic!("{e}"));
+        let before = fs::metadata(path(&dir))
+            .and_then(|m| m.modified())
+            .unwrap_or_else(|e| panic!("{e}"));
+        std::thread::sleep(std::time::Duration::from_millis(20));
+        rewrite_source(&path(&dir)).unwrap_or_else(|e| panic!("{e}"));
+        let after = fs::metadata(path(&dir))
+            .and_then(|m| m.modified())
+            .unwrap_or_else(|e| panic!("{e}"));
+        assert_eq!(before, after);
+    }
+
+    #[test]
+    fn a_byte_order_mark_is_refused_and_the_file_left_alone() {
+        let dir = tempfile::tempdir().unwrap_or_else(|e| panic!("{e}"));
+        let bom = "\u{FEFF}{\"format\":1}";
+        fs::write(path(&dir), bom).unwrap_or_else(|e| panic!("{e}"));
+        assert!(matches!(
+            rewrite_source(&path(&dir)),
+            Err(Error::Invalid { .. })
+        ));
+        assert_eq!(fs::read_to_string(path(&dir)).unwrap_or_default(), bom);
     }
 
     #[test]
