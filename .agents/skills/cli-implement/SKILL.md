@@ -7,9 +7,13 @@ description: Workflow for implementing a new CLI command or subcommand in ruleli
 
 This is the CLI-specific wrapper around the generic implement loop. Follow the steps in order. Each commit follows the `commit` skill.
 
-## 1. Create the branch
+## 1. Open a worktree
 
-Create the git branch name after what should be done using the feature, fix or support prefix. The branch should contain the issue name.
+Work in an isolated git worktree, never in the main checkout. Name the branch after what should be done using the feature, fix or support prefix. The branch should contain the issue name.
+
+1. Open the worktree with the `EnterWorktree` tool, using the issue name as its `name` (for example `12-rules-format`). The tool switches the session into the worktree.
+2. Rename the worktree's branch to the convention if the tool chose another name: `git branch -m <feature|fix|support>/<issue-name>`.
+3. Run every later step from inside the worktree. At the end of step 9, leave it with `ExitWorktree` (`keep` while the pull request is open).
 
 ## 2. Document first
 
