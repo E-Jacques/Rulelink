@@ -68,17 +68,12 @@ impl std::str::FromStr for RuleStatus {
 
     /// Reads a status typed by a user, exactly as [`Display`](std::fmt::Display) writes it.
     fn from_str(raw: &str) -> Result<Self, Self::Err> {
-        [
-            Self::Proposed,
-            Self::Validated,
-            Self::Obsolete,
-            Self::Rejected,
-        ]
-        .into_iter()
-        .find(|status| status.to_string() == raw)
-        .ok_or_else(|| crate::UnknownStatus {
-            value: raw.to_owned(),
-        })
+        Self::ALL
+            .into_iter()
+            .find(|status| status.to_string() == raw)
+            .ok_or_else(|| crate::UnknownStatus {
+                value: raw.to_owned(),
+            })
     }
 }
 

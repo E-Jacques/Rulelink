@@ -23,15 +23,24 @@ pub struct RulesSearchArgs {
     pub(super) status: Option<RuleStatus>,
 }
 
+/// Prints every Rule, or only those in `--status`, one per line.
+///
+/// # Errors
+/// As [`rulelink_app::rules::select`], or if the project root cannot be found.
 pub(super) fn list(args: &RulesListArgs) -> Result<(), Error> {
     print_selection(None, args.status)
 }
 
+/// Prints the Rules containing the text, optionally limited to `--status`.
+///
+/// # Errors
+/// [`Error::Input`] if the text is empty or made only of accents; otherwise as [`list`].
 pub(super) fn search(args: &RulesSearchArgs) -> Result<(), Error> {
     let text = SearchText::parse(&args.text)?;
     print_selection(Some(&text), args.status)
 }
 
+/// Prints one line per Rule selected by `text` and `status`, in Identifier order.
 fn print_selection(text: Option<&SearchText>, status: Option<RuleStatus>) -> Result<(), Error> {
     for rule in rulelink_app::rules::select(&project_root()?, text, status)? {
         println!("{}", line(&rule));

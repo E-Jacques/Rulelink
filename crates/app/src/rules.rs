@@ -1,11 +1,21 @@
 //! Rule use cases: create a Rule and move it along its lifecycle.
 
-use std::path::Path;
+use std::path::{Path, PathBuf};
 
 use rulelink_config::Config;
 use rulelink_model::{Rule, RuleDraft, RuleId, RuleSet, RuleStatus, SearchText};
 
 use crate::Error;
+
+/// Loads the configuration, then reads the Source it points to.
+///
+/// Returns the configuration, the Source's path and its Rules.
+fn read_source(root: &Path) -> Result<(Config, PathBuf, RuleSet), Error> {
+    let config = Config::load(root)?;
+    let source_path = root.join(&config.source_path);
+    let rule_set = rulelink_adapter_json::read_source(&source_path)?;
+    Ok((config, source_path, rule_set))
+}
 
 /// Loads the configuration and the Source, applies `change`, then writes the Source once.
 ///
@@ -14,9 +24,7 @@ fn update_source<T>(
     root: &Path,
     change: impl FnOnce(&Config, &mut RuleSet) -> Result<T, Error>,
 ) -> Result<T, Error> {
-    let config = Config::load(root)?;
-    let source_path = root.join(&config.source_path);
-    let mut rule_set = rulelink_adapter_json::read_source(&source_path)?;
+    let (config, source_path, mut rule_set) = read_source(root)?;
     let out = change(&config, &mut rule_set)?;
     rulelink_adapter_json::write_source(&source_path, &rule_set)?;
     Ok(out)
@@ -43,8 +51,7 @@ pub fn select(
     text: Option<&SearchText>,
     status: Option<RuleStatus>,
 ) -> Result<Vec<Rule>, Error> {
-    let config = Config::load(root)?;
-    let rule_set = rulelink_adapter_json::read_source(&root.join(&config.source_path))?;
+    let (_, _, rule_set) = read_source(root)?;
     Ok(rule_set.select(text, status).into_iter().cloned().collect())
 }
 
