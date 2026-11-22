@@ -31,6 +31,8 @@ pub struct Config {
     pub id_prefix: IdPrefix,
     /// Location of the Source, relative to the project root.
     pub source_path: PathBuf,
+    /// `.gitignore`-style patterns of files the code scan skips (`[scan] exclude`).
+    pub scan_exclude: Vec<String>,
 }
 
 #[derive(Deserialize)]
@@ -38,6 +40,12 @@ struct RawConfig {
     version: Option<u32>,
     source: Option<RawSource>,
     rules: Option<RawRules>,
+    scan: Option<RawScan>,
+}
+
+#[derive(Deserialize)]
+struct RawScan {
+    exclude: Option<Vec<String>>,
 }
 
 #[derive(Deserialize)]
@@ -103,9 +111,14 @@ impl Config {
             .rules
             .and_then(|r| r.prefix)
             .ok_or_else(|| invalid("missing `rules.prefix`"))?;
+        let scan_exclude = raw.scan.and_then(|s| s.exclude).unwrap_or_default();
+        if scan_exclude.iter().any(|p| p.trim().is_empty()) {
+            return Err(invalid("`scan.exclude` must not contain an empty pattern"));
+        }
         Ok(Self {
             id_prefix: IdPrefix::parse(&prefix)?,
             source_path,
+            scan_exclude,
         })
     }
 }
@@ -178,6 +191,19 @@ mod tests {
             Err(Error::InvalidIdPrefix(_))
         ));
         assert!(Config::parse("not toml {").is_err());
+    }
+
+    #[test]
+    fn scan_exclusions_are_optional_and_never_blank() {
+        let base = config("a.json", "json", "RULE");
+        assert_eq!(Config::parse(&base).expect("valid").scan_exclude.len(), 0);
+        let with = format!("{base}[scan]\nexclude = [\"vendor/\", \"*.gen.rs\"]\n");
+        assert_eq!(
+            Config::parse(&with).expect("valid").scan_exclude,
+            ["vendor/", "*.gen.rs"]
+        );
+        let blank = format!("{base}[scan]\nexclude = [\" \"]\n");
+        assert!(matches!(Config::parse(&blank), Err(Error::Invalid { .. })));
     }
 
     #[test]

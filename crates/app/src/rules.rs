@@ -10,7 +10,7 @@ use crate::{Error, Rewrite};
 /// Loads the configuration, then reads the Source it points to.
 ///
 /// Returns the configuration, the Source's path and its Rules.
-fn read_source(root: &Path) -> Result<(Config, PathBuf, RuleSet), Error> {
+pub(crate) fn read_source(root: &Path) -> Result<(Config, PathBuf, RuleSet), Error> {
     let config = Config::load(root)?;
     let source_path = root.join(&config.source_path);
     let rule_set = rulelink_adapter_json::read_source(&source_path)?;

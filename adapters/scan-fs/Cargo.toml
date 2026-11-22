@@ -14,3 +14,9 @@ workspace = true
 [dependencies]
 thiserror.workspace = true
 rulelink-adapter-sdk.workspace = true
+rulelink-link.workspace = true
+rulelink-model.workspace = true
+ignore.workspace = true
+
+[dev-dependencies]
+tempfile.workspace = true
