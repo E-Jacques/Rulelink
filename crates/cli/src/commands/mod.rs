@@ -8,6 +8,7 @@ use clap::{Parser, Subcommand};
 
 mod init;
 mod rules_add;
+mod rules_format;
 mod rules_lifecycle;
 mod rules_query;
 
@@ -52,6 +53,8 @@ pub enum RulesAction {
     Reject(RuleRefArgs),
     /// Retire a `validated` Rule, optionally recording its replacement.
     Obsolete(RulesObsoleteArgs),
+    /// Rewrite the rules file into Canonical form.
+    Format,
     /// List the Rules, optionally only those in one status.
     List(RulesListArgs),
     /// Find the Rules that contain a text, ignoring case and accents.
@@ -134,6 +137,9 @@ fn dispatch(args: CliArgs) -> Result<(), Error> {
         CliArgs::Run(Command::Rules {
             action: RulesAction::Obsolete(args),
         }) => rules_lifecycle::obsolete(&args),
+        CliArgs::Run(Command::Rules {
+            action: RulesAction::Format,
+        }) => rules_format::run(),
         CliArgs::Run(Command::Rules {
             action: RulesAction::List(args),
         }) => rules_query::list(&args),

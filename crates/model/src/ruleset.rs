@@ -99,6 +99,12 @@ impl RuleSet {
         out.push('\n');
         out
     }
+
+    /// Whether `text` is exactly this Source in Canonical form, byte for byte.
+    #[must_use]
+    pub fn is_canonical(&self, text: &str) -> bool {
+        text == self.to_canonical()
+    }
 }
 
 /// Compares strings so that digit runs compare by value (`RULE-2` < `RULE-10`).
