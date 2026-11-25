@@ -41,3 +41,4 @@ Keep the table column widths aligned so the Markdown source stays readable.
 - Every example must run as written.
 - Document behaviour a user can observe (what is created, changed or printed), not how it works inside.
 - When a command changes, update its page in the same change.
+- The page describes the command and nothing else. Anything that explains how Rulelink works beyond it (a file format, the Annotation grammar, which files are scanned) goes in `docs/public/`, and the page links to it.
