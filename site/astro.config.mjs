@@ -1,12 +1,19 @@
 import { defineConfig } from 'astro/config';
 import starlight from '@astrojs/starlight';
-import { SITE_URL, REPO_URL } from './site.config.mjs';
+import sitemap from '@astrojs/sitemap';
+import { SITE_URL, REPO_URL, EDIT_BRANCH } from './site.config.mjs';
+import { sidebar } from './src/docs/sidebar.mjs';
+import { noPlaceholders } from './src/docs/no-placeholders.mjs';
 import { remarkPublicDocs } from './src/docs/remark-public-docs.mjs';
 
 export default defineConfig({
   site: SITE_URL,
+  // Every page is a directory (`/guides/page/index.html`), so a plain Apache host serves it.
+  trailingSlash: 'always',
+  build: { format: 'directory' },
   markdown: { remarkPlugins: [remarkPublicDocs] },
   integrations: [
+    sitemap(),
     starlight({
       title: 'Rulelink',
       customCss: [
@@ -16,12 +23,10 @@ export default defineConfig({
         './src/docs/tokens.css',
         './src/docs/theme.css',
       ],
-      editLink: { baseUrl: `${REPO_URL}/edit/main/docs/public/` },
+      editLink: { baseUrl: `${REPO_URL}/edit/${EDIT_BRANCH}/site/` },
       social: [{ icon: 'github', label: 'GitHub', href: REPO_URL }],
-      sidebar: [
-        { label: 'Concepts', autogenerate: { directory: 'concepts' } },
-        { label: 'CLI reference', autogenerate: { directory: 'cli' } },
-      ],
+      sidebar: sidebar(),
     }),
+    noPlaceholders(),
   ],
 });
