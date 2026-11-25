@@ -27,55 +27,64 @@ const MAX_FILE_BYTES: u64 = 2 * 1024 * 1024;
 /// [`Error::InvalidExclude`] for a pattern that is not a valid glob, [`Error::Unreadable`] for
 /// a directory or file that cannot be read.
 pub fn scan(root: &Path, exclude: &[String]) -> Result<LinkIndex, Error> {
-    let mut overrides = OverrideBuilder::new(root);
-    for pattern in exclude {
-        // In an override, a leading `!` means "ignore".
-        overrides
-            .add(&format!("!{pattern}"))
-            .map_err(|e| Error::InvalidExclude {
-                pattern: pattern.clone(),
-                message: e.to_string(),
-            })?;
-    }
-    let overrides = overrides.build().map_err(|e| Error::InvalidExclude {
-        pattern: exclude.join(", "),
-        message: e.to_string(),
-    })?;
-    let walk = WalkBuilder::new(root)
-        .require_git(false)
-        .add_custom_ignore_filename(IGNORE_FILE)
-        .overrides(overrides)
-        .build();
+    let walk = files_to_walk(root, exclude)?;
     let mut index = LinkIndex::new();
     for entry in walk {
         let entry = entry.map_err(|e| Error::Unreadable {
             path: root.to_path_buf(),
             message: e.to_string(),
         })?;
-        if !entry.file_type().is_some_and(|t| t.is_file()) {
-            continue;
-        }
-        let path = entry.path();
-        let unreadable = |e: &dyn std::fmt::Display| Error::Unreadable {
-            path: path.to_path_buf(),
-            message: e.to_string(),
-        };
-        let size = entry.metadata().map_err(|e| unreadable(&e))?.len();
-        if size > MAX_FILE_BYTES {
-            continue;
-        }
-        let bytes = std::fs::read(path).map_err(|e| unreadable(&e))?;
-        let Ok(text) = String::from_utf8(bytes) else {
-            continue;
-        };
-        // A NUL byte is valid UTF-8 but never in hand-written text: it marks a binary format
-        // (image, archive, database) that happens to decode, the same heuristic `grep` uses.
-        if text.contains(NUL) {
-            continue;
-        }
-        index.add_file(&relative(root, path), &text);
+        index_entry(root, &entry, &mut index)?;
     }
     Ok(index)
+}
+
+/// The walk over `root`: ignore files and `exclude` patterns applied, nothing read yet.
+fn files_to_walk(root: &Path, exclude: &[String]) -> Result<ignore::Walk, Error> {
+    let invalid = |pattern: String, e: ignore::Error| Error::InvalidExclude {
+        pattern,
+        message: e.to_string(),
+    };
+    let mut overrides = OverrideBuilder::new(root);
+    for pattern in exclude {
+        // In an override, a leading `!` means "ignore".
+        overrides
+            .add(&format!("!{pattern}"))
+            .map_err(|e| invalid(pattern.clone(), e))?;
+    }
+    let overrides = overrides
+        .build()
+        .map_err(|e| invalid(exclude.join(", "), e))?;
+    Ok(WalkBuilder::new(root)
+        .require_git(false)
+        .add_custom_ignore_filename(IGNORE_FILE)
+        .overrides(overrides)
+        .build())
+}
+
+/// Adds the Annotations of one walk entry to `index`, skipping what is not hand-written text.
+fn index_entry(root: &Path, entry: &ignore::DirEntry, index: &mut LinkIndex) -> Result<(), Error> {
+    if !entry.file_type().is_some_and(|t| t.is_file()) {
+        return Ok(());
+    }
+    let path = entry.path();
+    let unreadable = |e: &dyn std::fmt::Display| Error::Unreadable {
+        path: path.to_path_buf(),
+        message: e.to_string(),
+    };
+    if entry.metadata().map_err(|e| unreadable(&e))?.len() > MAX_FILE_BYTES {
+        return Ok(());
+    }
+    let bytes = std::fs::read(path).map_err(|e| unreadable(&e))?;
+    let Ok(text) = String::from_utf8(bytes) else {
+        return Ok(());
+    };
+    // A NUL byte is valid UTF-8 but never in hand-written text: it marks a binary format
+    // (image, archive, database) that happens to decode, the same heuristic `grep` uses.
+    if !text.contains(NUL) {
+        index.add_file(&relative(root, path), &text);
+    }
+    Ok(())
 }
 
 /// `path` relative to `root`, always `/`-separated.
