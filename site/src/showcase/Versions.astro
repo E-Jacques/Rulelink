@@ -42,7 +42,7 @@ const latest = versions[0];
       <h2 class="sc-mono">v{v.version}{v.date && <span class="sc-faint sc-ver-date"> · {v.date}</span>}</h2>
       <div class="sc-grid sc-grid-250">
         {v.groups.map((g) => (
-          <article class="sc-card sc-pad"><h3>{g.title}</h3><ul>{g.items.map((i) => <li>{i}</li>)}</ul></article>
+          <article class="sc-card sc-pad"><h3>{g.title}</h3><ul>{g.items.map((i) => <li>{i.text}{i.migration && <p class="sc-faint">Migration: {i.migration}</p>}</li>)}</ul></article>
         ))}
       </div>
     </section>
@@ -55,7 +55,7 @@ const latest = versions[0];
         <p class="sc-lead">Merged, not released yet. This is what the next version will contain so far.</p>
         <div class="sc-grid sc-grid-300">
           {unreleased.map((g) => (
-            <article class="sc-card sc-pad"><h3>{g.title}</h3><ul>{g.items.map((i) => <li>{i}</li>)}</ul></article>
+            <article class="sc-card sc-pad"><h3>{g.title}</h3><ul>{g.items.map((i) => <li>{i.text}{i.migration && <p class="sc-faint">Migration: {i.migration}</p>}</li>)}</ul></article>
           ))}
         </div>
       </div>
