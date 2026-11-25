@@ -62,7 +62,7 @@ rulelink rules reject RULE-001
 
 ## What is not available yet
 
-Other imports, for example from Jira, are announced. They are not available in this version. The Roadmap lists what comes next.
+Other imports, for example from Jira, are announced. They are not available in this version. The [Roadmap](../roadmap.md) lists what comes next.
 
 ## Next steps
 
