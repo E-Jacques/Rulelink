@@ -13,16 +13,40 @@ pub struct Command {
     pub options: Vec<String>,
 }
 
+/// The indented lines of each section of a `--help` text that start an entry. Entries sit at
+/// the section's own indentation (an option without a short flag is aligned four columns
+/// further); anything deeper wraps the previous description and is dropped.
+fn entry_lines(help: &str) -> Vec<(&str, &str)> {
+    let indent = |line: &str| line.len() - line.trim_start().len();
+    let mut section = "";
+    let mut lines: Vec<(&str, &str)> = Vec::new();
+    for line in help.lines() {
+        if line.starts_with(' ') {
+            lines.push((section, line));
+        } else {
+            section = line.trim_end_matches(':');
+        }
+    }
+    let base = |section: &str| {
+        lines
+            .iter()
+            .filter(|(s, _)| *s == section)
+            .map(|(_, l)| indent(l))
+            .min()
+            .unwrap_or(0)
+    };
+    lines
+        .iter()
+        .copied()
+        .filter(|(s, l)| indent(l) <= base(s) + 4)
+        .collect()
+}
+
 /// Reads a `--help` text: the subcommands it lists and its long options.
 pub fn parse_help(help: &str) -> (Vec<String>, Vec<String>) {
     let mut subcommands = Vec::new();
     let mut options = Vec::new();
-    let mut section = "";
-    for line in help.lines() {
-        if !line.starts_with(' ') {
-            section = line.trim_end_matches(':');
-            continue;
-        }
+    for (section, line) in entry_lines(help) {
         let words: Vec<&str> = line.split_whitespace().collect();
         match section {
             "Commands" => {
@@ -509,6 +533,14 @@ mod tests {
         let found = problems("slug", &[("concepts/x.md", &page)], &[]);
         assert_eq!(found.len(), 1, "{found:?}");
         assert!(found[0].contains("#not-a-heading"));
+    }
+
+    #[test]
+    fn wrapped_description_lines_are_not_read_as_entries() {
+        let help = "Usage: rulelink x\n\nCommands:\n  add   Create a Rule, then\n        remove  is not a command\n\nOptions:\n      --title <TITLE>  Short title that\n                       wraps and mentions --not-an-option here\n  -h, --help           Print help\n";
+        let (subs, options) = parse_help(help);
+        assert_eq!(subs, ["add"]);
+        assert_eq!(options, ["--title"]);
     }
 
     #[test]
