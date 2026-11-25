@@ -28,7 +28,7 @@ const { title, description, mainId = 'top' } = Astro.props;
     </script>
   </head>
   <body class="sc">
-    <a class="sc-skip" href="#top">Skip to content</a>
+    <a class="sc-skip" href={`#${mainId}`}>Skip to content</a>
     <header class="sc-header">
       <div class="sc-wrap sc-header-in">
         <a class="sc-brand" href="/"><img src={logo.src} alt="" width="26" height="26" /><span>Rulelink</span></a>

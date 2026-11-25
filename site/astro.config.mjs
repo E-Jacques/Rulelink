@@ -13,7 +13,8 @@ export default defineConfig({
   build: { format: 'directory' },
   markdown: { remarkPlugins: [remarkPublicDocs] },
   integrations: [
-    sitemap(),
+    // The component library is a maintainer page, not content to index.
+    sitemap({ filter: (page) => !page.includes('/components/') }),
     starlight({
       title: 'Rulelink',
       customCss: [

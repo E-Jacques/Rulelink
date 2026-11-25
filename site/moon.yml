@@ -6,6 +6,12 @@ tasks:
     inputs: ['package.json', '/pnpm-lock.yaml', '/pnpm-workspace.yaml']
     options:
       runInCI: false
+  test:
+    command: 'node --test "tests/*.test.mjs"'
+    inputs: ['tests/**/*', 'src/**/*', 'site.config.mjs', '/docs/public/release-notes/*']
+    options:
+      # Run by the `site` job in ci.yml, with the build.
+      runInCI: false
   build:
     command: 'pnpm astro build'
     deps: ['~:install']

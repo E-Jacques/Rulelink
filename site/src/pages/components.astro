@@ -10,7 +10,9 @@ import Badge from '../components/Badge.astro';
 import VersionBadge from '../components/VersionBadge.astro';
 import ComingSoon from '../components/ComingSoon.astro';
 
-const installer = 'https://github.com/E-Jacques/Rulelink/releases/latest/download';
+import { INSTALLER_URL } from '../../site.config.mjs';
+
+const installer = INSTALLER_URL;
 const tabs = [
   { id: 'mac', label: 'macOS', platform: 'mac' as const, cmd: `curl --proto '=https' --tlsv1.2 -LsSf ${installer}/rulelink-cli-installer.sh | sh` },
   { id: 'linux', label: 'Linux', platform: 'linux' as const, cmd: `curl --proto '=https' --tlsv1.2 -LsSf ${installer}/rulelink-cli-installer.sh | sh` },
@@ -26,7 +28,7 @@ const args = [
   { name: '[PATH]', required: false, description: 'Limit the scan to this folder.' },
 ];
 ---
-<StarlightPage frontmatter={{ title: 'Components', description: 'The reusable parts of the Rulelink site.', tableOfContents: { minHeadingLevel: 2, maxHeadingLevel: 2 } }}>
+<StarlightPage frontmatter={{ title: 'Components', description: 'The reusable parts of the Rulelink site.', head: [{ tag: 'meta', attrs: { name: 'robots', content: 'noindex' } }],tableOfContents: { minHeadingLevel: 2, maxHeadingLevel: 2 } }}>
   <p>The reusable parts used to build pages, in the active theme. Switch the theme in the header to check both.</p>
 
   <h2 id="install-tabs">Install tabs</h2>
