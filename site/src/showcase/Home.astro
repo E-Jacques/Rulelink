@@ -1,14 +1,9 @@
 ---
 // Showcase part: the product home. It reads site.config.mjs, src/components and the shared
 // design tokens, never docs logic; src/docs never imports from here (tests/boundaries.test.mjs).
-import '@fontsource/ibm-plex-sans/400.css';
-import '@fontsource/ibm-plex-sans/600.css';
-import '@fontsource/ibm-plex-mono/400.css';
-import '../docs/tokens.css';
-import './home.css';
 import InstallTabs from '../components/InstallTabs.astro';
 import ComingSoon from '../components/ComingSoon.astro';
-import logo from './logo.svg';
+import Layout from './Layout.astro';
 import { REPO_URL, INSTALLER_URL, route } from '../../site.config.mjs';
 
 const tabs = [
@@ -34,46 +29,7 @@ const now = ['Create, review, search and retire Rules', 'Annotations in any lang
 const next = ['Findings for the whole project', 'Help your AI agent propose Rules', 'Propose Rules from an external file', 'Install with a package manager'];
 const later = ['Import from Jira, CSV files and GitHub issues', 'Publish Rules to Confluence', 'More ways to read Findings, such as in CI tools'];
 ---
-<!doctype html>
-<html lang="en" data-theme="dark">
-  <head>
-    <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>Rulelink: every business rule, linked to its code</title>
-    <meta name="description" content="Rulelink links the business rules of your product to the code that implements them, so the knowledge stays in the repository when the team changes." />
-    <link rel="icon" href={logo.src} type="image/svg+xml" />
-    <script is:inline>
-      (function () {
-        var t = null;
-        try { t = localStorage.getItem('starlight-theme'); } catch (e) {}
-        if (t !== 'light' && t !== 'dark') t = matchMedia('(prefers-color-scheme: light)').matches ? 'light' : 'dark';
-        document.documentElement.dataset.theme = t;
-      })();
-    </script>
-  </head>
-  <body class="sc">
-    <a class="sc-skip" href="#top">Skip to content</a>
-    <header class="sc-header">
-      <div class="sc-wrap sc-header-in">
-        <a class="sc-brand" href="/"><img src={logo.src} alt="" width="26" height="26" /><span>Rulelink</span></a>
-        <nav aria-label="Main" class="sc-nav">
-          <a href="#produit">Product</a>
-          <a href="#installer">Install</a>
-          <a href={route('introduction')}>Docs</a>
-          <a href="#reference">Reference</a>
-          <a href="#roadmap">Roadmap</a>
-        </nav>
-        <div class="sc-actions">
-          <button type="button" class="sc-theme" data-theme-toggle aria-label="Switch theme">
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="M20 14.5A8.5 8.5 0 0 1 9.5 4 8.5 8.5 0 1 0 20 14.5z"></path></svg>
-            <span>Theme</span>
-          </button>
-          <a class="sc-ghost" href={REPO_URL}>GitHub</a>
-        </div>
-      </div>
-    </header>
-
-    <main id="top">
+<Layout title="Rulelink: every business rule, linked to its code" description="Rulelink links the business rules of your product to the code that implements them, so the knowledge stays in the repository when the team changes.">
       <section id="produit" class="sc-hero">
         <div class="sc-wrap sc-hero-in">
           <div class="sc-hero-copy">
@@ -254,7 +210,7 @@ $ rulelink rules add --title "…"</pre>
           <div class="sc-flex2 sc-col">
             <h2 id="cl-title">What's new</h2>
             <p class="sc-lead">Every release, written from its commits.</p>
-            <p><a href={route('releaseNotes')}>Read the release notes</a> · <a href="/release-notes/cli.xml">RSS feed</a></p>
+            <p><a href={route('releaseNotes')}>Read the release notes</a> · <a href={route('versions')}>Versions</a> · <a href="/release-notes/cli.xml">RSS feed</a></p>
           </div>
           <div class="sc-col">
             <h3>Contribute and get help</h3>
@@ -266,30 +222,4 @@ $ rulelink rules add --title "…"</pre>
           </div>
         </div>
       </section>
-    </main>
-
-    <footer class="sc-footer">
-      <div class="sc-wrap sc-foot-in">
-        <div class="sc-col"><strong>Rulelink</strong><span>MIT license. Your rules and code stay in your repository.</span></div>
-        <nav aria-label="Footer" class="sc-foot-nav">
-          <a href={route('introduction')}>Documentation</a>
-          <a href={route('quickstart')}>Quickstart</a>
-          <a href={route('cli')}>CLI reference</a>
-          <a href="#installer">Install</a>
-          <a href={REPO_URL}>GitHub</a>
-          <a href={route('releaseNotes')}>Release notes</a>
-          <a href="#roadmap">Roadmap</a>
-          <a href="#cloud">Rulelink Cloud</a>
-        </nav>
-      </div>
-    </footer>
-
-    <script>
-      document.querySelector('[data-theme-toggle]')?.addEventListener('click', () => {
-        const next = document.documentElement.dataset.theme === 'light' ? 'dark' : 'light';
-        document.documentElement.dataset.theme = next;
-        try { localStorage.setItem('starlight-theme', next); } catch {}
-      });
-    </script>
-  </body>
-</html>
+</Layout>

@@ -1,0 +1,81 @@
+---
+// Showcase chrome: header, footer and theme toggle shared by the showcase pages.
+import '@fontsource/ibm-plex-sans/400.css';
+import '@fontsource/ibm-plex-sans/600.css';
+import '@fontsource/ibm-plex-mono/400.css';
+import '../docs/tokens.css';
+import './home.css';
+import logo from './logo.svg';
+import { REPO_URL, route } from '../../site.config.mjs';
+interface Props { title: string; description: string; mainId?: string }
+const { title, description, mainId = 'top' } = Astro.props;
+---
+<!doctype html>
+<html lang="en" data-theme="dark">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>{title}</title>
+    <meta name="description" content={description} />
+    <link rel="icon" href={logo.src} type="image/svg+xml" />
+    <script is:inline>
+      (function () {
+        var t = null;
+        try { t = localStorage.getItem('starlight-theme'); } catch (e) {}
+        if (t !== 'light' && t !== 'dark') t = matchMedia('(prefers-color-scheme: light)').matches ? 'light' : 'dark';
+        document.documentElement.dataset.theme = t;
+      })();
+    </script>
+  </head>
+  <body class="sc">
+    <a class="sc-skip" href="#top">Skip to content</a>
+    <header class="sc-header">
+      <div class="sc-wrap sc-header-in">
+        <a class="sc-brand" href="/"><img src={logo.src} alt="" width="26" height="26" /><span>Rulelink</span></a>
+        <nav aria-label="Main" class="sc-nav">
+          <a href="/#produit">Product</a>
+          <a href="/#installer">Install</a>
+          <a href={route('introduction')}>Docs</a>
+          <a href="/#reference">Reference</a>
+          <a href="/#roadmap">Roadmap</a>
+        </nav>
+        <div class="sc-actions">
+          <button type="button" class="sc-theme" data-theme-toggle aria-label="Switch theme">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="M20 14.5A8.5 8.5 0 0 1 9.5 4 8.5 8.5 0 1 0 20 14.5z"></path></svg>
+            <span>Theme</span>
+          </button>
+          <a class="sc-ghost" href={REPO_URL}>GitHub</a>
+        </div>
+      </div>
+    </header>
+
+    <main id={mainId}>
+      <slot />
+    </main>
+
+    <footer class="sc-footer">
+      <div class="sc-wrap sc-foot-in">
+        <div class="sc-col"><strong>Rulelink</strong><span>MIT license. Your rules and code stay in your repository.</span></div>
+        <nav aria-label="Footer" class="sc-foot-nav">
+          <a href={route('introduction')}>Documentation</a>
+          <a href={route('quickstart')}>Quickstart</a>
+          <a href={route('cli')}>CLI reference</a>
+          <a href="/#installer">Install</a>
+          <a href={REPO_URL}>GitHub</a>
+          <a href={route('releaseNotes')}>Release notes</a>
+          <a href={route('versions')}>Versions</a>
+          <a href="/#roadmap">Roadmap</a>
+          <a href="/#cloud">Rulelink Cloud</a>
+        </nav>
+      </div>
+    </footer>
+
+    <script>
+      document.querySelector('[data-theme-toggle]')?.addEventListener('click', () => {
+        const next = document.documentElement.dataset.theme === 'light' ? 'dark' : 'light';
+        document.documentElement.dataset.theme = next;
+        try { localStorage.setItem('starlight-theme', next); } catch {}
+      });
+    </script>
+  </body>
+</html>
