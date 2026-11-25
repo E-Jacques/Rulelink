@@ -5,7 +5,7 @@ Rulelink links business rules to the code that implements them, and reports whic
 ## Language
 
 **Rule**:
-An atomic, testable statement of business behaviour with a stable identifier (e.g. `RULE-042`). The only object the registry manages.
+An atomic, testable statement of business behaviour with a stable identifier (e.g. `RULE-042`): a single verifiable criterion, either satisfied or not. The only object the registry manages.
 _Avoid_: Requirement, user story, ticket, business rule (when ambiguous)
 
 **Imported item**:
@@ -57,3 +57,25 @@ _Avoid_: Tag, link (as a noun for the comment)
 **Finding**:
 One result of `check`, with a severity, about a Rule or an Annotation.
 _Avoid_: Error, violation, issue
+
+## Documentation
+
+**Public documentation**:
+The documentation written for the people who use Rulelink (developers, product owners, functional roles), as opposed to the people who build it. It describes only what the current version does; anything announced appears only on the Roadmap.
+_Avoid_: User manual, docs (alone, when the audience matters)
+
+**Contributor documentation**:
+The product, architecture and repository documents written for the people who build Rulelink.
+_Avoid_: Internal docs, dossier
+
+**Product**:
+A distinct deliverable that users install or use: the CLI, or an editor extension. Release notes and the Roadmap are organised by Product, never by crate.
+_Avoid_: Component, module, crate (when speaking to users)
+
+**Release notes**:
+The changes a Product brings between two versions, written for its users and generated from commit messages. Detail per crate belongs to the contributor-facing developer pages, not to Release notes.
+_Avoid_: Changelog (for the user-facing text)
+
+**Roadmap**:
+The list of what each Product offers now, what comes next and what comes later, without dates.
+_Avoid_: Backlog, plan
