@@ -1,0 +1,19 @@
+---
+// The copy button shared by CodeBlock and InstallTabs. Behaviour lives in the parent's script.
+const { label = 'Copy command' } = Astro.props;
+---
+<button type="button" class="rl-copy" data-copy aria-label={label}>
+  <svg class="rl-copy-ic" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><rect x="9" y="9" width="11" height="11" rx="2"></rect><path d="M5 15V6a2 2 0 0 1 2-2h8"></path></svg>
+  <svg class="rl-copy-ok" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7.5"></path></svg>
+  <span data-copy-label aria-live="polite">Copy</span>
+</button>
+
+<style is:global>
+  .rl-copy { display: inline-flex; align-items: center; gap: 6px; min-height: 32px; min-width: 44px; padding: 0 10px; border: 0; border-radius: var(--rl-radius-sm); background: transparent; color: var(--rl-ink-muted); font: inherit; font-size: 12px; cursor: pointer; }
+  .rl-copy:hover { background: var(--rl-surface-300); color: var(--rl-ink); }
+  .rl-copy:focus-visible { outline: 2px solid var(--rl-brand-text); outline-offset: 2px; }
+  .rl-copy .rl-copy-ok { display: none; }
+  .rl-copy[data-copied] { color: var(--rl-success-text); }
+  .rl-copy[data-copied] .rl-copy-ok { display: inline; }
+  .rl-copy[data-copied] .rl-copy-ic { display: none; }
+</style>

@@ -1,0 +1,39 @@
+---
+import CopyButton from './CopyButton.astro';
+interface Props {
+  /** Header text: a file name or "Terminal". */
+  title?: string;
+  /** What the copy button copies: the command only, never the prompt or the output. */
+  copy: string;
+  /** Show the copy button (default true). */
+  copyable?: boolean;
+  /** Print the title in monospace (file names). */
+  mono?: boolean;
+}
+const { title = 'Terminal', copy, copyable = true, mono = false } = Astro.props;
+---
+<div class="rl-code" data-code data-copy-text={copy}>
+  <div class="rl-code-head">
+    <span class:list={[{ 'rl-mono': mono }]}>{title}</span>
+    {copyable && <CopyButton label="Copy code" />}
+  </div>
+  <pre class="rl-code-pre" tabindex="0"><slot /></pre>
+</div>
+
+<style is:global>
+  .rl-code { border: 1px solid var(--rl-border-subtle); border-radius: var(--rl-radius-md); background: var(--rl-surface-200); overflow: hidden; margin-block: var(--rl-space-4); }
+  .rl-code-head { display: flex; justify-content: space-between; align-items: center; gap: var(--rl-space-2); padding: 4px 4px 4px 14px; border-bottom: 1px solid var(--rl-border-subtle); font-size: 12px; color: var(--rl-ink-subtle); }
+  .rl-mono { font-family: var(--rl-font-mono); }
+  .rl-code-pre { margin: 0; padding: 14px; font-family: var(--rl-font-mono); font-size: 13.5px; line-height: 22px; overflow-x: auto; color: var(--rl-ink); background: transparent; }
+  .rl-code-pre .rl-out { color: var(--rl-ink-muted); user-select: none; }
+  .rl-code-pre .rl-ok { color: var(--rl-success-text); font-weight: 600; }
+  .rl-code-pre .rl-ann { color: var(--rl-brand-text); font-weight: 600; }
+</style>
+
+<script>
+  import { copyText } from './copy';
+  document.addEventListener('click', (e) => {
+    const btn = (e.target as HTMLElement).closest<HTMLElement>('[data-code] [data-copy]');
+    if (btn) copyText(btn, btn.closest<HTMLElement>('[data-code]')!.dataset.copyText ?? '');
+  });
+</script>

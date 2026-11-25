@@ -1,0 +1,79 @@
+---
+import CopyButton from './CopyButton.astro';
+interface Tab { id: string; label: string; prompt?: string; cmd: string; platform?: 'linux' | 'mac' | 'win' | 'any' }
+interface Props { tabs: Tab[]; label?: string }
+const { tabs, label = 'Operating system' } = Astro.props;
+const uid = `it-${Math.random().toString(36).slice(2, 8)}`;
+---
+<div class="rl-code rl-tabs" data-install-tabs>
+  <div class="rl-tabs-head">
+    <div role="tablist" aria-label={label} class="rl-tablist">
+      {tabs.map((t, i) => (
+        <button type="button" role="tab" class="rl-tab" id={`${uid}-t-${t.id}`} aria-controls={`${uid}-p-${t.id}`} aria-selected={i === 0 ? 'true' : 'false'} tabindex={i === 0 ? 0 : -1} data-id={t.id} data-platform={t.platform ?? 'any'}>{t.label}</button>
+      ))}
+    </div>
+    <CopyButton label="Copy install command" />
+  </div>
+  {tabs.map((t, i) => (
+    <pre class="rl-code-pre" role="tabpanel" id={`${uid}-p-${t.id}`} aria-labelledby={`${uid}-t-${t.id}`} hidden={i !== 0} tabindex="0" data-id={t.id} data-cmd={t.cmd}><span class="rl-out">{t.prompt ?? '$'} </span>{t.cmd}</pre>
+  ))}
+</div>
+
+<style is:global>
+  .rl-tabs-head { display: flex; flex-wrap: wrap; align-items: center; border-bottom: 1px solid var(--rl-border-subtle); background: var(--rl-surface-100); padding-right: 4px; }
+  .rl-tablist { display: flex; flex-wrap: wrap; flex: 1 1 auto; }
+  .rl-tab { min-height: 40px; padding: 0 14px; border: 0; border-bottom: 2px solid transparent; background: transparent; color: var(--rl-ink-muted); font: inherit; font-size: 13px; cursor: pointer; }
+  .rl-tab:hover { color: var(--rl-ink); }
+  .rl-tab[aria-selected='true'] { color: var(--rl-brand-text); border-bottom-color: var(--rl-brand); font-weight: 600; }
+  .rl-tab:focus-visible { outline: 2px solid var(--rl-brand-text); outline-offset: -2px; }
+</style>
+
+<script>
+  import { copyText } from './copy';
+  const KEY = 'rl-install-tab';
+  const guess = (): string => {
+    const p = `${navigator.platform} ${navigator.userAgent}`;
+    return /Win/i.test(p) ? 'win' : /Mac/i.test(p) ? 'mac' : /Linux|X11/i.test(p) ? 'linux' : 'any';
+  };
+  const saved = (): string | null => { try { return localStorage.getItem(KEY); } catch { return null; } };
+  const all = () => document.querySelectorAll<HTMLElement>('[data-install-tabs]');
+
+  function select(root: HTMLElement, id: string, remember: boolean) {
+    root.querySelectorAll<HTMLElement>('[role=tab]').forEach((t) => {
+      const on = t.dataset.id === id;
+      t.setAttribute('aria-selected', String(on));
+      t.tabIndex = on ? 0 : -1;
+    });
+    root.querySelectorAll<HTMLElement>('[role=tabpanel]').forEach((p) => { p.hidden = p.dataset.id !== id; });
+    if (remember) { try { localStorage.setItem(KEY, id); } catch {} }
+  }
+
+  all().forEach((root) => {
+    const tabs = [...root.querySelectorAll<HTMLElement>('[role=tab]')];
+    const s = saved();
+    const os = guess();
+    const initial = (s && tabs.some((t) => t.dataset.id === s) ? s : null) ?? tabs.find((t) => t.dataset.platform === os)?.dataset.id;
+    if (initial) select(root, initial, false);
+  });
+
+  document.addEventListener('click', (e) => {
+    const el = e.target as HTMLElement;
+    const tab = el.closest<HTMLElement>('[data-install-tabs] [role=tab]');
+    if (tab) { all().forEach((r) => select(r, tab.dataset.id!, true)); return; }
+    const btn = el.closest<HTMLElement>('[data-install-tabs] [data-copy]');
+    if (btn) {
+      const panel = btn.closest('[data-install-tabs]')!.querySelector<HTMLElement>('[role=tabpanel]:not([hidden])');
+      if (panel) copyText(btn, panel.dataset.cmd!);
+    }
+  });
+  document.addEventListener('keydown', (e) => {
+    const tab = (e.target as HTMLElement).closest<HTMLElement>('[data-install-tabs] [role=tab]');
+    if (!tab || !['ArrowRight', 'ArrowLeft', 'Home', 'End'].includes(e.key)) return;
+    const tabs = [...tab.parentElement!.querySelectorAll<HTMLElement>('[role=tab]')];
+    const i = tabs.indexOf(tab);
+    const next = e.key === 'Home' ? 0 : e.key === 'End' ? tabs.length - 1 : (i + (e.key === 'ArrowRight' ? 1 : -1) + tabs.length) % tabs.length;
+    e.preventDefault();
+    tabs[next].focus();
+    tabs[next].click();
+  });
+</script>
