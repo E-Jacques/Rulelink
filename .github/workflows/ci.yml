@@ -37,7 +37,7 @@ jobs:
       - if: steps.changed.outputs.run == 'true'
         uses: moonrepo/setup-toolchain@v0
       - if: steps.changed.outputs.run == 'true'
-        run: moon run site:build
+        run: moon run site:test site:build
   e2e:
     name: e2e (${{ matrix.os }})
     strategy:
