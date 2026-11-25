@@ -18,5 +18,7 @@ export const ROUTES = {
   glossary: '/reference/glossary/',
   releaseNotes: '/release-notes/cli/',
 };
-export const route = (name) => ROUTES[name];
+// Pages the showcase itself owns (no page under docs/public).
+export const SHOWCASE_ROUTES = { versions: '/versions/' };
+export const route = (name) => ROUTES[name] ?? SHOWCASE_ROUTES[name];
 export const INSTALLER_URL = `${REPO_URL}/releases/latest/download`;

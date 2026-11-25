@@ -30,6 +30,17 @@ test('the showcase imports nothing from the docs part but the shared tokens', ()
   }
 });
 
+test('the Versions page tells the truth about the release notes', async () => {
+  const { parseReleaseNotes } = await import('../src/showcase/releases.mjs');
+  const md = readFileSync(path.join(site, DOCS_SOURCE, 'release-notes/cli.md'), 'utf8');
+  assert.ok(parseReleaseNotes(md).unreleased.length > 0, 'the generated notes list unreleased changes');
+  const sample = parseReleaseNotes('## Unreleased\n\n### Added\n\n- A\n\n## 0.1.0 - 2026-01-02\n\n### Fixed\n\n- B\n');
+  assert.deepEqual(sample.unreleased, [{ title: 'Added', items: ['A'] }]);
+  assert.equal(sample.versions[0].version, '0.1.0');
+  assert.equal(sample.versions[0].date, '2026-01-02');
+  assert.deepEqual(parseReleaseNotes('# Notes\n').versions, []);
+});
+
 test('every route the showcase links to is a page of docs/public', () => {
   const root = path.resolve(site, DOCS_SOURCE);
   for (const [name, route] of Object.entries(ROUTES)) {

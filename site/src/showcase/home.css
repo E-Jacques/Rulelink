@@ -92,7 +92,17 @@
 .sc-foot-in { padding-block: 40px; display: flex; flex-wrap: wrap; gap: 24px 48px; }
 .sc-footer strong { color: var(--on-deep); font-size: 16px; }
 .sc-foot-nav { flex: 2 1 480px; display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 8px 24px; align-content: start; }
+.sc-ver-in { padding-block: 56px 48px; }
+.sc-ver-hero h1 { max-width: none; }
+.sc-ver-empty { border-color: var(--rl-brand); }
+.sc-ver-empty h2 { font-size: 24px; line-height: 32px; }
+.sc-ver-empty p { max-width: 62ch; }
+.sc-ver-block { padding-top: 0; }
+.sc-ver-block h2 { margin-bottom: 16px; overflow-wrap: anywhere; }
+.sc-ver-date { font-weight: 400; font-size: 18px; }
+.sc-ver-links { margin-top: 16px; }
 @media (max-width: 600px) {
+  .sc-ver-in { padding-block: 32px; }
   .sc-hero h1 { font-size: 34px; line-height: 42px; }
   .sc-hero-in { padding-block: 40px; gap: 32px; }
   .sc-checker { padding: 12px; }
