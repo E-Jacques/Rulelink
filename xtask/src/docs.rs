@@ -83,7 +83,7 @@ fn check_command(docs_root: &Path, command: &Command, problems: &mut Vec<String>
 /// plus `since` on CLI pages. Guides need nothing more for now.
 fn required_fields(relative: &str) -> Vec<&'static str> {
     let mut fields = vec!["title", "description"];
-    if relative.starts_with("cli/") {
+    if relative.starts_with("cli/") && relative != "cli/README.md" {
         fields.push("since");
     }
     fields

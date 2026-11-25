@@ -1,3 +1,8 @@
+---
+title: CLI reference
+description: Find the page of each rulelink command.
+---
+
 # CLI reference
 
 One page per `rulelink` command.
