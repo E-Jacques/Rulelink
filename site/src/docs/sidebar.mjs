@@ -19,7 +19,7 @@ const titleCase = (s) => s.replace(/-/g, ' ').replace(/^./, (c) => c.toUpperCase
 const NAVIGATION = [
   {
     label: 'Get started',
-    entries: ['introduction', 'roadmap', 'installation', 'quickstart'].map((slug) => ({ slug })),
+    entries: ['introduction', 'roadmap', 'installation', 'get-started/quickstart'].map((slug) => ({ slug })),
   },
   { label: 'Guides', entries: [{ dir: 'guides' }] },
   { label: 'Concepts', entries: [{ dir: 'concepts' }] },
