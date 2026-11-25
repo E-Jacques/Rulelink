@@ -1,0 +1,30 @@
+---
+// Arguments and options table. Descriptions are trusted HTML written by the page author.
+interface Row { name: string; description: string; default?: string; required?: boolean }
+interface Props { rows: Row[]; kind?: 'option' | 'argument' }
+const { rows, kind = 'option' } = Astro.props;
+const isOption = kind === 'option';
+---
+<div class="rl-table-wrap" tabindex="0" role="region" aria-label={isOption ? 'Options' : 'Arguments'}>
+  <table class="rl-table">
+    <thead><tr><th scope="col">{isOption ? 'Option' : 'Argument'}</th><th scope="col">{isOption ? 'Default' : 'Required'}</th><th scope="col">Description</th></tr></thead>
+    <tbody>
+      {rows.map((r) => (
+        <tr>
+          <td class="rl-nowrap"><code>{r.name}</code></td>
+          <td class:list={{ 'rl-mono': isOption && !!r.default }}>{isOption ? (r.default ?? '—') : r.required ? 'Yes' : 'No'}</td>
+          <td set:html={r.description} />
+        </tr>
+      ))}
+    </tbody>
+  </table>
+</div>
+
+<style is:global>
+  .rl-table-wrap { border: 1px solid var(--rl-border-subtle); border-radius: var(--rl-radius-md); overflow-x: auto; margin-block: var(--rl-space-4); }
+  .rl-table { width: 100%; border-collapse: collapse; font-size: 14px; margin: 0; }
+  .rl-table th { text-align: left; background: var(--rl-surface-200); color: var(--rl-ink-muted); font-weight: 500; font-size: 13px; padding: 9px 14px; }
+  .rl-table td { padding: 11px 14px; border-top: 1px solid var(--rl-border-subtle); vertical-align: top; }
+  .rl-table code { background: none; padding: 0; font-family: var(--rl-font-mono); }
+  .rl-nowrap { white-space: nowrap; }
+</style>

@@ -62,3 +62,13 @@
   --rl-danger-subtle: #fce9e7;
   --rl-obsolete-text: #5a6375;
 }
+
+/* Brass accent, used only next to Rulelink Cloud. */
+:root {
+  --rl-accent-text: #e0b865;
+  --rl-accent-subtle: #2c2414;
+}
+:root[data-theme='light'] {
+  --rl-accent-text: #85601c;
+  --rl-accent-subtle: #f7efdf;
+}

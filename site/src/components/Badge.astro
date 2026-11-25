@@ -1,0 +1,27 @@
+---
+// One badge for everything: Rule status, finding severity, version, "coming soon".
+// Status is always text plus icon, never colour alone.
+interface Props { kind: 'proposed' | 'validated' | 'obsolete' | 'rejected' | 'error' | 'warning' | 'success' | 'version' | 'latest' | 'soon' | 'soon-cloud' }
+const { kind } = Astro.props;
+const icons: Record<string, string> = {
+  proposed: '<circle cx="12" cy="12" r="9" stroke-dasharray="3 3"></circle>',
+  validated: '<path d="M5 12.5l4.5 4.5L19 7.5"></path>',
+  obsolete: '<path d="M5 12h14"></path>',
+  rejected: '<circle cx="12" cy="12" r="9"></circle><path d="M6 18L18 6"></path>',
+  soon: '<circle cx="12" cy="12" r="9"></circle><path d="M12 7v5l3 2"></path>',
+};
+const icon = icons[kind];
+---
+<span class={`rl-badge rl-badge-${kind}`}>{icon && <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" aria-hidden="true" set:html={icon} />}<slot /></span>
+
+<style is:global>
+  .rl-badge { display: inline-flex; align-items: center; gap: 4px; padding: 2px 8px; border-radius: var(--rl-radius-sm); font-size: 12px; font-weight: 600; line-height: 18px; white-space: nowrap; background: var(--rl-surface-200); color: var(--rl-ink-muted); }
+  .rl-badge-proposed, .rl-badge-soon { background: var(--rl-brand-subtle); color: var(--rl-brand-text); }
+  .rl-badge-soon { font-weight: 500; }
+  .rl-badge-validated, .rl-badge-latest, .rl-badge-success { background: var(--rl-success-subtle); color: var(--rl-success-text); }
+  .rl-badge-obsolete { background: var(--rl-surface-200); color: var(--rl-obsolete-text); }
+  .rl-badge-rejected, .rl-badge-error { background: var(--rl-danger-subtle); color: var(--rl-danger-text); }
+  .rl-badge-warning { background: var(--rl-warning-subtle); color: var(--rl-warning-text); }
+  .rl-badge-version { font-family: var(--rl-font-mono); font-weight: 500; }
+  .rl-badge-soon-cloud { background: var(--rl-accent-subtle); color: var(--rl-accent-text); font-weight: 500; }
+</style>
