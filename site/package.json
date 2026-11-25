@@ -1,0 +1,16 @@
+{
+  "name": "@rulelink/site",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "astro dev",
+    "build": "astro build"
+  },
+  "dependencies": {
+    "@astrojs/starlight": "^0.37.0",
+    "@fontsource/ibm-plex-mono": "^5.2.5",
+    "@fontsource/ibm-plex-sans": "^5.2.5",
+    "astro": "^5.16.0",
+    "unist-util-visit": "^5.0.0"
+  }
+}
