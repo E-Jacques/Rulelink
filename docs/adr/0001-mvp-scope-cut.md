@@ -14,3 +14,4 @@ The project is run by one person next to other work, and the MVP's exit criterio
 - `check --changed` is in the MVP: the agent loop in the consultation skill needs it.
 - The `sarif` and `github` reporters wait for the GitHub Action (V2).
 - Release pipeline in the MVP: GitHub release archives and the npm package, built by dist (`.github/workflows/release.yml`).
+- Amended by [ADR-0004](0004-shell-and-powershell-installers.md): the shell and PowerShell installers ship in the MVP too.

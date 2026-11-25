@@ -23,7 +23,8 @@
 | Feature | MVP | V1 | V2 |
 |---|:-:|:-:|:-:|
 | Release pipeline: release-plz + dist, GitHub releases, npm package | ● | | |
-| Shell and PowerShell installers, Docker image | | ● | |
+| Shell and PowerShell installers (amends ADR-0001, see ADR-0004) | ● | | |
+| Docker image | | ● | |
 | crates.io publication of every library crate | ● | | |
 | Signed artefacts, SBOM, build provenance attestations | ● | | |
 | Homebrew, Scoop, winget | | ● | |
@@ -53,7 +54,7 @@ Public contracts are versioned independently of the binary, because they evolve 
 
 | Artefact | Scheme | Strategy | Published to |
 |---|---|---|---|
-| `rulelink` binary (`rulelink-cli`) | SemVer, `0.x` until the format is frozen | Lockstep with every internal crate (`workspace.package.version`) | GitHub releases, npm, crates.io (V1: shell and PowerShell installers, Docker, Homebrew) |
+| `rulelink` binary (`rulelink-cli`) | SemVer, `0.x` until the format is frozen | Lockstep with every internal crate (`workspace.package.version`) | GitHub releases (archives, shell and PowerShell installers), npm, crates.io (V1: Docker, Homebrew) |
 | Other library crates (`registry`, `link`, `check`, `import`, `publish`, `config`, `app`, `lsp`, `adapters/*`) | Same as the binary | Lockstep, published in dependency order by release-plz | crates.io |
 | `xtask`, `rulelink-e2e` | — | `publish = false` | — |
 | `rulelink-model` | SemVer, `1.x` from the first public release | Independent, checked by `cargo-semver-checks` | crates.io |
@@ -86,15 +87,15 @@ sequenceDiagram
     GH->>DIST: tag rulelink-cli v0.4.0
     DIST->>DIST: build matrix (Linux musl x86_64 and arm64, macOS universal, Windows)
     DIST->>DIST: checksums, SBOM, signatures, provenance attestations
-    DIST->>CH: GitHub release and npm package (V1: shell and PowerShell installers, Homebrew tap)
+    DIST->>CH: GitHub release (archives, shell and PowerShell installers) and npm package (V1: Homebrew tap)
     GH->>CH: follow-up jobs: V1: Docker image, VSIX per platform, skills tag. V2: Action and GitLab mirrors
 ```
 
 | Step | Tool | Release |
 |---|---|---|
 | Version bumps, changelogs, tags, crates.io | release-plz | MVP |
-| Cross-platform binaries, npm wrapper | dist (formerly cargo-dist) | MVP |
-| Shell and PowerShell installers, Homebrew | dist | V1 |
+| Cross-platform binaries, shell and PowerShell installers, npm wrapper | dist (formerly cargo-dist) | MVP |
+| Homebrew | dist | V1 |
 | Release dry run on every PR | `dist plan` ([Repository structure](01-repository-structure.md), section 9.1) | MVP |
 | Docker image | GitHub Actions, multi-arch build from the release binaries | V1 |
 | Signatures and provenance | GitHub artifact attestations; SBOM with `cargo-cyclonedx` | MVP |
@@ -176,8 +177,8 @@ flowchart LR
 
 - `dist plan` succeeds on every PR; a full release dry run (`release-plz release --dry-run`) runs nightly.
 - `cargo xtask release-check` passes on every release PR.
-- The `smoke-test` workflow runs on every tag, between the build and the npm publish: the built archive starts on Linux, macOS (x86_64 and arm64) and Windows, and the npm tarball declares the `rulelink` binary. Once `init` and `check` exist, it also runs `init` then `check` in a clean repository (flip `FULL_FLOW`).
-- Installation test from the brief: first `check` in under 15 minutes for 3 external developers, using the npm package, and including one `check` run in a CI workflow the developer writes by hand.
+- The `smoke-test` workflow runs on every tag, between the build and the npm publish: the built archive starts on Linux, macOS (x86_64 and arm64) and Windows, the shell and PowerShell installers are present, parse and point at the release being built, and the npm tarball declares the `rulelink` binary. Once `init` and `check` exist, it also runs `init` then `check` in a clean repository (flip `FULL_FLOW`).
+- Installation test from the brief: first `check` in under 15 minutes for 3 external developers, using any of the shell installer, the PowerShell installer or the npm package, and including one `check` run in a CI workflow the developer writes by hand.
 
 ## 8. Open points
 
