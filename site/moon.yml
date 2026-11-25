@@ -1,0 +1,23 @@
+# The public site: Starlight documentation (src/docs) now, showcase (src/showcase) later.
+language: 'typescript'
+tasks:
+  install:
+    command: 'pnpm install --frozen-lockfile'
+    inputs: ['package.json', '/pnpm-lock.yaml', '/pnpm-workspace.yaml']
+    options:
+      runInCI: false
+  build:
+    command: 'pnpm astro build'
+    deps: ['~:install']
+    inputs:
+      - 'src/**/*'
+      - 'public/**/*'
+      - 'astro.config.mjs'
+      - 'site.config.mjs'
+      - 'package.json'
+      - '/docs/public/**/*'
+    outputs: ['dist']
+    options:
+      # Rust-only pull requests must not pay for the site: the `site` job in ci.yml runs it
+      # when the site or the public docs change.
+      runInCI: false
