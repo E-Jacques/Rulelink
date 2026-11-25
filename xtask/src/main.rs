@@ -1,6 +1,7 @@
 //! Maintainer automation: `cargo xtask <arch|schemas|skills-lint|docs-check>`.
 
 mod arch;
+mod docs;
 mod schemas;
 mod skills;
 
@@ -12,7 +13,7 @@ fn main() -> ExitCode {
         Some("arch") => arch::run(),
         Some("schemas") => schemas::run(args.next().as_deref() == Some("--check")),
         Some("skills-lint") => skills::run(),
-        Some("docs-check") => Ok(()), // TODO: mermaid validation of docs/
+        Some("docs-check") => docs::run(),
         _ => Err("usage: cargo xtask <arch|schemas [--check]|skills-lint|docs-check>".to_string()),
     };
     match result {

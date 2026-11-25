@@ -1,3 +1,8 @@
+---
+title: {{ title }}
+since: {{ version }}
+---
+
 # {{ title }}
 
 {{ description }}
@@ -29,3 +34,14 @@
 | {{ option_name_2 }} |  {{ option_description_2 }} | {{ option_example_2 }} |
 
 <!-- endif -->
+
+## Exit codes
+
+| code | meaning                    |
+| ---- | -------------------------- |
+| `0`  | {{ success_meaning }}      |
+| `2`  | {{ invalid_meaning }}      |
+
+## See also
+
+- [{{ related_command }}]({{ related_page }}.md)

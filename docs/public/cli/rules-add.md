@@ -1,3 +1,8 @@
+---
+title: rulelink rules add
+since: 0.1.0
+---
+
 # rulelink rules add
 
 Creates a new Rule in the Source with the status `proposed` and prints its Identifier. The Identifier is allocated for you (`RULE-001`, `RULE-002`, …) and is never reused, even if a Rule was retired or deleted by hand. Run it from the project root, after `rulelink init`.
@@ -21,3 +26,17 @@ rulelink rules add --title "Line-level VAT rounding" --statement "VAT is rounded
 | `--related`   | Records the Identifier of a related Rule. It must exist. Repeat it for several.                 | `--related RULE-001`                     |
 
 Values can be written in any language. The command stops without changing anything if a value is empty, repeated, or the title is too long, or if a `--related` Identifier does not exist.
+
+## Exit codes
+
+| code | meaning                                                                |
+| ---- | ---------------------------------------------------------------------- |
+| `0`  | The command succeeded.                                                 |
+| `2`  | A value or the configuration is invalid. Nothing was changed.          |
+| `3`  | The rules file is missing, unreadable or invalid. Nothing was changed. |
+| `10` | Unexpected internal error.                                             |
+
+## See also
+
+- [`rulelink rules approve`](rules-approve.md)
+- [`rulelink rules list`](rules-list.md)

@@ -6,8 +6,8 @@ Rulelink keeps every business rule attached to its code, even when the team chan
 
 | File | Content |
 |---|---|
-| [`public/rule-format.md`](public/rule-format.md) | What a Rule is, the Identifier format, the lifecycle, the Source file |
-| [`public/specify-rules-in-code.md`](public/specify-rules-in-code.md) | Writing `@rule` Annotations: what is valid, what counts as a comment, known limits, scanned files |
+| [`public/concepts/rule-format.md`](public/concepts/rule-format.md) | What a Rule is, the Identifier format, the lifecycle, the Source file |
+| [`public/concepts/specify-rules-in-code.md`](public/concepts/specify-rules-in-code.md) | Writing `@rule` Annotations: what is valid, what counts as a comment, known limits, scanned files |
 
 ## 1. Product — what and why
 
