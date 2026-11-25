@@ -9,7 +9,7 @@ export const EDIT_BRANCH = 'main';
 // page never repeats a path by hand. tests/boundaries.test.mjs checks that each one exists.
 export const ROUTES = {
   introduction: '/introduction/',
-  installation: '/get-started/installation/',
+  installation: '/installation/',
   quickstart: '/get-started/quickstart/',
   roadmap: '/roadmap/',
   guides: '/guides/write-a-good-rule/',
