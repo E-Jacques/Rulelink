@@ -13,6 +13,12 @@ pub use rulelink_model::{DEFAULT_ID_PREFIX, IdPrefix};
 pub const CONFIG_FILE: &str = "rulelink.toml";
 /// Default location of the Source, relative to the project root (always `/`-separated).
 pub const DEFAULT_SOURCE_PATH: &str = "rules/rules.json";
+/// The only version of `rulelink.toml` this tool reads.
+const SUPPORTED_VERSION: u32 = 1;
+/// The only `source.kind` available today.
+const SOURCE_KIND_JSON: &str = "json";
+/// Starts a negated `.gitignore` pattern, which `scan.exclude` refuses.
+const NEGATION: char = '!';
 /// Template of the `rulelink.toml` written by `init`, embedded at compile time.
 const INITIAL_TEMPLATE: &str = include_str!("../templates/rulelink.toml");
 
@@ -31,6 +37,8 @@ pub struct Config {
     pub id_prefix: IdPrefix,
     /// Location of the Source, relative to the project root.
     pub source_path: PathBuf,
+    /// `.gitignore`-style patterns of files the code scan skips (`[scan] exclude`).
+    pub scan_exclude: Vec<String>,
 }
 
 #[derive(Deserialize)]
@@ -38,6 +46,12 @@ struct RawConfig {
     version: Option<u32>,
     source: Option<RawSource>,
     rules: Option<RawRules>,
+    scan: Option<RawScan>,
+}
+
+#[derive(Deserialize)]
+struct RawScan {
+    exclude: Option<Vec<String>>,
 }
 
 #[derive(Deserialize)]
@@ -74,31 +88,8 @@ impl Config {
 
     fn parse(text: &str) -> Result<Self, Error> {
         let raw: RawConfig = toml::from_str(text).map_err(|e| invalid(e.message()))?;
-        match raw.version {
-            Some(1) => {}
-            Some(other) => {
-                return Err(invalid(&format!("unsupported version {other}, expected 1")));
-            }
-            None => return Err(invalid("missing `version`")),
-        }
-        let source = raw
-            .source
-            .ok_or_else(|| invalid("missing `[source]` section"))?;
-        match source.kind.as_deref() {
-            Some("json") => {}
-            Some(other) => {
-                return Err(invalid(&format!(
-                    "unsupported `source.kind` \"{other}\", only \"json\" is available"
-                )));
-            }
-            None => return Err(invalid("missing `source.kind`")),
-        }
-        let source_path = relative_inside_project(
-            source
-                .path
-                .as_deref()
-                .ok_or_else(|| invalid("missing `source.path`"))?,
-        )?;
+        check_version(raw.version)?;
+        let source_path = parse_source(raw.source)?;
         let prefix = raw
             .rules
             .and_then(|r| r.prefix)
@@ -106,8 +97,58 @@ impl Config {
         Ok(Self {
             id_prefix: IdPrefix::parse(&prefix)?,
             source_path,
+            scan_exclude: parse_scan_exclude(raw.scan)?,
         })
     }
+}
+
+fn check_version(version: Option<u32>) -> Result<(), Error> {
+    match version {
+        Some(SUPPORTED_VERSION) => Ok(()),
+        Some(other) => Err(invalid(&format!(
+            "unsupported version {other}, expected {SUPPORTED_VERSION}"
+        ))),
+        None => Err(invalid("missing `version`")),
+    }
+}
+
+/// Validates `[source]` and returns the location of the Source.
+fn parse_source(source: Option<RawSource>) -> Result<PathBuf, Error> {
+    let source = source.ok_or_else(|| invalid("missing `[source]` section"))?;
+    match source.kind.as_deref() {
+        Some(SOURCE_KIND_JSON) => {}
+        Some(other) => {
+            return Err(invalid(&format!(
+                "unsupported `source.kind` \"{other}\", only \"{SOURCE_KIND_JSON}\" is available"
+            )));
+        }
+        None => return Err(invalid("missing `source.kind`")),
+    }
+    relative_inside_project(
+        source
+            .path
+            .as_deref()
+            .ok_or_else(|| invalid("missing `source.path`"))?,
+    )
+}
+
+/// Validates `[scan]` and returns the exclusion patterns (none when the section is absent).
+fn parse_scan_exclude(scan: Option<RawScan>) -> Result<Vec<String>, Error> {
+    let patterns: Vec<String> = scan
+        .and_then(|s| s.exclude)
+        .unwrap_or_default()
+        .iter()
+        .map(|p| p.trim().to_owned())
+        .collect();
+    if patterns.iter().any(String::is_empty) {
+        return Err(invalid("`scan.exclude` must not contain an empty pattern"));
+    }
+    if let Some(negated) = patterns.iter().find(|p| p.starts_with(NEGATION)) {
+        return Err(invalid(&format!(
+            "`scan.exclude` pattern \"{negated}\" starts with `{NEGATION}`: list only what to skip"
+        )));
+    }
+    Ok(patterns)
 }
 
 fn invalid(message: &str) -> Error {
@@ -178,6 +219,29 @@ mod tests {
             Err(Error::InvalidIdPrefix(_))
         ));
         assert!(Config::parse("not toml {").is_err());
+    }
+
+    #[test]
+    fn scan_exclusions_are_optional_and_never_blank() {
+        let base = config("a.json", "json", "RULE");
+        assert_eq!(Config::parse(&base).expect("valid").scan_exclude.len(), 0);
+        let with = format!("{base}[scan]\nexclude = [\"vendor/\", \"*.gen.rs\"]\n");
+        assert_eq!(
+            Config::parse(&with).expect("valid").scan_exclude,
+            ["vendor/", "*.gen.rs"]
+        );
+        let padded = format!("{base}[scan]\nexclude = [\" vendor/ \"]\n");
+        assert_eq!(
+            Config::parse(&padded).expect("valid").scan_exclude,
+            ["vendor/"]
+        );
+        let negated = format!("{base}[scan]\nexclude = [\"!src/\"]\n");
+        assert!(matches!(
+            Config::parse(&negated),
+            Err(Error::Invalid { .. })
+        ));
+        let blank = format!("{base}[scan]\nexclude = [\" \"]\n");
+        assert!(matches!(Config::parse(&blank), Err(Error::Invalid { .. })));
     }
 
     #[test]

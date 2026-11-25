@@ -148,6 +148,13 @@ fn sequence_lowered_by_hand_does_not_reuse_a_present_rule() {
     assert!(add(&repo, "Two").stdout.contains("RULE-002"));
 }
 
+/// `rules add` arguments with a valid title and statement, followed by `extra`.
+fn add_args<'a>(extra: &[&'a str]) -> Vec<&'a str> {
+    let mut args = vec!["rules", "add", "--title", "T", "--statement", "S"];
+    args.extend_from_slice(extra);
+    args
+}
+
 #[test]
 fn invalid_input_is_refused_and_the_source_is_untouched() {
     let repo = initialised();
@@ -157,38 +164,9 @@ fn invalid_input_is_refused_and_the_source_is_untouched() {
         vec!["rules", "add", "--title", "  ", "--statement", "S"],
         vec!["rules", "add", "--title", "T", "--statement", ""],
         vec!["rules", "add", "--title", long.as_str(), "--statement", "S"],
-        vec![
-            "rules",
-            "add",
-            "--title",
-            "T",
-            "--statement",
-            "S",
-            "--covered",
-            " ",
-        ],
-        vec![
-            "rules",
-            "add",
-            "--title",
-            "T",
-            "--statement",
-            "S",
-            "--app",
-            "a",
-            "--app",
-            "a",
-        ],
-        vec![
-            "rules",
-            "add",
-            "--title",
-            "T",
-            "--statement",
-            "S",
-            "--module",
-            "",
-        ],
+        add_args(&["--covered", " "]),
+        add_args(&["--app", "a", "--app", "a"]),
+        add_args(&["--module", ""]),
     ] {
         let run = repo.run(&args);
         assert_eq!(run.code, 2, "args {args:?}, stderr: {}", run.stderr);

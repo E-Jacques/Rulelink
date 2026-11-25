@@ -18,6 +18,7 @@ rulelink-import.workspace = true
 rulelink-publish.workspace = true
 rulelink-config.workspace = true
 rulelink-model.workspace = true
+rulelink-link.workspace = true
 rulelink-adapter-json.workspace = true
 rulelink-adapter-scan-fs.workspace = true
 rulelink-adapter-git.workspace = true

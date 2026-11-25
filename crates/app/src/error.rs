@@ -89,6 +89,16 @@ impl From<rulelink_adapter_json::Error> for Error {
     }
 }
 
+impl From<rulelink_adapter_scan_fs::Error> for Error {
+    fn from(err: rulelink_adapter_scan_fs::Error) -> Self {
+        use rulelink_adapter_scan_fs::Error as E;
+        match err {
+            E::InvalidExclude { .. } => Self::Config(err.to_string()),
+            E::Unreadable { .. } => Self::Internal(err.to_string()),
+        }
+    }
+}
+
 impl From<rulelink_model::Error> for Error {
     fn from(err: rulelink_model::Error) -> Self {
         use rulelink_model::Error as E;

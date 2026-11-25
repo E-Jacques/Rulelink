@@ -13,8 +13,9 @@ Work in an isolated git worktree, never in the main checkout. Name the branch af
 
 1. Open the worktree with the `EnterWorktree` tool, using the issue name as its `name` (for example `12-rules-format`). The tool switches the session into the worktree.
 2. Rename the worktree's branch to the convention if the tool chose another name: `git branch -m <feature|fix|support>/<issue-name>`.
-3. Run every later step from inside the worktree. At the end of step 9, leave it with `ExitWorktree` (`keep` while the pull request is open).
-4. Inside the worktree, write files with Write or Edit, and give Bash one plain command per call: no `cd`, no heredoc, no `python3 -` script. The harness refuses a compound command it cannot confirm stays inside the worktree, and a heredoc without input hangs the shell.
+3. If `git worktree add` or `EnterWorktree` fails because the branch is registered in a missing directory, run `git worktree prune`, then retry.
+4. Run every later step from inside the worktree. At the end of step 9, leave it with `ExitWorktree` (`keep` while the pull request is open).
+5. Inside the worktree, write files with Write or Edit, and give Bash one plain command per call: no `cd`, no heredoc, no `python3 -` script. The harness refuses a compound command it cannot confirm stays inside the worktree, and a heredoc without input hangs the shell.
 
 ## 2. Document first
 
@@ -57,6 +58,8 @@ Review in two passes, then record the findings.
 
 1. **Correctness pass**: run the `code-review` skill against the merge-base with `main`. Also check Rust idioms (ownership, needless clones, clippy) and the `Errors` section of `input-boundaries` (one type per cause, no catch-all arm, no blanket `From`, each message names the value or path at fault) and that the code still matches the documentation page from step 2.
 2. **Design pass**: start a fresh subagent with no history of the implementation. Give it only the diff, the plan note, the `strategic-programming` skill, the `input-boundaries` checklist and the list of dependent tickets. Ask it to report smells and unchecked boundary lines. A fresh context is not anchored on the code you just wrote.
+
+Reread every term of `GLOSSARY.md` and every section of `docs/architecture/` that the diff touches; update the ones the code now contradicts. Score the diff against `docs/agents/quality-rubric.md`.
 
 Run `cargo xtask arch` and `cargo deny check` as well; they catch what no reviewer should have to.
 

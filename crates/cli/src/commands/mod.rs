@@ -11,6 +11,7 @@ mod rules_add;
 mod rules_format;
 mod rules_lifecycle;
 mod rules_query;
+mod where_cmd;
 
 use init::InitArgs;
 use rulelink_app::Error;
@@ -20,6 +21,7 @@ use rulelink_app::runtime::{
 use rules_add::RulesAddArgs;
 use rules_lifecycle::{RuleRefArgs, RulesObsoleteArgs};
 use rules_query::{RulesListArgs, RulesSearchArgs};
+use where_cmd::WhereArgs;
 
 /// Command line grammar, derived by `clap`.
 #[derive(Debug, Parser)]
@@ -34,6 +36,8 @@ struct Cli {
 pub enum Command {
     /// Create `rulelink.toml` and an empty rules file in the current directory.
     Init(InitArgs),
+    /// List the code locations that cite a Rule.
+    Where(WhereArgs),
     /// Create, inspect and change Rules.
     Rules {
         /// What to do with Rules.
@@ -125,6 +129,7 @@ fn dispatch(args: CliArgs) -> Result<(), Error> {
             Ok(())
         }
         CliArgs::Run(Command::Init(args)) => init::run(&args),
+        CliArgs::Run(Command::Where(args)) => where_cmd::run(&args),
         CliArgs::Run(Command::Rules {
             action: RulesAction::Add(args),
         }) => rules_add::run(&args),

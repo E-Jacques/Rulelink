@@ -11,7 +11,9 @@ mod reject;
 use crate::{LifecycleError, Rule, RuleId, RuleSet, RuleStatus};
 
 impl RuleSet {
-    pub(crate) fn find(&self, id: &RuleId) -> Option<&Rule> {
+    /// The Rule named `id`, if the Source holds it.
+    #[must_use]
+    pub fn find(&self, id: &RuleId) -> Option<&Rule> {
         self.rules.iter().find(|r| &r.id == id)
     }
 
