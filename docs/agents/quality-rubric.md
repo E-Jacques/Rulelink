@@ -22,11 +22,19 @@ Used to compare two implementations of the same ticket, and to test changes to t
 - Invalid input, invalid configuration and unreadable Source are separate classes with separate exit codes.
 - A corrupted Source is never overwritten.
 
+## Readability
+
+- Every literal that carries a domain rule has a name (`NEGATION`, `TRAILING_PUNCTUATION`), not an inline `'!'` or a string list.
+- Every guard that is not obvious says why in one line (`NUL` marks a binary file).
+- A heuristic documents its known limits next to the code and in the architecture note.
+- No function needs scrolling to read; `clippy.toml` fails the build above 40 lines.
+
 ## Hygiene
 
 - Dependencies are declared in the workspace (`cargo xtask arch` passes).
 - Unit tests sit with the types; end-to-end tests cover exit codes and untouched files.
 - The commit and PR titles match what the diff contains.
+- A change to the grammar or to a behaviour of the domain updates `GLOSSARY.md` and the architecture note it contradicts.
 - Deferred findings name the dependent tickets they affect.
 
 ## How to use it
