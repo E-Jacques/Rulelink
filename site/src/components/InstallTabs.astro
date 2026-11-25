@@ -1,5 +1,6 @@
 ---
 import CopyButton from './CopyButton.astro';
+import './code.css';
 interface Tab { id: string; label: string; prompt?: string; cmd: string; platform?: 'linux' | 'mac' | 'win' | 'any' }
 interface Props { tabs: Tab[]; label?: string }
 const { tabs, label = 'Operating system' } = Astro.props;
