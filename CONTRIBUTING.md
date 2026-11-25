@@ -52,4 +52,4 @@ The full rules are in the [pull request skill](.agents/skills/create-pull-reques
 
 ## Documentation
 
-Public documentation for users lives in [docs/public](docs/public/concepts/rule-format.md). Contributor documentation lives in [docs](docs/README.md). Guidance for creating and editing public guides will be added here when it exists.
+Public documentation for users lives in [docs/public](docs/public/concepts/rule-format.md). Contributor documentation lives in [docs](docs/README.md). To create or edit a guide, follow the [public documentation skill](.agents/skills/public-documentation/SKILL.md). It sets the tone, the structure, the front matter and a review checklist, and the [guide template](.agents/skills/public-documentation/templates/guide-template.md) gives you a starting point. Run `moon run :docs-check` before you push.
