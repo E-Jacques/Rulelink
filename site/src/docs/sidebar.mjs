@@ -26,7 +26,7 @@ const NAVIGATION = [
   { label: 'CLI reference', entries: [{ dir: 'cli' }] },
   {
     label: 'Reference',
-    entries: [{ dir: 'developers' }, { dir: 'release-notes' }, { slug: 'glossary' }],
+    entries: [{ dir: 'developers' }, { dir: 'release-notes' }, { slug: 'reference/glossary' }],
   },
 ];
 
