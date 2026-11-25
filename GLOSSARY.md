@@ -28,7 +28,7 @@ _Avoid_: Export (for a Confluence page), sync
 The one line-oriented, sorted layout in which the Source file is always written, so independent edits touch different lines.
 
 **Identifier**:
-The permanent name of a Rule (e.g. `RULE-042`). Immutable: it is never changed, reassigned or reused, even after the Rule is rejected or obsolete.
+The permanent name of a Rule (e.g. `RULE-042`): an upper-case prefix (a letter, then upper-case letters, digits or `_`), one hyphen, then upper-case letters, digits or `_`. `RULE-042`, `BR-7` and `PRICING_V2-A1` are valid; `rule-042`, `RULE042`, `RULE-` and `1RULE-042` are not. Immutable: it is never changed, reassigned or reused, even after the Rule is rejected or obsolete.
 _Avoid_: Code, key, number
 
 ## Rule lifecycle
@@ -51,7 +51,7 @@ An identifier of an obsolete or rejected Rule. It is never allocated again.
 ## Linking
 
 **Annotation**:
-A `@rule <ID>` comment in code that states which Rule the nearby code implements.
+A `@rule <ID>` comment in code that states which Rule the nearby code implements. The `@rule` must sit in a comment and be followed by a space, then one or more Identifiers separated by spaces or commas; the list stops at the first token that is not an Identifier. See `docs/architecture/03-code-linking.md` §4.1 for the exact grammar and its limits.
 _Avoid_: Tag, link (as a noun for the comment)
 
 **Finding**:

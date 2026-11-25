@@ -79,6 +79,22 @@ Valid examples, all inside a comment:
  */
 ```
 
+#### MVP lexical rules
+
+The MVP scan is lexical (no syntax tree), so what counts as an annotation is defined by these rules, not by the language.
+
+**Valid identifier.** `PREFIX-SUFFIX`: a prefix that starts with an upper-case ASCII letter then continues with upper-case letters, digits or `_`; one hyphen; a non-empty suffix of upper-case letters, digits or `_`. Valid: `RULE-042`, `BR-7`, `PRICING_V2-A1`. Not valid: `rule-042` (lower case), `RULE042` (no hyphen), `RULE-` (empty suffix), `1RULE-042` (prefix starts with a digit), `RULE-04a`.
+
+**What makes `@rule` an annotation.**
+- `@rule` is followed by whitespace (`@rules` and `@ruleRULE-1` are not annotations) and by at least one valid identifier.
+- The identifiers are separated by spaces or commas. The list stops at the first token that is not an identifier (`--`, `*/`, `-->`, a note). A trailing `.`, `:`, `;`, `)`, `]`, `"` or `'` on an identifier is ignored.
+- `@rule` is in a comment, decided by the text before it on the same line:
+  - `//`, `#`, `--`, `/*` or `<!--` anywhere before it;
+  - `;` or `%` as the first non-blank character of the line (Lisp, ini, assembly, TeX, Matlab). Elsewhere they are code (`foo(); @rule X` is not an annotation);
+  - a line whose first non-blank character is `*` (continuation of a block comment).
+
+**Known limits.** The scan reads one line at a time. An opener inside a string literal earlier on the line (`"a // b" @rule RULE-1`) is taken for a comment. A multi-line block comment is recognised only on lines that start with `*`. These are accepted false positives, to be removed by the tree-sitter lexer (V2).
+
 - Several annotations per file, and one rule in several places, tests included, as the brief requires.
 - An annotation applies to its file and line. In V2, it is also attached to the symbol that follows (function, method, class).
 - An `@rule` without a valid identifier produces a `RL006` malformed annotation finding (04).

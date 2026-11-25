@@ -12,6 +12,8 @@ pub use error::Error;
 
 /// Name of the Rulelink-specific ignore file, in `.gitignore` syntax.
 const IGNORE_FILE: &str = ".rulelinkignore";
+/// The byte that marks a file as binary.
+const NUL: char = '\0';
 /// Files above this size are skipped: they are data or generated code, not hand-written code.
 const MAX_FILE_BYTES: u64 = 2 * 1024 * 1024;
 
@@ -66,7 +68,9 @@ pub fn scan(root: &Path, exclude: &[String]) -> Result<LinkIndex, Error> {
         let Ok(text) = String::from_utf8(bytes) else {
             continue;
         };
-        if text.contains('\0') {
+        // A NUL byte is valid UTF-8 but never in hand-written text: it marks a binary format
+        // (image, archive, database) that happens to decode, the same heuristic `grep` uses.
+        if text.contains(NUL) {
             continue;
         }
         index.add_file(&relative(root, path), &text);
@@ -74,7 +78,10 @@ pub fn scan(root: &Path, exclude: &[String]) -> Result<LinkIndex, Error> {
     Ok(index)
 }
 
-/// `path` relative to `root`, `/`-separated.
+/// `path` relative to `root`, always `/`-separated.
+///
+/// Built from path components rather than the raw string, so a Windows path (`a\\b.rs`) comes out
+/// as `a/b.rs` too: the same Location on every platform.
 fn relative(root: &Path, path: &Path) -> String {
     let rel = path.strip_prefix(root).unwrap_or(path);
     rel.components()

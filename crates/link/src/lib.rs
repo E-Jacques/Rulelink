@@ -10,9 +10,25 @@ use rulelink_model::RuleId;
 /// The tag that introduces an Annotation.
 const TAG: &str = "@rule";
 
-/// Openers of a comment in the common languages (`//`, `#`, `--`, `/* */`, `<!-- -->`, ...).
-/// A line that starts with `*` continues a block comment and counts too.
-const COMMENT_OPENERS: [&str; 7] = ["//", "#", "--", "/*", "<!--", ";", "%"];
+/// Comment openers recognised anywhere before the tag: they are rare enough in code that a
+/// trailing comment (`x = 1 # @rule ...`) is worth a few false positives inside string literals.
+const TRAILING_COMMENT_OPENERS: [&str; 5] = ["//", "#", "--", "/*", "<!--"];
+
+/// Comment openers recognised only at the start of a line (`;` in Lisp, ini and assembly, `%`
+/// in TeX and Matlab). Anywhere else they are code: statement end, modulo, a format string.
+const LEADING_COMMENT_OPENERS: [&str; 2] = [";", "%"];
+
+/// A line that starts with this continues a block comment (` * @rule ...`).
+const BLOCK_COMMENT_CONTINUATION: char = '*';
+
+/// Separates Identifiers in a list, besides whitespace.
+const IDENTIFIER_SEPARATOR: char = ',';
+
+/// Punctuation that may follow an Identifier in prose and is not part of it.
+const TRAILING_PUNCTUATION: [char; 7] = ['.', ':', ';', ')', ']', '"', '\''];
+
+/// Separates the prefix of an Identifier from its suffix.
+const IDENTIFIER_HYPHEN: char = '-';
 
 /// One place that cites a Rule.
 #[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord)]
@@ -51,23 +67,30 @@ fn line_identifiers(line: &str) -> Vec<RuleId> {
     ids
 }
 
+/// Whether the text before the tag puts it inside a comment.
+///
+/// Lexical, so approximate: an opener inside a string literal earlier on the line (`"a // b"`)
+/// still counts. A lone `<` or `/` is not an opener; only the whole opener (`<!--`, `//`) is.
 fn in_comment(before: &str) -> bool {
-    before.trim_start().starts_with('*') || COMMENT_OPENERS.iter().any(|o| before.contains(o))
+    let start = before.trim_start();
+    start.starts_with(BLOCK_COMMENT_CONTINUATION)
+        || LEADING_COMMENT_OPENERS.iter().any(|o| start.starts_with(o))
+        || TRAILING_COMMENT_OPENERS.iter().any(|o| before.contains(o))
 }
 
 /// The leading Identifiers of `text`, separated by spaces or commas; stops at anything else
 /// (`--`, `*/`, `-->`, a note).
 fn identifier_list(text: &str) -> impl Iterator<Item = RuleId> + '_ {
-    text.split(|c: char| c.is_whitespace() || c == ',')
+    text.split(|c: char| c.is_whitespace() || c == IDENTIFIER_SEPARATOR)
         .filter(|token| !token.is_empty())
-        .map(|token| token.trim_end_matches(['.', ':', ';', ')', ']', '"', '\'']))
+        .map(|token| token.trim_end_matches(TRAILING_PUNCTUATION))
         .map_while(|token| is_identifier(token).then(|| RuleId(token.to_owned())))
 }
 
 /// `PREFIX-SUFFIX`: an upper-case prefix like the ones `init` accepts, one hyphen, then
 /// upper-case letters, digits or `_`.
 fn is_identifier(token: &str) -> bool {
-    let Some((prefix, suffix)) = token.split_once('-') else {
+    let Some((prefix, suffix)) = token.split_once(IDENTIFIER_HYPHEN) else {
         return false;
     };
     let mut chars = prefix.chars();
@@ -166,6 +189,19 @@ mod tests {
         assert_eq!(ids("// @rule rule-1").len(), 0);
         assert_eq!(ids("// @rules RULE-1").len(), 0);
         assert_eq!(ids("// @ruleRULE-1").len(), 0);
+    }
+
+    #[test]
+    fn semicolon_and_percent_open_a_comment_only_at_the_start_of_a_line() {
+        assert_eq!(ids("  ; @rule RULE-1").len(), 1);
+        assert_eq!(ids("foo(); @rule RULE-1").len(), 0);
+        assert_eq!(ids("printf(\"100%\") @rule RULE-1").len(), 0);
+    }
+
+    #[test]
+    fn a_lone_angle_bracket_or_slash_is_not_an_opener() {
+        assert_eq!(ids("if a < b @rule RULE-1").len(), 0);
+        assert_eq!(ids("a / b @rule RULE-1").len(), 0);
     }
 
     #[test]
