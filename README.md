@@ -39,9 +39,9 @@ Rulelink is distributed as the `rulelink` command-line tool. The installation st
 
 **Public documentation** is for people who use Rulelink. It will be published at <https://rulelink.dev> (not live yet). Until then, read it in this repository:
 
-- [Rule format](docs/public/rule-format.md): what a Rule is and how it is named.
-- [Specify rules in code](docs/public/specify-rules-in-code.md): how to write an Annotation.
-- [CLI reference](crates/cli/docs/reference/init.md): one page per command, in the same folder.
+- [Rule format](docs/public/concepts/rule-format.md): what a Rule is and how it is named.
+- [Specify rules in code](docs/public/concepts/specify-rules-in-code.md): how to write an Annotation.
+- [CLI reference](docs/public/cli/init.md): one page per command, in the same folder.
 
 **Contributor documentation** is for people who build Rulelink. Start with the [documentation index](docs/README.md), then see the [product overview](docs/product/01-product-overview.md), the [global architecture](docs/architecture/00-global-architecture.md) and the [repository structure](docs/repository/01-repository-structure.md). Terms are defined in the [glossary](GLOSSARY.md).
 

@@ -52,4 +52,4 @@ The full rules are in the [pull request skill](.agents/skills/create-pull-reques
 
 ## Documentation
 
-Public documentation for users lives in [docs/public](docs/public/rule-format.md). Contributor documentation lives in [docs](docs/README.md). Guidance for creating and editing public guides will be added here when it exists.
+Public documentation for users lives in [docs/public](docs/public/concepts/rule-format.md). Contributor documentation lives in [docs](docs/README.md). Guidance for creating and editing public guides will be added here when it exists.
