@@ -1,0 +1,26 @@
+# Builds the public site and the crate reference into one folder, called by release.yml
+# (dist `host-jobs`). Nothing is published: the folder is uploaded as a workflow artifact,
+# and the site is then uploaded by hand.
+name: Docs bundle
+
+on:
+  workflow_call:
+    inputs:
+      plan:
+        description: dist plan (manifest JSON), unused for now but part of the dist contract
+        required: true
+        type: string
+
+jobs:
+  bundle:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+      - uses: moonrepo/setup-toolchain@v0
+      - run: moon run site:install site:build :api-docs :site-bundle
+      - uses: actions/upload-artifact@v4
+        with:
+          name: site-bundle
+          path: target/site
+          if-no-files-found: error
