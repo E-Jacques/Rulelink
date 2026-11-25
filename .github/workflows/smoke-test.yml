@@ -1,6 +1,7 @@
 # Smoke test of the built release artifacts, called by release.yml (dist `host-jobs`).
 # publish-npm and announce wait for it, so a broken build is never published to npm.
-# It installs nothing from the network: it runs the archives built in this very run,
+# It installs nothing from the network: it runs the archives built in this very run
+# and checks the installers built with them,
 # on a clean runner, the way a new user would: version, init, first check.
 name: Smoke test
 
@@ -68,6 +69,36 @@ jobs:
           "$RULELINK" init --template greenfield --id-prefix RULE --yes
           # An empty Source must pass, with a "no rules yet" message (exit code 0).
           "$RULELINK" check
+
+  installers:
+    name: shell and powershell installers
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          pattern: artifacts-*
+          path: dist-artifacts
+          merge-multiple: true
+      - name: Both installers are present
+        run: |
+          test -f dist-artifacts/rulelink-cli-installer.sh || { echo "missing shell installer"; ls dist-artifacts; exit 1; }
+          test -f dist-artifacts/rulelink-cli-installer.ps1 || { echo "missing PowerShell installer"; ls dist-artifacts; exit 1; }
+      - name: The shell installer parses
+        run: sh -n dist-artifacts/rulelink-cli-installer.sh
+      - name: The PowerShell installer parses
+        shell: pwsh
+        run: |
+          $errors = $null
+          [System.Management.Automation.Language.Parser]::ParseFile("$PWD/dist-artifacts/rulelink-cli-installer.ps1", [ref]$null, [ref]$errors) | Out-Null
+          if ($errors.Count -gt 0) { $errors | Out-String | Write-Error; exit 1 }
+      - name: Both installers fetch the archives built in this run
+        run: |
+          # The release does not exist yet (this job runs before hosting), so the installers
+          # cannot be run end to end here; check that they name the archives smoke (above) just ran.
+          for f in dist-artifacts/rulelink-cli-installer.sh dist-artifacts/rulelink-cli-installer.ps1; do
+            grep -q 'rulelink-cli-x86_64-unknown-linux-musl.tar.xz' "$f" || { echo "$f does not name the Linux archive"; exit 1; }
+            grep -q 'rulelink-cli-x86_64-pc-windows-msvc.zip' "$f" || { echo "$f does not name the Windows archive"; exit 1; }
+          done
 
   npm-package:
     name: npm package content
