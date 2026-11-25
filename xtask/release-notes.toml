@@ -1,0 +1,12 @@
+# Which Product each commit scope belongs to (GLOSSARY: Product). The Release notes are
+# organised by Product, never by crate, so crate names do not appear here as such.
+# The first Product is the CLI. A feat, fix, perf, deprecate or breaking commit whose scope
+# is neither mapped nor ignored fails the generation, so a new scope is a deliberate choice.
+
+# Scopes that never reach users: contributor tooling, site, agent skills, documentation.
+ignore = ["site", "xtask", "skills", "ia", "readme", "mvp", "glossary", "docs"]
+
+[[product]]
+id = "cli"
+title = "CLI"
+scopes = ["cli", "init", "rules", "where", "release"]

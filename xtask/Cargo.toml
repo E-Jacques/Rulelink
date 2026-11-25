@@ -13,3 +13,5 @@ workspace = true
 serde_json.workspace = true
 schemars.workspace = true
 rulelink-model = { workspace = true, features = ["schema"] }
+serde.workspace = true
+toml.workspace = true

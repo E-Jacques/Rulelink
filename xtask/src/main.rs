@@ -1,7 +1,8 @@
-//! Maintainer automation: `cargo xtask <arch|schemas|skills-lint|docs-check>`.
+//! Maintainer automation: `cargo xtask <arch|schemas|skills-lint|docs-check|release-notes>`.
 
 mod arch;
 mod docs;
+mod release_notes;
 mod schemas;
 mod skills;
 
@@ -14,7 +15,8 @@ fn main() -> ExitCode {
         Some("schemas") => schemas::run(args.next().as_deref() == Some("--check")),
         Some("skills-lint") => skills::run(),
         Some("docs-check") => docs::run(),
-        _ => Err("usage: cargo xtask <arch|schemas [--check]|skills-lint|docs-check>".to_string()),
+        Some("release-notes") => release_notes::run(args.next().as_deref() == Some("--check")),
+        _ => Err("usage: cargo xtask <arch|schemas [--check]|skills-lint|docs-check|release-notes [--check]>".to_string()),
     };
     match result {
         Ok(()) => ExitCode::SUCCESS,
