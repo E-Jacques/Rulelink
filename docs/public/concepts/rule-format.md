@@ -1,6 +1,6 @@
 # Rule format
 
-What a Rule is, and how it is named. For the commands that create and change Rules, see the [CLI reference](../../crates/cli/docs/reference/).
+What a Rule is, and how it is named. For the commands that create and change Rules, see the [CLI reference](../cli/).
 
 ## Identifier
 

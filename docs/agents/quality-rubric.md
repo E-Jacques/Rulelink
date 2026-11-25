@@ -35,7 +35,7 @@ Used to compare two implementations of the same ticket, and to test changes to t
 - Unit tests sit with the types; end-to-end tests cover exit codes and untouched files.
 - The commit and PR titles match what the diff contains.
 - A change to the grammar or to a behaviour of the domain updates `GLOSSARY.md` and the architecture note it contradicts.
-- A documentation page covers only the code it sits next to: a command page describes the command, and shared behaviour lives in `docs/public/`.
+- A documentation page covers only the code it documents: a command page describes the command, and shared behaviour lives in `docs/public/concepts/`.
 - Deferred findings name the dependent tickets they affect.
 
 ## How to use it
