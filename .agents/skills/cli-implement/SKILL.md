@@ -40,7 +40,7 @@ Read `GLOSSARY.md` and the ADRs in `docs/adr/`, and read the `codebase-design` s
 
 Use the `tdd` skill (red → green) at the seams you planned. Run the smoke tests from step 3 until they pass.
 
-Gate before every commit from here on: `cargo fmt --all`, `cargo test --workspace` and `cargo clippy --workspace --all-targets` all pass, with no new clippy warning in the files you touched.
+Gate before every push from here on: `moon ci` passes. It is the command CI runs, so a warning it reports is yours to fix, whichever file it sits in. While iterating, `cargo fmt --all`, `cargo test --workspace` and `cargo clippy --workspace --all-targets` give faster feedback.
 
 Commit: `feat(cli): …`
 
