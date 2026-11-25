@@ -3,3 +3,4 @@
 export const SITE_URL = 'https://rulelink.dev';
 export const REPO_URL = 'https://github.com/E-Jacques/Rulelink';
 export const DOCS_SOURCE = '../docs/public'; // relative to site/
+export const EDIT_BRANCH = 'main';
