@@ -1,5 +1,6 @@
 ---
 title: rulelink rules add
+description: Create a new Rule with the status proposed and print its Identifier.
 since: 0.1.0
 ---
 

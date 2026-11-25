@@ -1,3 +1,8 @@
+---
+title: Rule format
+description: What a Rule is, how it is named and which fields it has.
+---
+
 # Rule format
 
 What a Rule is, and how it is named. For the commands that create and change Rules, see the [CLI reference](../cli/).

@@ -1,3 +1,8 @@
+---
+title: Specify Rules in code
+description: How an Annotation in a comment links a Rule to the code that implements it.
+---
+
 # Specify Rules in code
 
 You link a Rule to the code that implements it by writing an Annotation in a comment. Rulelink reads Annotations as plain text: nothing is enforced by your compiler, and the language does not matter. `rulelink where <ID>` lists every Annotation that cites a Rule.

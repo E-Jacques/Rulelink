@@ -54,6 +54,10 @@ pub fn check(docs_root: &Path, commands: &[Command]) -> Vec<String> {
     let mut pages = Vec::new();
     collect_pages(docs_root, &mut pages);
     for page in pages {
+        let name = page_name(docs_root, &page);
+        if let Ok(text) = fs::read_to_string(&page) {
+            check_front_matter(&name, &text, &mut problems);
+        }
         check_links(docs_root, &page, &mut problems);
     }
     problems
@@ -66,7 +70,6 @@ fn check_command(docs_root: &Path, command: &Command, problems: &mut Vec<String>
         problems.push(format!("`{typed}` has no page: expected {relative}"));
         return;
     };
-    check_front_matter(&relative, &text, problems);
     for option in &command.options {
         if !text.contains(&format!("`{option}`")) {
             problems.push(format!(
@@ -76,15 +79,37 @@ fn check_command(docs_root: &Path, command: &Command, problems: &mut Vec<String>
     }
 }
 
-/// A CLI page starts with a front matter holding `title` and a `since` version.
+/// The front matter fields a page must fill: `title` and `description` everywhere,
+/// plus `since` on CLI pages. Guides need nothing more for now.
+fn required_fields(relative: &str) -> Vec<&'static str> {
+    let mut fields = vec!["title", "description"];
+    if relative.starts_with("cli/") {
+        fields.push("since");
+    }
+    fields
+}
+
+/// Splits a page into its front matter and the Markdown body.
+fn split_front_matter(text: &str) -> Result<(&str, &str), &'static str> {
+    let rest = text.strip_prefix("---\n").ok_or("missing front matter")?;
+    if let Some(body) = rest.strip_prefix("---") {
+        return Ok(("", body));
+    }
+    let end = rest
+        .find("\n---")
+        .ok_or("front matter is not closed by `---`")?;
+    Ok((&rest[..end], &rest[end + 4..]))
+}
+
+/// A page starts with a front matter holding its required fields.
 fn check_front_matter(relative: &str, text: &str, problems: &mut Vec<String>) {
-    let Some(rest) = text.strip_prefix("---\n") else {
-        problems.push(format!(
-            "{relative}: missing front matter (`title` and `since`)"
-        ));
-        return;
+    let front = match split_front_matter(text) {
+        Ok((front, _)) => front,
+        Err(reason) => {
+            problems.push(format!("{relative}: {reason} (`title` and `description`)"));
+            return;
+        }
     };
-    let front = rest.split("\n---").next().unwrap_or_default();
     let field = |name: &str| {
         front
             .lines()
@@ -92,15 +117,17 @@ fn check_front_matter(relative: &str, text: &str, problems: &mut Vec<String>) {
             .map(str::trim)
             .filter(|value| !value.is_empty())
     };
-    if field("title").is_none() {
-        problems.push(format!("{relative}: front matter field `title` is missing"));
+    for name in required_fields(relative) {
+        if field(name).is_none() {
+            problems.push(format!(
+                "{relative}: front matter field `{name}` is missing or empty"
+            ));
+        }
     }
-    match field("since") {
-        None => problems.push(format!("{relative}: front matter field `since` is missing")),
-        Some(version) if !is_version(version) => problems.push(format!(
+    if let Some(version) = field("since").filter(|v| !is_version(v)) {
+        problems.push(format!(
             "{relative}: front matter `since` must be a version like 0.1.0, found `{version}`"
-        )),
-        Some(_) => {}
+        ));
     }
 }
 
@@ -127,16 +154,74 @@ fn collect_pages(dir: &Path, pages: &mut Vec<PathBuf>) {
     }
 }
 
+fn page_name(docs_root: &Path, page: &Path) -> String {
+    page.strip_prefix(docs_root)
+        .unwrap_or(page)
+        .display()
+        .to_string()
+}
+
+/// Whether the Markdown page at `target` has a heading whose slug is `anchor`.
+/// Only Markdown pages are checked: other targets are given the benefit of the doubt.
+fn has_heading(target: &Path, own_text: &str, own_page: &Path, anchor: &str) -> bool {
+    if target.extension().is_none_or(|ext| ext != "md") {
+        return true;
+    }
+    let other;
+    let text = if target == own_page {
+        own_text
+    } else {
+        match fs::read_to_string(target) {
+            Ok(read) => {
+                other = read;
+                &other
+            }
+            Err(_) => return true,
+        }
+    };
+    heading_slugs(text).iter().any(|slug| slug == anchor)
+}
+
+/// The GitHub anchors of the headings of a page, repeated headings getting `-1`, `-2`, ...
+fn heading_slugs(text: &str) -> Vec<String> {
+    let body = split_front_matter(text).map_or(text, |(_, body)| body);
+    let mut slugs: Vec<String> = Vec::new();
+    let mut in_fence = false;
+    for line in body.lines() {
+        if line.trim_start().starts_with("```") {
+            in_fence = !in_fence;
+            continue;
+        }
+        let hashes = line.chars().take_while(|c| *c == '#').count();
+        let title = line[hashes..].strip_prefix(' ');
+        if in_fence || !(1..=6).contains(&hashes) || title.is_none() {
+            continue;
+        }
+        let base: String = title
+            .unwrap_or_default()
+            .trim()
+            .to_lowercase()
+            .chars()
+            .filter(|c| c.is_alphanumeric() || matches!(c, ' ' | '-' | '_'))
+            .map(|c| if c == ' ' { '-' } else { c })
+            .collect();
+        let mut slug = base.clone();
+        let mut count = 0;
+        while slugs.contains(&slug) {
+            count += 1;
+            slug = format!("{base}-{count}");
+        }
+        slugs.push(slug);
+    }
+    slugs
+}
+
 /// Every relative link of a page must point to a file that exists.
 fn check_links(docs_root: &Path, page: &Path, problems: &mut Vec<String>) {
     let Ok(text) = fs::read_to_string(page) else {
         return;
     };
-    let name = page
-        .strip_prefix(docs_root)
-        .unwrap_or(page)
-        .display()
-        .to_string();
+    let name = page_name(docs_root, page);
     let mut in_fence = false;
     for line in text.lines() {
         if line.trim_start().starts_with("```") {
@@ -146,14 +231,22 @@ fn check_links(docs_root: &Path, page: &Path, problems: &mut Vec<String>) {
             continue;
         }
         for target in link_targets(line) {
-            let path = target.split('#').next().unwrap_or_default();
+            let (path, anchor) = target.split_once('#').unwrap_or((target, ""));
             let external = target.contains("://") || target.starts_with("mailto:");
-            if path.is_empty() || external {
+            if external || (path.is_empty() && anchor.is_empty()) {
                 continue;
             }
-            let resolved = page.parent().unwrap_or(docs_root).join(path);
+            let resolved = if path.is_empty() {
+                page.to_path_buf()
+            } else {
+                page.parent().unwrap_or(docs_root).join(path)
+            };
             if !resolved.exists() {
                 problems.push(format!("{name}: broken link to `{target}`"));
+            } else if !anchor.is_empty() && !has_heading(&resolved, &text, page, anchor) {
+                problems.push(format!(
+                    "{name}: link to `{target}` points to a heading that does not exist"
+                ));
             }
         }
     }
@@ -222,7 +315,7 @@ fn help_of(path: &[String]) -> Result<String, String> {
 mod tests {
     use super::*;
 
-    const PAGE: &str = "---\ntitle: rulelink init\nsince: 0.1.0\n---\n\n# rulelink init\n\n## Options\n\n| name | description | example |\n| --- | --- | --- |\n| `--id-prefix` | Prefix. | `--id-prefix BR` |\n";
+    const PAGE: &str = "---\ntitle: rulelink init\ndescription: Set up Rulelink in a project.\nsince: 0.1.0\n---\n\n# rulelink init\n\n## Options\n\n| name | description | example |\n| --- | --- | --- |\n| `--id-prefix` | Prefix. | `--id-prefix BR` |\n";
 
     fn init_command() -> Command {
         Command {
@@ -255,7 +348,11 @@ mod tests {
 
     #[test]
     fn a_command_without_a_page_fails() {
-        let found = problems("nopage", &[("index.md", "# Hi\n")], &[init_command()]);
+        let found = problems(
+            "nopage",
+            &[("index.md", "---\ntitle: Hi\ndescription: Home.\n---\n")],
+            &[init_command()],
+        );
         assert_eq!(found.len(), 1, "{found:?}");
         assert!(found[0].contains("rulelink init") && found[0].contains("cli/init.md"));
     }
@@ -313,11 +410,95 @@ mod tests {
             "goodlink",
             &[
                 ("cli/init.md", &page),
-                ("concepts/rule-format.md", "# Rule format\n"),
+                ("concepts/rule-format.md", &concept("## Identifier\n")),
             ],
             &[init_command()],
         );
         assert!(found.is_empty(), "{found:?}");
+    }
+
+    /// A concept page with valid front matter and the given body.
+    fn concept(body: &str) -> String {
+        format!(
+            "---\ntitle: Rule format\ndescription: What a Rule is.\n---\n\n# Rule format\n\n{body}"
+        )
+    }
+
+    #[test]
+    fn every_page_needs_a_title() {
+        let page = "---\ndescription: Something.\n---\n\n# Hi\n";
+        let found = problems("p-notitle", &[("index.md", page)], &[]);
+        assert_eq!(found.len(), 1, "{found:?}");
+        assert!(found[0].contains("index.md") && found[0].contains("`title`"));
+    }
+
+    #[test]
+    fn every_page_needs_a_description() {
+        let page = "---\ntitle: Hi\n---\n\n# Hi\n";
+        let found = problems("p-nodesc", &[("index.md", page)], &[]);
+        assert_eq!(found.len(), 1, "{found:?}");
+        assert!(found[0].contains("index.md") && found[0].contains("`description`"));
+
+        let empty = "---\ntitle: Hi\ndescription:   \n---\n\n# Hi\n";
+        let found = problems("p-emptydesc", &[("index.md", empty)], &[]);
+        assert!(
+            found.iter().any(|m| m.contains("`description`")),
+            "{found:?}"
+        );
+    }
+
+    #[test]
+    fn a_page_without_front_matter_or_with_an_unclosed_one_fails() {
+        let found = problems("p-nofm", &[("a.md", "# Hi\n")], &[]);
+        assert!(found[0].contains("a.md") && found[0].contains("front matter"));
+        let found = problems("p-unclosed", &[("a.md", "---\ntitle: Hi\n# Hi\n")], &[]);
+        assert!(found.iter().any(|m| m.contains("not closed")), "{found:?}");
+    }
+
+    #[test]
+    fn a_guide_is_checked_like_any_page() {
+        let found = problems(
+            "guide",
+            &[("guides/write.md", "---\ntitle: Write\n---\n")],
+            &[],
+        );
+        assert!(
+            found.iter().any(|m| m.contains("`description`")),
+            "{found:?}"
+        );
+    }
+
+    #[test]
+    fn a_missing_anchor_in_another_page_fails() {
+        let page = format!("{PAGE}\nSee [format](../concepts/rule-format.md#nowhere).\n");
+        let found = problems(
+            "anchor",
+            &[
+                ("cli/init.md", &page),
+                ("concepts/rule-format.md", &concept("## Identifier\n")),
+            ],
+            &[init_command()],
+        );
+        assert_eq!(found.len(), 1, "{found:?}");
+        assert!(found[0].contains("cli/init.md") && found[0].contains("#nowhere"));
+    }
+
+    #[test]
+    fn a_missing_anchor_in_the_same_page_fails() {
+        let page = format!("{PAGE}\nSee [here](#gone).\n");
+        let found = problems("self", &[("cli/init.md", &page)], &[init_command()]);
+        assert_eq!(found.len(), 1, "{found:?}");
+        assert!(found[0].contains("#gone"));
+    }
+
+    #[test]
+    fn anchors_follow_the_github_slug_rules() {
+        let body = "## Exit codes & more\n\n## `--id-prefix`\n\n## Twice\n\n## Twice\n\n```\n# Not a heading\n```\n";
+        let links = "[a](#exit-codes--more) [b](#--id-prefix) [c](#twice) [d](#twice-1) [e](#not-a-heading)";
+        let page = concept(&format!("{body}\n{links}\n"));
+        let found = problems("slug", &[("concepts/x.md", &page)], &[]);
+        assert_eq!(found.len(), 1, "{found:?}");
+        assert!(found[0].contains("#not-a-heading"));
     }
 
     #[test]

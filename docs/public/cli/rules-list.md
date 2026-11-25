@@ -1,5 +1,6 @@
 ---
 title: rulelink rules list
+description: List the Rules of the Source, optionally filtered by status.
 since: 0.1.0
 ---
 
