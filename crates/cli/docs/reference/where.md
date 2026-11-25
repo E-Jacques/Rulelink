@@ -1,8 +1,6 @@
 # rulelink where
 
-Lists the places in your code that cite a Rule, one `file:line` per Annotation. It finds `@rule <ID>` Annotations in the comments of your files, whatever the language (`//`, `#`, `--`, `/* */`, `<!-- -->`, …), tests included. Files ignored by `.gitignore`, `.ignore` or `.rulelinkignore`, and files matching `scan.exclude` in `rulelink.toml`, are skipped, as are hidden files, binary files, files that are not UTF-8 and files over 2 MB. Run it from the project root.
-
-An Annotation is `@rule` in a comment, then a space and one or more Identifiers separated by spaces or commas (`// @rule RULE-042, RULE-043`). An Identifier is an upper-case prefix, a hyphen, then upper-case letters, digits or `_` (`RULE-042`, `BR-7`); `rule-042` or `RULE042` are not cited. `;` and `%` open a comment only at the start of a line. See the architecture note on code linking for the full grammar and its limits.
+Lists the places in your code that cite a Rule, one `file:line` per Annotation, tests included. Run it from the project root. What counts as an Annotation, and which files are scanned, is described in [Specify Rules in code](../../../../docs/public/specify-rules-in-code.md).
 
 ## Example
 

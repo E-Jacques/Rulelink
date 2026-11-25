@@ -51,7 +51,7 @@ An identifier of an obsolete or rejected Rule. It is never allocated again.
 ## Linking
 
 **Annotation**:
-A `@rule <ID>` comment in code that states which Rule the nearby code implements. The `@rule` must sit in a comment and be followed by a space, then one or more Identifiers separated by spaces or commas; the list stops at the first token that is not an Identifier. See `docs/architecture/03-code-linking.md` §4.1 for the exact grammar and its limits.
+A `@rule <ID>` comment in code that states which Rule the nearby code implements. The `@rule` must sit in a comment and be followed by a space, then one or more Identifiers separated by spaces or commas; the list stops at the first token that is not an Identifier. See `docs/public/specify-rules-in-code.md` for what is valid and its limits.
 _Avoid_: Tag, link (as a noun for the comment)
 
 **Finding**:
