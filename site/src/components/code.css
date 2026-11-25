@@ -1,0 +1,8 @@
+/* Shared by CodeBlock and InstallTabs. */
+.rl-code { border: 1px solid var(--rl-border-subtle); border-radius: var(--rl-radius-md); background: var(--rl-surface-200); overflow: hidden; margin-block: var(--rl-space-4); }
+.rl-code-head { display: flex; justify-content: space-between; align-items: center; gap: var(--rl-space-2); padding: 4px 4px 4px 14px; border-bottom: 1px solid var(--rl-border-subtle); font-size: 12px; color: var(--rl-ink-subtle); }
+.rl-mono { font-family: var(--rl-font-mono); }
+.rl-code-pre { margin: 0; padding: 14px; font-family: var(--rl-font-mono); font-size: 13.5px; line-height: 22px; overflow-x: auto; color: var(--rl-ink); background: transparent; }
+.rl-code-pre .rl-out { color: var(--rl-ink-muted); user-select: none; }
+.rl-code-pre .rl-ok { color: var(--rl-success-text); font-weight: 600; }
+.rl-code-pre .rl-ann { color: var(--rl-brand-text); font-weight: 600; }
