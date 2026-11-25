@@ -290,16 +290,6 @@ jobs:
       plan: ${{ needs.plan.outputs.val }}
     secrets: inherit
 
-  custom-docs-bundle:
-    needs:
-      - plan
-      - build-local-artifacts
-      - build-global-artifacts
-    uses: ./.github/workflows/docs-bundle.yml
-    with:
-      plan: ${{ needs.plan.outputs.val }}
-    secrets: inherit
-
   publish-npm:
     needs:
       - plan
@@ -335,7 +325,6 @@ jobs:
       - host
       - publish-npm
       - custom-smoke-test
-      - custom-docs-bundle
     # use "always() && ..." to allow us to wait for all publish jobs while
     # still allowing individual publish jobs to skip themselves (for prereleases).
     # "host" however must run to completion, no skipping allowed!
