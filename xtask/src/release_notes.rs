@@ -386,17 +386,39 @@ pub fn render_rss(product: &Product, releases: &[Release], site_url: &str) -> St
     for release in releases {
         let heading = release.heading();
         let link = format!("{page}#{}", slug(&heading));
+        let html = release_html(release);
+        let guid = guid(release, &link, &html);
         let _ = write!(
             out,
-            "<item>\n<title>Rulelink {} {}</title>\n<link>{link}</link>\n<guid isPermaLink=\"true\">{link}</guid>\n<pubDate>{}</pubDate>\n<description>{}</description>\n</item>\n",
+            "<item>\n<title>Rulelink {} {}</title>\n<link>{link}</link>\n{guid}\n<pubDate>{}</pubDate>\n<description>{}</description>\n</item>\n",
             escape_xml(&product.title),
             escape_xml(&heading),
             release.rfc_date,
-            escape_xml(&release_html(release)),
+            escape_xml(&html),
         );
     }
     out.push_str("</channel>\n</rss>\n");
     out
+}
+
+/// A released version never changes, so its link is a stable guid. The Unreleased item
+/// changes with every merge: its guid carries a hash of the content so readers see it as new.
+fn guid(release: &Release, link: &str, html: &str) -> String {
+    if release.version.is_some() {
+        format!("<guid isPermaLink=\"true\">{link}</guid>")
+    } else {
+        format!(
+            "<guid isPermaLink=\"false\">{link}-{:016x}</guid>",
+            fnv1a(html)
+        )
+    }
+}
+
+/// FNV-1a, a fixed hash so the generated feed is the same on every machine and toolchain.
+fn fnv1a(text: &str) -> u64 {
+    text.bytes().fold(0xcbf2_9ce4_8422_2325, |hash, byte| {
+        (hash ^ u64::from(byte)).wrapping_mul(0x0100_0000_01b3)
+    })
 }
 
 fn release_html(release: &Release) -> String {
@@ -704,6 +726,26 @@ mod tests {
         assert!(rss.contains("href=\"https://rulelink.dev/release-notes/cli.xml\""));
         assert!(rss.contains("a &amp;amp; b"));
         assert!(rss.contains("<pubDate>Wed, 25 Nov 2026 10:00:00 +0100</pubDate>"));
+    }
+
+    #[test]
+    fn the_unreleased_item_gets_a_new_guid_when_its_content_changes() {
+        let product = config().products[0].clone();
+        let guid = |commits: &[Commit]| {
+            let rss = render_rss(&product, &cli(commits), "https://rulelink.dev");
+            let start = rss.find("<guid").expect("guid");
+            let end = rss[start..].find("</guid>").expect("end of guid");
+            rss[start..start + end].to_string()
+        };
+        let one = guid(&[commit("feat(cli): one", "", None)]);
+        let same = guid(&[commit("feat(cli): one", "", None)]);
+        let two = guid(&[
+            commit("feat(cli): two", "", None),
+            commit("feat(cli): one", "", None),
+        ]);
+        assert_eq!(one, same);
+        assert_ne!(one, two);
+        assert!(one.contains("isPermaLink=\"false\""));
     }
 
     #[test]
