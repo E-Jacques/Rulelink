@@ -1,5 +1,6 @@
 ---
 title: rulelink rules search
+description: Find the Rules that contain a keyword, ignoring case and accents.
 since: 0.1.0
 ---
 

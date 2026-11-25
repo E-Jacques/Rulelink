@@ -1,5 +1,6 @@
 ---
 title: rulelink rules reject
+description: Decline a proposed Rule so that it is not proposed again.
 since: 0.1.0
 ---
 

@@ -1,5 +1,6 @@
 ---
 title: rulelink rules approve
+description: Mark a proposed Rule as validated once a human has reviewed it.
 since: 0.1.0
 ---
 
