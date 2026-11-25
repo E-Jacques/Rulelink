@@ -31,9 +31,16 @@ Rulelink reads these comments, so a Rule can be traced to its code and back.
 
 ## Installation
 
-Rulelink is distributed as the `rulelink` command-line tool. The installation steps for each operating system are on the documentation site, which owns this section:
+No release is published yet, so these commands will work once the first release is out. Details and a check step: [Installation](docs/public/installation.md).
 
-<https://rulelink.dev/get-started/installation/> (the site is being set up and may not be live yet)
+```sh
+# macOS and Linux
+curl --proto '=https' --tlsv1.2 -LsSf https://github.com/E-Jacques/rulelink/releases/latest/download/rulelink-cli-installer.sh | sh
+# Windows (PowerShell)
+powershell -ExecutionPolicy Bypass -c "irm https://github.com/E-Jacques/rulelink/releases/latest/download/rulelink-cli-installer.ps1 | iex"
+# Any system with Node.js
+npm install -g @rulelink-cli/rulelink-cli
+```
 
 ## Documentation
 
