@@ -1,5 +1,6 @@
 ---
 title: rulelink init
+description: Set up Rulelink in a project by creating its configuration and an empty rules file.
 since: 0.1.0
 ---
 

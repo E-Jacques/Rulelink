@@ -1,5 +1,6 @@
 ---
 title: rulelink rules obsolete
+description: Retire a validated Rule that no longer applies, optionally naming its replacement.
 since: 0.1.0
 ---
 

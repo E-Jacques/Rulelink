@@ -15,7 +15,7 @@ Start from [templates/cli-documentation-template.md](templates/cli-documentation
 
 ## Front matter
 
-Every page starts with `title` (the command as typed) and `since`, the version of Rulelink that first had the command (`0.1.0`). Write `since` by hand when you create the page; never change it afterwards.
+Every page starts with `title` (the command as typed), `description` (one sentence saying what the command does) and `since`, the version of Rulelink that first had the command (`0.1.0`). Write `since` by hand when you create the page; never change it afterwards.
 
 ## Sections
 

@@ -1,5 +1,6 @@
 ---
 title: rulelink where
+description: List the places in your code that cite a Rule.
 since: 0.1.0
 ---
 

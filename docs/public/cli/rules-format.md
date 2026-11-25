@@ -1,5 +1,6 @@
 ---
 title: rulelink rules format
+description: Rewrite the rules file into Canonical form, for example after a Git merge.
 since: 0.1.0
 ---
 
