@@ -1,6 +1,6 @@
 ---
 title: CLI reference
-description: Find the page of each rulelink command and its options.
+description: Find the page of every rulelink command.
 since: 0.1.0
 ---
 
