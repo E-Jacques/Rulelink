@@ -1,4 +1,3 @@
-use std::cmp::Ordering;
 use std::collections::BTreeMap;
 
 use serde::{Deserialize, Serialize};
@@ -80,7 +79,7 @@ impl RuleSet {
             .filter(|r| status.is_none_or(|s| r.status == s))
             .filter(|r| text.is_none_or(|t| r.contains(t)))
             .collect();
-        found.sort_by(|a, b| natural_cmp(&a.id.0, &b.id.0));
+        found.sort_by(|a, b| a.id.natural_cmp(&b.id));
         found
     }
 
@@ -92,8 +91,8 @@ impl RuleSet {
     #[must_use]
     pub fn to_canonical(&self) -> String {
         let mut sorted = self.clone();
-        sorted.rules.sort_by(|a, b| natural_cmp(&a.id.0, &b.id.0));
-        sorted.retired.sort_by(|a, b| natural_cmp(&a.0, &b.0));
+        sorted.rules.sort_by(|a, b| a.id.natural_cmp(&b.id));
+        sorted.retired.sort_by(RuleId::natural_cmp);
         let mut out = serde_json::to_string_pretty(&sorted)
             .expect("a RuleSet always serialises: string keys, no custom serialisers");
         out.push('\n');
@@ -105,41 +104,6 @@ impl RuleSet {
     pub fn is_canonical(&self, text: &str) -> bool {
         text == self.to_canonical()
     }
-}
-
-/// Compares strings so that digit runs compare by value (`RULE-2` < `RULE-10`).
-fn natural_cmp(a: &str, b: &str) -> Ordering {
-    let (mut a, mut b) = (a.chars().peekable(), b.chars().peekable());
-    loop {
-        match (a.peek().copied(), b.peek().copied()) {
-            (None, None) => return Ordering::Equal,
-            (None, Some(_)) => return Ordering::Less,
-            (Some(_), None) => return Ordering::Greater,
-            (Some(x), Some(y)) if x.is_ascii_digit() && y.is_ascii_digit() => {
-                let (na, nb) = (take_digits(&mut a), take_digits(&mut b));
-                let (ta, tb) = (na.trim_start_matches('0'), nb.trim_start_matches('0'));
-                let ord = ta.len().cmp(&tb.len()).then_with(|| ta.cmp(tb));
-                if ord != Ordering::Equal {
-                    return ord;
-                }
-            }
-            (Some(x), Some(y)) => {
-                if x != y {
-                    return x.cmp(&y);
-                }
-                a.next();
-                b.next();
-            }
-        }
-    }
-}
-
-fn take_digits(it: &mut std::iter::Peekable<std::str::Chars<'_>>) -> String {
-    let mut s = String::new();
-    while let Some(c) = it.next_if(char::is_ascii_digit) {
-        s.push(c);
-    }
-    s
 }
 
 #[cfg(test)]

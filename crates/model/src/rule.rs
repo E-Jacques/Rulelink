@@ -1,3 +1,5 @@
+use std::cmp::Ordering;
+
 use serde::{Deserialize, Serialize};
 
 /// Permanent identifier of a rule (e.g. `RULE-042`).
@@ -18,6 +20,20 @@ impl RuleId {
         } else {
             Ok(Self(trimmed.to_owned()))
         }
+    }
+
+    /// The order Identifiers are listed in: digit runs compare by value, so `RULE-2` comes
+    /// before `RULE-10`. Not [`Ord`]: `RULE-2` and `RULE-02` are equal here, yet different.
+    ///
+    /// ```
+    /// use rulelink_model::RuleId;
+    ///
+    /// let id = |raw: &str| RuleId(raw.to_owned());
+    /// assert!(id("RULE-2").natural_cmp(&id("RULE-10")).is_lt());
+    /// ```
+    #[must_use]
+    pub fn natural_cmp(&self, other: &Self) -> Ordering {
+        natural_cmp(&self.0, &other.0)
     }
 }
 
@@ -136,6 +152,41 @@ pub struct Rule {
     /// Replacement of an obsolete rule.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub superseded_by: Option<RuleId>,
+}
+
+/// Compares strings so that digit runs compare by value (`RULE-2` < `RULE-10`).
+fn natural_cmp(a: &str, b: &str) -> Ordering {
+    let (mut a, mut b) = (a.chars().peekable(), b.chars().peekable());
+    loop {
+        match (a.peek().copied(), b.peek().copied()) {
+            (None, None) => return Ordering::Equal,
+            (None, Some(_)) => return Ordering::Less,
+            (Some(_), None) => return Ordering::Greater,
+            (Some(x), Some(y)) if x.is_ascii_digit() && y.is_ascii_digit() => {
+                let (na, nb) = (take_digits(&mut a), take_digits(&mut b));
+                let (ta, tb) = (na.trim_start_matches('0'), nb.trim_start_matches('0'));
+                let ord = ta.len().cmp(&tb.len()).then_with(|| ta.cmp(tb));
+                if ord != Ordering::Equal {
+                    return ord;
+                }
+            }
+            (Some(x), Some(y)) => {
+                if x != y {
+                    return x.cmp(&y);
+                }
+                a.next();
+                b.next();
+            }
+        }
+    }
+}
+
+fn take_digits(it: &mut std::iter::Peekable<std::str::Chars<'_>>) -> String {
+    let mut s = String::new();
+    while let Some(c) = it.next_if(char::is_ascii_digit) {
+        s.push(c);
+    }
+    s
 }
 
 #[cfg(test)]

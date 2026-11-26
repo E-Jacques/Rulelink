@@ -83,7 +83,12 @@ fn page() -> String {
 #[test]
 fn the_quickstart_runs_as_written() {
     let steps = steps(&page());
-    for command in ["rulelink init", "rulelink rules add", "rulelink where"] {
+    for command in [
+        "rulelink init",
+        "rulelink rules add",
+        "rulelink where",
+        "rulelink check",
+    ] {
         assert!(
             steps.iter().any(|s| s.command.starts_with(command)),
             "the page has no `{command}` step: {steps:?}"
@@ -98,9 +103,9 @@ fn the_quickstart_runs_as_written() {
 
 #[test]
 fn a_command_the_cli_rejects_is_a_divergence() {
-    let page = "```console\n$ rulelink init\nInitialised Rulelink: wrote rulelink.toml and rules/rules.json\n$ rulelink check\n```\n";
+    let page = "```console\n$ rulelink init\nInitialised Rulelink: wrote rulelink.toml and rules/rules.json\n$ rulelink bogus\n```\n";
     let result = replay(&Repo::new(), &steps(page));
-    assert!(result.is_err_and(|e| e.contains("rulelink check")));
+    assert!(result.is_err_and(|e| e.contains("rulelink bogus")));
 }
 
 #[test]

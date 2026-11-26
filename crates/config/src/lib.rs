@@ -2,8 +2,10 @@
 
 mod error;
 
+use std::collections::BTreeMap;
 use std::path::{Component, Path, PathBuf};
 
+use rulelink_check::{Code, Level, Levels};
 use serde::Deserialize;
 
 pub use error::Error;
@@ -39,6 +41,8 @@ pub struct Config {
     pub source_path: PathBuf,
     /// `.gitignore`-style patterns of files the code scan skips (`[scan] exclude`).
     pub scan_exclude: Vec<String>,
+    /// The levels of the Findings that `[check.levels]` sets.
+    pub check_levels: Levels,
 }
 
 #[derive(Deserialize)]
@@ -47,6 +51,14 @@ struct RawConfig {
     source: Option<RawSource>,
     rules: Option<RawRules>,
     scan: Option<RawScan>,
+    check: Option<RawCheck>,
+}
+
+/// Unknown keys are refused: a setting such as a per-path override must not look applied.
+#[derive(Deserialize)]
+#[serde(deny_unknown_fields)]
+struct RawCheck {
+    levels: Option<BTreeMap<String, toml::Value>>,
 }
 
 #[derive(Deserialize)]
@@ -98,6 +110,7 @@ impl Config {
             id_prefix: IdPrefix::parse(&prefix)?,
             source_path,
             scan_exclude: parse_scan_exclude(raw.scan)?,
+            check_levels: parse_check_levels(raw.check)?,
         })
     }
 }
@@ -149,6 +162,29 @@ fn parse_scan_exclude(scan: Option<RawScan>) -> Result<Vec<String>, Error> {
         )));
     }
     Ok(patterns)
+}
+
+/// Validates `[check.levels]` (none set when the section is absent).
+fn parse_check_levels(check: Option<RawCheck>) -> Result<Levels, Error> {
+    let mut levels = Levels::default();
+    for (name, value) in check.and_then(|c| c.levels).unwrap_or_default() {
+        let refused = |why: &str| invalid(&format!("`check.levels.{name}`: {why}"));
+        let code: Code = name
+            .parse()
+            .map_err(|e: rulelink_check::UnknownFinding| refused(&e.to_string()))?;
+        let level: Level = value
+            .as_str()
+            .ok_or_else(|| {
+                refused(&format!(
+                    "the level must be a string, found {}",
+                    value.type_str()
+                ))
+            })?
+            .parse()
+            .map_err(|e: rulelink_check::UnknownLevel| refused(&e.to_string()))?;
+        levels.set(code, level);
+    }
+    Ok(levels)
 }
 
 fn invalid(message: &str) -> Error {
