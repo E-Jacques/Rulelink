@@ -1,6 +1,6 @@
 # Quality rubric for implementation runs
 
-Used to compare two implementations of the same ticket, and to test changes to the skills (`strategic-programming`, `input-boundaries`, `cli-implement`). Score each line yes / no / partly, and keep the evidence.
+Used to compare two implementations of the same ticket, and to test changes to the skills (`strategic-programming`, `input-boundaries`, `implement`). Score each line yes / no / partly, and keep the evidence.
 
 ## Interface design
 
