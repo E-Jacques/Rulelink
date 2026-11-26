@@ -35,7 +35,7 @@ tasks:
     command: 'cargo xtask skills-lint'
   release-plan:
     command: 'dist plan'
-  # Regenerates the Release notes and RSS feed from the commit history before a site upload.
+  # Regenerates the Release notes from the commit history before a site upload.
   # Not a CI check: the output changes with every merged commit.
   release-notes:
     command: 'cargo xtask release-notes'

@@ -5,7 +5,7 @@ description: What changed in each version of the Rulelink CLI.
 
 # CLI release notes
 
-What changed in each version of the Rulelink CLI, breaking changes first. These notes are generated from commit messages. Subscribe with the [RSS feed](https://rulelink.dev/release-notes/cli.xml).
+What changed in each version of the Rulelink CLI, breaking changes first. These notes are generated from commit messages.
 
 ## Unreleased
 

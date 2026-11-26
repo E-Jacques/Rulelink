@@ -1,9 +1,7 @@
-//! `release-notes`: Release notes and an RSS feed per Product, generated from commit messages.
+//! `release-notes`: Release notes per Product, generated from commit messages.
 //!
-//! Output is written into the public documentation (`docs/public/release-notes/<product>.md`)
-//! and the static assets of the site (`site/public/release-notes/<product>.xml`), so both are
-//! part of the assembled site. Feed URLs are absolute, built from `SITE_URL` in
-//! `site/site.config.mjs`.
+//! Output is written into the public documentation (`docs/public/release-notes/<product>.md`),
+//! so it is part of the assembled site.
 
 use std::fmt::Write as _;
 use std::fs;
@@ -47,8 +45,6 @@ impl Group {
 pub struct Commit {
     /// Commit date, `YYYY-MM-DD`.
     pub date: String,
-    /// Commit date, RFC 2822 (RSS `pubDate`).
-    pub rfc_date: String,
     /// The version tag on this commit, if any (`v0.1.0` or `0.1.0`).
     pub tag: Option<String>,
     pub subject: String,
@@ -97,7 +93,6 @@ pub struct Release {
     /// `None` for changes after the latest tag.
     pub version: Option<String>,
     pub date: String,
-    pub rfc_date: String,
     pub groups: Vec<(Group, Vec<Entry>)>,
 }
 
@@ -303,51 +298,21 @@ fn release(tag: Option<&String>, commit: &Commit, entries: &[(Group, Entry)]) ->
     Release {
         version: tag.map(|t| t.trim_start_matches('v').to_string()),
         date: commit.date.clone(),
-        rfc_date: commit.rfc_date.clone(),
         groups,
     }
-}
-
-/// GitHub-style heading slug, which Starlight also produces for the headings it renders.
-fn slug(heading: &str) -> String {
-    heading
-        .to_lowercase()
-        .chars()
-        .filter(|c| c.is_alphanumeric() || *c == ' ' || *c == '-')
-        .map(|c| if c == ' ' { '-' } else { c })
-        .collect()
 }
 
 fn escape_md(text: &str) -> String {
     text.replace('<', "&lt;").replace('{', "&#123;")
 }
 
-fn escape_xml(text: &str) -> String {
-    text.replace('&', "&amp;")
-        .replace('<', "&lt;")
-        .replace('>', "&gt;")
-}
-
-fn page_path(product: &Product) -> String {
-    format!("release-notes/{}", product.id)
-}
-
-fn feed_url(site_url: &str, product: &Product) -> String {
-    format!(
-        "{}/{}.xml",
-        site_url.trim_end_matches('/'),
-        page_path(product)
-    )
-}
-
 /// The Markdown page of a Product: front matter accepted by `docs-check` and the site build.
-pub fn render_page(product: &Product, releases: &[Release], site_url: &str) -> String {
+pub fn render_page(product: &Product, releases: &[Release]) -> String {
     let mut out = String::new();
     let _ = write!(
         out,
-        "---\ntitle: {title} release notes\ndescription: What changed in each version of the Rulelink {title}.\n---\n\n# {title} release notes\n\nWhat changed in each version of the Rulelink {title}, breaking changes first. These notes are generated from commit messages. Subscribe with the [RSS feed]({feed}).\n",
+        "---\ntitle: {title} release notes\ndescription: What changed in each version of the Rulelink {title}.\n---\n\n# {title} release notes\n\nWhat changed in each version of the Rulelink {title}, breaking changes first. These notes are generated from commit messages.\n",
         title = product.title,
-        feed = feed_url(site_url, product),
     );
     if releases.is_empty() {
         out.push_str("\nNo user-facing changes yet.\n");
@@ -370,78 +335,11 @@ pub fn render_page(product: &Product, releases: &[Release], site_url: &str) -> S
     out
 }
 
-/// The RSS 2.0 feed of a Product, one item per release, every URL absolute.
-pub fn render_rss(product: &Product, releases: &[Release], site_url: &str) -> String {
-    let page = format!("{}/{}/", site_url.trim_end_matches('/'), page_path(product));
-    let mut out = String::new();
-    let _ = write!(
-        out,
-        "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<rss version=\"2.0\" xmlns:atom=\"http://www.w3.org/2005/Atom\">\n<channel>\n<title>Rulelink {title} release notes</title>\n<link>{page}</link>\n<description>What changed in each version of the Rulelink {title}.</description>\n<atom:link href=\"{feed}\" rel=\"self\" type=\"application/rss+xml\"/>\n",
-        title = escape_xml(&product.title),
-        feed = feed_url(site_url, product),
-    );
-    if let Some(first) = releases.first() {
-        let _ = writeln!(out, "<lastBuildDate>{}</lastBuildDate>", first.rfc_date);
-    }
-    for release in releases {
-        let heading = release.heading();
-        let link = format!("{page}#{}", slug(&heading));
-        let html = release_html(release);
-        let guid = guid(release, &link, &html);
-        let _ = write!(
-            out,
-            "<item>\n<title>Rulelink {} {}</title>\n<link>{link}</link>\n{guid}\n<pubDate>{}</pubDate>\n<description>{}</description>\n</item>\n",
-            escape_xml(&product.title),
-            escape_xml(&heading),
-            release.rfc_date,
-            escape_xml(&html),
-        );
-    }
-    out.push_str("</channel>\n</rss>\n");
-    out
-}
-
-/// A released version never changes, so its link is a stable guid. The Unreleased item
-/// changes with every merge: its guid carries a hash of the content so readers see it as new.
-fn guid(release: &Release, link: &str, html: &str) -> String {
-    if release.version.is_some() {
-        format!("<guid isPermaLink=\"true\">{link}</guid>")
-    } else {
-        format!(
-            "<guid isPermaLink=\"false\">{link}-{:016x}</guid>",
-            fnv1a(html)
-        )
-    }
-}
-
-/// FNV-1a, a fixed hash so the generated feed is the same on every machine and toolchain.
-fn fnv1a(text: &str) -> u64 {
-    text.bytes().fold(0xcbf2_9ce4_8422_2325, |hash, byte| {
-        (hash ^ u64::from(byte)).wrapping_mul(0x0100_0000_01b3)
-    })
-}
-
-fn release_html(release: &Release) -> String {
-    let mut html = String::new();
-    for (group, entries) in &release.groups {
-        let _ = write!(html, "<h3>{}</h3><ul>", group.title());
-        for entry in entries {
-            let _ = write!(html, "<li>{}", escape_xml(&entry.text));
-            if let Some(note) = &entry.migration {
-                let _ = write!(html, "<br/>Migration: {}", escape_xml(note));
-            }
-            html.push_str("</li>");
-        }
-        html.push_str("</ul>");
-    }
-    html
-}
-
 /// Reads `git log`, newest first.
 fn read_commits() -> Result<Vec<Commit>, String> {
-    let format = "%x1e%cs%x1f%cd%x1f%D%x1f%s%x1f%b";
+    let format = "%x1e%cs%x1f%D%x1f%s%x1f%b";
     let output = Command::new("git")
-        .args(["log", "--date=rfc2822", &format!("--format={format}")])
+        .args(["log", &format!("--format={format}")])
         .output()
         .map_err(|e| format!("cannot run git: {e}"))?;
     if !output.status.success() {
@@ -457,15 +355,13 @@ fn parse_log(log: &str) -> Vec<Commit> {
     log.split('\x1e')
         .filter(|record| !record.trim().is_empty())
         .filter_map(|record| {
-            let mut fields = record.splitn(5, '\x1f');
+            let mut fields = record.splitn(4, '\x1f');
             let date = fields.next()?.trim().to_string();
-            let rfc_date = fields.next()?.trim().to_string();
             let refs = fields.next()?;
             let subject = fields.next()?.trim().to_string();
             let body = fields.next().unwrap_or("").to_string();
             Some(Commit {
                 date,
-                rfc_date,
                 tag: version_tag(refs),
                 subject,
                 body,
@@ -488,45 +384,25 @@ fn version_tag(refs: &str) -> Option<String> {
         .map(str::to_string)
 }
 
-fn site_url(config_js: &str) -> Result<String, String> {
-    config_js
-        .lines()
-        .find_map(|line| line.strip_prefix("export const SITE_URL = '"))
-        .and_then(|rest| rest.split('\'').next())
-        .map(str::to_string)
-        .ok_or_else(|| "SITE_URL not found in site/site.config.mjs".to_string())
-}
-
 /// Generates the files, or with `check` verifies they are up to date.
 pub fn run(check: bool) -> Result<(), String> {
     let read = |path: &str| fs::read_to_string(path).map_err(|e| format!("{path}: {e}"));
     let config: Config = toml::from_str(&read("xtask/release-notes.toml")?)
         .map_err(|e| format!("xtask/release-notes.toml: {e}"))?;
-    let url = site_url(&read("site/site.config.mjs")?)?;
     let products = build(&read_commits()?, &config)?;
     let mut stale = Vec::new();
     for (product, releases) in &products {
-        let files = [
-            (
-                format!("docs/public/{}.md", page_path(product)),
-                render_page(product, releases, &url),
-            ),
-            (
-                format!("site/public/{}.xml", page_path(product)),
-                render_rss(product, releases, &url),
-            ),
-        ];
-        for (path, content) in files {
-            if check {
-                if fs::read_to_string(&path).ok().as_deref() != Some(content.as_str()) {
-                    stale.push(path);
-                }
-            } else {
-                if let Some(dir) = Path::new(&path).parent() {
-                    fs::create_dir_all(dir).map_err(|e| format!("{path}: {e}"))?;
-                }
-                fs::write(&path, content).map_err(|e| format!("{path}: {e}"))?;
+        let path = format!("docs/public/release-notes/{}.md", product.id);
+        let content = render_page(product, releases);
+        if check {
+            if fs::read_to_string(&path).ok().as_deref() != Some(content.as_str()) {
+                stale.push(path);
             }
+        } else {
+            if let Some(dir) = Path::new(&path).parent() {
+                fs::create_dir_all(dir).map_err(|e| format!("{path}: {e}"))?;
+            }
+            fs::write(&path, content).map_err(|e| format!("{path}: {e}"))?;
         }
     }
     if stale.is_empty() {
@@ -563,7 +439,6 @@ mod tests {
     fn commit(subject: &str, body: &str, tag: Option<&str>) -> Commit {
         Commit {
             date: "2026-11-25".into(),
-            rfc_date: "Wed, 25 Nov 2026 10:00:00 +0100".into(),
             tag: tag.map(str::to_string),
             subject: subject.into(),
             body: body.into(),
@@ -694,7 +569,7 @@ mod tests {
     }
 
     #[test]
-    fn the_page_has_front_matter_groups_and_an_absolute_feed_link() {
+    fn the_page_has_front_matter_and_groups() {
         let product = config().products[0].clone();
         let releases = cli(&[
             commit("fix(cli): crash", "", None),
@@ -704,9 +579,8 @@ mod tests {
                 Some("v0.1.0"),
             ),
         ]);
-        let page = render_page(&product, &releases, "https://rulelink.dev");
+        let page = render_page(&product, &releases);
         assert!(page.starts_with("---\ntitle: CLI release notes\ndescription: "));
-        assert!(page.contains("[RSS feed](https://rulelink.dev/release-notes/cli.xml)"));
         assert!(page.contains("## 0.1.0\n\nReleased 2026-11-25."));
         let breaking = page.find("### Breaking").expect("breaking");
         assert!(page.find("## Unreleased").expect("unreleased") < breaking);
@@ -715,52 +589,12 @@ mod tests {
     }
 
     #[test]
-    fn the_feed_has_absolute_urls_and_escaped_content() {
-        let product = config().products[0].clone();
-        let releases = cli(&[commit("feat(cli): handle a & b", "", Some("v0.1.0"))]);
-        let rss = render_rss(&product, &releases, "https://rulelink.dev/");
-        assert!(rss.contains("<link>https://rulelink.dev/release-notes/cli/</link>"));
-        assert!(rss.contains(
-            "<guid isPermaLink=\"true\">https://rulelink.dev/release-notes/cli/#010</guid>"
-        ));
-        assert!(rss.contains("href=\"https://rulelink.dev/release-notes/cli.xml\""));
-        assert!(rss.contains("a &amp;amp; b"));
-        assert!(rss.contains("<pubDate>Wed, 25 Nov 2026 10:00:00 +0100</pubDate>"));
-    }
-
-    #[test]
-    fn the_unreleased_item_gets_a_new_guid_when_its_content_changes() {
-        let product = config().products[0].clone();
-        let guid = |commits: &[Commit]| {
-            let rss = render_rss(&product, &cli(commits), "https://rulelink.dev");
-            let start = rss.find("<guid").expect("guid");
-            let end = rss[start..].find("</guid>").expect("end of guid");
-            rss[start..start + end].to_string()
-        };
-        let one = guid(&[commit("feat(cli): one", "", None)]);
-        let same = guid(&[commit("feat(cli): one", "", None)]);
-        let two = guid(&[
-            commit("feat(cli): two", "", None),
-            commit("feat(cli): one", "", None),
-        ]);
-        assert_eq!(one, same);
-        assert_ne!(one, two);
-        assert!(one.contains("isPermaLink=\"false\""));
-    }
-
-    #[test]
     fn git_log_records_are_parsed_with_their_version_tag() {
-        let log = "\x1e2026-11-25\x1fWed, 25 Nov 2026 10:00:00 +0100\x1fHEAD -> main, tag: v0.1.0, origin/main\x1ffeat(cli): x\x1fBody\n\x1e2026-11-24\x1fTue, 24 Nov 2026 10:00:00 +0100\x1f\x1ffix(cli): y\x1f";
+        let log = "\x1e2026-11-25\x1fHEAD -> main, tag: v0.1.0, origin/main\x1ffeat(cli): x\x1fBody\n\x1e2026-11-24\x1f\x1ffix(cli): y\x1f";
         let commits = parse_log(log);
         assert_eq!(commits.len(), 2);
         assert_eq!(commits[0].tag.as_deref(), Some("v0.1.0"));
         assert_eq!(commits[1].tag, None);
         assert_eq!(commits[1].subject, "fix(cli): y");
-    }
-
-    #[test]
-    fn the_site_url_is_read_from_the_site_config() {
-        let js = "// c\nexport const SITE_URL = 'https://rulelink.dev';\nexport const X = 1;\n";
-        assert_eq!(site_url(js).as_deref(), Ok("https://rulelink.dev"));
     }
 }
