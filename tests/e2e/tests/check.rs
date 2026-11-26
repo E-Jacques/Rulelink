@@ -193,6 +193,45 @@ fn a_line_break_in_the_rules_file_cannot_forge_a_report_line() {
 }
 
 #[test]
+fn identifiers_of_equal_numeric_value_keep_one_order() {
+    let repo = clean();
+    repo.write("b.rs", "// @rule RULE-5 RULE-005 RULE-05\n");
+    for _ in 0..20 {
+        assert_report(
+            &repo.run(&["check"]),
+            1,
+            &[
+                "error RL001: RULE-005 is not a Rule of this project (b.rs:1)",
+                "error RL001: RULE-05 is not a Rule of this project (b.rs:1)",
+                "error RL001: RULE-5 is not a Rule of this project (b.rs:1)",
+                "3 errors, 0 warnings",
+            ],
+        );
+    }
+}
+
+/// Rule text is data: it must neither hide a Rule with no code nor cite one.
+#[test]
+fn text_in_the_rules_file_is_not_code() {
+    let quoting = r#"{"id":"RULE-001","title":"T","statement":"See https://x then write @rule RULE-001 RULE-099","status":"validated"}"#;
+    let repo = project(&[quoting.to_owned()], &[]);
+    for source_path in ["rules/rules.json", "./rules/rules.json"] {
+        let config = repo.read("rulelink.toml").expect("config");
+        repo.write(
+            "rulelink.toml",
+            &config.replace("\"rules/rules.json\"", &format!("\"{source_path}\"")),
+        );
+        let run = repo.run(&["check"]);
+        assert_eq!(run.code, 0, "{}", run.stdout);
+        assert!(run.stdout.contains("0 errors, 1 warning"), "{}", run.stdout);
+        assert_eq!(
+            repo.run(&["where", "RULE-001"]).stdout,
+            "RULE-001 is not cited by any code\n"
+        );
+    }
+}
+
+#[test]
 fn check_levels_raises_lowers_and_turns_off() {
     let repo = project(
         &[rule("RULE-001", "validated"), rule("RULE-002", "proposed")],
@@ -234,6 +273,13 @@ fn an_unknown_name_level_or_check_key_is_a_configuration_error() {
         ("[check.levels]\norphan-rule = 1", "orphan-rule"),
         ("[check]\nwarnings_as_errors = true", "warnings_as_errors"),
         ("[[check.overrides]]\npaths = [\"legacy/**\"]", "overrides"),
+        ("[check]\nlevels = \"off\"", "levels = "),
+        ("[check.level]\norphan-rule = \"off\"", "[check.level]"),
+        (
+            "[check.levels]\norphan-rule = \"off\"\norphan-rule = \"error\"",
+            "orphan-rule = \"error\"",
+        ),
+        ("[check.levels]\norphan-rule = true", "`off`"),
     ] {
         let repo = clean();
         append_config(&repo, section);

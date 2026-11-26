@@ -58,4 +58,4 @@ These are accepted false positives, to be removed when the scan understands the 
 
 ## Which files are scanned
 
-Skipped: files ignored by `.gitignore`, `.ignore` or `.rulelinkignore`; files matching `scan.exclude` in `rulelink.toml`; hidden files; symbolic links; binary files; files that are not UTF-8; files over 2 MB.
+Skipped: the rules file itself, so that an Annotation quoted in the text of a Rule cites nothing; files ignored by `.gitignore`, `.ignore` or `.rulelinkignore`; files matching `scan.exclude` in `rulelink.toml`; hidden files; symbolic links; binary files; files that are not UTF-8; files over 2 MB.

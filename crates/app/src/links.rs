@@ -29,7 +29,7 @@ pub fn locate(root: &Path, id: &RuleId) -> Result<Located, Error> {
     let rule = rule_set
         .find(id)
         .ok_or_else(|| Error::Input(format!("{id} is not a Rule of this project")))?;
-    let index = rulelink_adapter_scan_fs::scan(root, &config.scan_exclude)?;
+    let index = rulelink_adapter_scan_fs::scan(root, &config.scan_exclude, &config.source_path)?;
     Ok(Located {
         status: rule.status,
         locations: index.locations(id),

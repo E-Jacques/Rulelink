@@ -23,7 +23,7 @@ pub struct Checked {
 /// [`Error::Internal`] if a file cannot be read.
 pub fn run(root: &Path) -> Result<Checked, Error> {
     let (config, _, rule_set) = crate::rules::read_source(root)?;
-    let links = rulelink_adapter_scan_fs::scan(root, &config.scan_exclude)?;
+    let links = rulelink_adapter_scan_fs::scan(root, &config.scan_exclude, &config.source_path)?;
     Ok(Checked {
         report: rulelink_check::check(&rule_set, &links, &config.check_levels),
         source_path: config.source_path,

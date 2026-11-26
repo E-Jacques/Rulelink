@@ -75,6 +75,9 @@ pub fn check(rules: &RuleSet, links: &LinkIndex, levels: &Levels) -> Report {
         (a.severity, a.problem.code())
             .cmp(&(b.severity, b.problem.code()))
             .then_with(|| a.rule.natural_cmp(&b.rule))
+            // `RULE-5` and `RULE-05` are equal above: without this, their order would follow
+            // the index's hash map and change from run to run.
+            .then_with(|| a.rule.0.cmp(&b.rule.0))
             .then_with(|| a.location.cmp(&b.location))
     });
     Report { findings, no_rules }

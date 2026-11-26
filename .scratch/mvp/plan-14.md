@@ -64,12 +64,18 @@ Reused: `read_source`, `scan`, `LinkIndex`, `Location`, `RuleSet::find`, `natura
 | ------ | ------ | ------------------- |
 | #15 | `Code`, `Level`, `Levels`, `Report` | RL003/RL1xx variants, refusing to lower them, stopping code checks. A wrong-shape Source still exits 3 |
 | #16 | `Finding` (code, name, severity, message, Rule, location), totals | JSON rendering, `--format` |
-| #17 | nothing: it asks for `check --changed`, which #14 and spec #7 remove | tell the maintainer |
+| #17 | nothing: closed as not planned, there is no `check --changed` | n/a |
 | #23 | `check` exits 0 right after `init` | enabling the smoke test step |
 
-## Known limits
+## Changed after review
 
-The scan treats the rules file like any file: an Annotation written inside a Rule's text counts as a citation, as it already does for `where`.
+The scan skips the rules file, for `check` and `where`: Rule text quoting `@rule` hid RL004. Identifiers of equal numeric value (`RULE-5`, `RULE-05`) are ordered by their text. `Code::name` is not exported until #16 calls it.
+
+## Left to dependent tickets
+
+- #15 and #16: `Finding::rule` is required. A Source Finding (RL100, RL106) may have no Rule, so #15 reshapes `Finding`; do it before #16 fixes the JSON schema.
+- #15: refusing to lower a Source error belongs in `rulelink-check` (make `Levels::set` fallible), not in `config`.
+- #16: "no location means the rules file" is decided by the human renderer; move it where both renderers can use it.
 
 ## Slices
 

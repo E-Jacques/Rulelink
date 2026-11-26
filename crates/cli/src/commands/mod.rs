@@ -1,7 +1,8 @@
 //! Command groups of the CLI. No business logic here: arguments become application commands.
 //!
 //! Adding a command: add a variant to [`Command`] with its own `clap::Args` struct, a handler
-//! function returning `Result<(), Error>`, and one line in [`dispatch`].
+//! function returning `Result<(), Error>`, and one line in [`dispatch`]. A command that can run
+//! to the end and still fail the run, like `check`, returns `Result<Outcome, Error>` instead.
 
 use clap::error::ErrorKind;
 use clap::{Parser, Subcommand};

@@ -99,7 +99,8 @@ impl Config {
     }
 
     fn parse(text: &str) -> Result<Self, Error> {
-        let raw: RawConfig = toml::from_str(text).map_err(|e| invalid(e.message()))?;
+        // The whole error, not only its message: it quotes the line at fault and its number.
+        let raw: RawConfig = toml::from_str(text).map_err(|e| invalid(&e.to_string()))?;
         check_version(raw.version)?;
         let source_path = parse_source(raw.source)?;
         let prefix = raw
@@ -176,7 +177,7 @@ fn parse_check_levels(check: Option<RawCheck>) -> Result<Levels, Error> {
             .as_str()
             .ok_or_else(|| {
                 refused(&format!(
-                    "the level must be a string, found {}",
+                    "expected `error`, `warning` or `off` in quotes, found {}",
                     value.type_str()
                 ))
             })?

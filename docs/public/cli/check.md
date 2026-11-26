@@ -26,7 +26,7 @@ check verifies the link between a Rule and the code, not that the code is correc
 
 Errors come first, then Findings are ordered by code, Identifier, file and line. The location is the `file:line` of the Annotation. A Finding about a Rule that no code cites names the rules file.
 
-While the rules file has no Rules, the first line says so, the code is still scanned and an Annotation is only a warning:
+While the rules file has no Rules, the first line says so and the code is still scanned. An Annotation citing an unknown Identifier (`RL001`) is then a warning by default:
 
 ```text
 The rules file has no Rules yet; the code is still scanned.
