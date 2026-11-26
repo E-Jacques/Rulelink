@@ -51,7 +51,7 @@ The last command lists every Annotation that cites `RULE-001`, tests included. I
 
 ## Next steps
 
-- Read the [Roadmap](roadmap.md) to see what exists today and what is announced.
 - Learn what a Rule contains in [Rule format](concepts/rule-format.md).
 - Learn how to link a Rule to code in [Specify Rules in code](concepts/specify-rules-in-code.md).
 - Browse every command in the [CLI reference](cli/README.md).
+- Read the [Roadmap](roadmap.md) to see what exists today and what is announced.
