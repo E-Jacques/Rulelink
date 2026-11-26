@@ -4,6 +4,7 @@
 .sc a { color: var(--rl-brand-text); }
 .sc a:hover { color: var(--rl-brand-hover); }
 .sc :focus-visible { outline: 2px solid var(--rl-brand-text); outline-offset: 2px; }
+.sc .sc-header :focus-visible, .sc .sc-footer :focus-visible { outline-color: #e7ebf3; }
 .sc h1, .sc h2, .sc h3, .sc p, .sc ul, .sc ol { margin: 0; }
 .sc h2 { font-size: 30px; line-height: 38px; font-weight: 600; letter-spacing: -0.01em; }
 .sc h3 { font-size: 18px; line-height: 26px; font-weight: 600; display: flex; align-items: center; justify-content: space-between; gap: 8px; }
@@ -16,7 +17,11 @@
 .sc-header { background: var(--deep); color: var(--on-deep); }
 .sc-header-in { min-height: 64px; display: flex; flex-wrap: wrap; align-items: center; gap: 12px 28px; }
 .sc-brand { display: flex; align-items: center; gap: 12px; text-decoration: none; font-size: 18px; font-weight: 600; }
-.sc .sc-brand, .sc .sc-nav a, .sc .sc-ghost, .sc .sc-footer a { color: var(--on-deep); }
+/* The header and footer stay dark in both themes: their links keep the light colour on hover too,
+   or the general `a:hover` colour would make them unreadable. */
+.sc .sc-brand, .sc .sc-nav a, .sc .sc-ghost, .sc .sc-footer a,
+.sc .sc-brand:hover, .sc .sc-nav a:hover, .sc .sc-ghost:hover, .sc .sc-footer a:hover { color: var(--on-deep); }
+.sc .sc-ghost:hover, .sc .sc-theme:hover { background: rgba(231, 235, 243, 0.12); border-color: var(--on-deep); }
 .sc-nav { display: flex; flex-wrap: wrap; gap: 4px 20px; flex: 1 1 auto; }
 .sc-nav a { text-decoration: none; font-size: 14px; font-weight: 500; padding: 10px 4px; }
 .sc-nav a:hover { text-decoration: underline; }
