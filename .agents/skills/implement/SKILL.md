@@ -5,7 +5,12 @@ description: Workflow for implementing a ticket in rulelink, from documentation 
 
 # Implementing a ticket
 
-One loop for every surface. Surface-specific rules live in [surfaces.md](surfaces.md). `cli-implement` adds the CLI details. Each commit follows the `commit` skill.
+One loop for every surface. Surface details are references, read only the ones you need. Each commit follows the `commit` skill.
+
+- [references/cli.md](references/cli.md)
+- [references/library.md](references/library.md)
+- [references/editor.md](references/editor.md)
+- [references/e2e.md](references/e2e.md)
 
 ## Principles
 
@@ -18,7 +23,7 @@ One loop for every surface. Surface-specific rules live in [surfaces.md](surface
 
 ## 1. Pick the surface
 
-Name every surface the ticket touches: CLI, library, editor. Read its section in [surfaces.md](surfaces.md). A ticket often touches several: the core change comes first, each surface follows.
+Name every surface the ticket touches: CLI, library, editor. Read its reference. A ticket often touches several. Order: core, library API, CLI, server, extensions.
 
 ## 2. Open a worktree
 
@@ -32,7 +37,7 @@ Never work in the main checkout.
 
 ## 3. Document first
 
-Write or update the public page for each surface (see [surfaces.md](surfaces.md)). It fixes the scope.
+Write or update the public page for each surface (see the surface reference). It fixes the scope.
 
 Commit: `docs(<scope>): …`
 
@@ -42,6 +47,7 @@ Write before any implementation, only where applicable:
 
 - A test that runs the exact documented example.
 - A test with all defaults, if it differs from the first.
+- For a user-facing change, an end-to-end test ([references/e2e.md](references/e2e.md)).
 
 Pick the seams where later tests go. Confirm them with the user if unsure.
 
@@ -78,7 +84,7 @@ Then:
 
 - Update the `GLOSSARY.md` terms and `docs/architecture/` sections the diff contradicts.
 - Score against `docs/agents/quality-rubric.md`.
-- Run the extra gates of the surface.
+- Run the extra gates of each surface reference and `moon run :e2e`.
 - Record both passes with `code-review-report`.
 
 Commit: `refactor(<scope>): …`, or `fix(<scope>): …` for a bug.
