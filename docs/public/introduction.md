@@ -28,7 +28,7 @@ Three things work together.
 
 1. **Rules.** A Rule is one statement of business behaviour that is either satisfied or not. It has a permanent Identifier, such as `RULE-042`. All Rules live in one file, the Source, inside your project.
 2. **Annotations.** You write the Identifier in a comment next to the code that implements the Rule: `// @rule RULE-042`. It works in any language.
-3. **The command line.** The `rulelink` command creates and reviews Rules, and lists the places that cite a Rule.
+3. **The command line.** The `rulelink` command creates and reviews Rules, lists the places that cite a Rule, and checks the whole project.
 
 Here is the whole loop:
 
@@ -37,9 +37,10 @@ rulelink init
 rulelink rules add --title "Line-level VAT rounding" --statement "VAT is rounded to the cent on each invoice line, then summed."
 rulelink rules approve RULE-001
 rulelink where RULE-001
+rulelink check
 ```
 
-The last command lists every Annotation that cites `RULE-001`, tests included. It prints `RULE-001 is not cited by any code` until you add one.
+`where` lists every Annotation that cites `RULE-001`, tests included. It prints `RULE-001 is not cited by any code` until you add one. [`rulelink check`](cli/check.md) reports the same gap for every validated Rule, and the Annotations that cite a Rule they should not.
 
 ## The basic rules
 

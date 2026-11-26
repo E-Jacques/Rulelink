@@ -5,7 +5,7 @@ description: Learn how to set up Rulelink, create your first Rule and find the c
 
 # Quickstart
 
-In a few minutes you will set up Rulelink in a project, create your first Rule, link it to code with an Annotation and find that code again. Each command below is run against the real `rulelink` command by a test, so the page matches what you see.
+In a few minutes you will set up Rulelink in a project, create your first Rule, link it to code with an Annotation and find that code again, then check the whole project. Each command below is run against the real `rulelink` command by a test, so the page matches what you see.
 
 ## Before you start
 
@@ -50,15 +50,33 @@ $ rulelink where RULE-001
 src/pricing.rs:1
 ```
 
-You now have a Rule, and the code that implements it is one command away.
+## 5. Check the whole project
 
-## What comes next
+[`rulelink check`](../cli/check.md) compares every Rule with every Annotation and reports Findings. `RULE-001` is still `proposed`, so citing it is a warning.
 
-A command that checks the whole project for Findings is announced, not available yet. See the [Roadmap](../roadmap.md). Until then, use `rulelink where` to see whether a Rule has code.
+```console
+$ rulelink check
+warning RL005: RULE-001 is still proposed (src/pricing.rs:1)
+0 errors, 1 warning
+check verifies the link between a Rule and the code, not that the code is correct.
+```
+
+A person reviews the Rule and approves it with [`rulelink rules approve`](../cli/rules-approve.md). The warning is gone.
+
+```console
+$ rulelink rules approve RULE-001
+RULE-001 is now validated
+$ rulelink check
+0 errors, 0 warnings
+check verifies the link between a Rule and the code, not that the code is correct.
+```
+
+You now have a Rule that is linked to the code that implements it.
 
 ## Next steps
 
 - Learn what a Rule contains in [Rule format](../concepts/rule-format.md).
+- Learn what each Finding means in [Findings](../concepts/findings.md).
 - Learn what counts as an Annotation in [Specify Rules in code](../concepts/specify-rules-in-code.md).
 - Write better Rules with [Write a good Rule](../guides/write-a-good-rule.md).
 - Review and approve Rules in [Manage a Rule lifecycle](../guides/manage-a-rule-lifecycle.md).

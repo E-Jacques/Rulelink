@@ -1,11 +1,11 @@
 ---
 title: Run Rulelink in CI
-description: Learn how to make your CI fail when the rules file is not in Canonical form.
+description: Learn how to make your CI fail on error Findings or a badly laid out rules file.
 ---
 
 # Run Rulelink in CI
 
-You can run `rulelink` in your CI workflow, like any other command. The build fails when the command exits with a code other than `0`. This guide shows a job that keeps the rules file in Canonical form, so independent edits do not collide.
+You can run `rulelink` in your CI workflow, like any other command. The build fails when the command exits with a code other than `0`. This guide shows a job that checks the links between your Rules and your code, and keeps the rules file in Canonical form so independent edits do not collide.
 
 ## Before you start
 
@@ -19,6 +19,16 @@ Every `rulelink` command ends with an exit code. `0` means it succeeded. `2` mea
 ```bash
 rulelink rules list
 ```
+
+## Check the links between Rules and code
+
+[`rulelink check`](../cli/check.md) scans the whole project. It exits with `1` when there is at least one error Finding, so the job fails. Warnings do not fail it.
+
+```bash
+rulelink check
+```
+
+To fail the build on a warning too, raise its level in `rulelink.toml`. See [Findings](../concepts/findings.md).
 
 ## Fail when the rules file is not in Canonical form
 
@@ -41,11 +51,13 @@ name: rules
 on: [pull_request]
 
 jobs:
-  rules-format:
+  rules:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
       # Install the rulelink command here.
+      - name: Rules are linked to the code
+        run: rulelink check
       - name: Rules file is in Canonical form
         run: |
           cp rules/rules.json "$RUNNER_TEMP/rules.before.json"
@@ -55,6 +67,7 @@ jobs:
 
 ## Next steps
 
+- [`rulelink check`](../cli/check.md)
 - [`rulelink rules format`](../cli/rules-format.md)
 - [Rule format](../concepts/rule-format.md)
 - [Find and relate Rules](find-and-relate-rules.md)
