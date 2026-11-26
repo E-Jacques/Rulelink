@@ -34,8 +34,7 @@ pub enum Level {
 
 impl Level {
     /// The severity to report with, `None` if the Finding is hidden.
-    #[must_use]
-    pub fn severity(self) -> Option<Severity> {
+    pub(crate) fn severity(self) -> Option<Severity> {
         match self {
             Self::Error => Some(Severity::Error),
             Self::Warning => Some(Severity::Warning),

@@ -22,7 +22,7 @@ pub enum Code {
 
 impl Code {
     /// Every kind, in code order.
-    pub const ALL: [Self; 5] = [
+    pub(crate) const ALL: [Self; 5] = [
         Self::UnknownReference,
         Self::ObsoleteReference,
         Self::OrphanRule,
@@ -43,8 +43,7 @@ impl Code {
     }
 
     /// The name a team uses to set the level, such as `unknown-reference`.
-    #[must_use]
-    pub fn name(self) -> &'static str {
+    pub(crate) fn name(self) -> &'static str {
         match self {
             Self::UnknownReference => "unknown-reference",
             Self::ObsoleteReference => "obsolete-reference",
@@ -69,7 +68,7 @@ impl Code {
 impl FromStr for Code {
     type Err = UnknownFinding;
 
-    /// Reads a [`name`](Code::name). A code such as `RL001` is not a name.
+    /// Reads the name of a Finding, such as `unknown-reference`. A code such as `RL001` is not a name.
     fn from_str(raw: &str) -> Result<Self, Self::Err> {
         Self::ALL
             .into_iter()
