@@ -23,9 +23,6 @@ Write the body with the `pr` skill (Summary, Evidence, Merge Danger). Then appen
 
 ## Code review
 
-```markdown
-## Code review
-
 Report: <path to the `code-review-report` file>
 
 | severity | count |
@@ -37,7 +34,14 @@ Report: <path to the `code-review-report` file>
 
 Copy the counts from the report's summary.
 
-## Merge settings
+## Checks
 
-- Squash is the merge method. Enable it on the created PR (`gh pr merge --auto --squash` or the repository setting).
-- If there is any blocker, mark the PR as not ready to merge (draft, plus a "not ready to merge" line at the top of the body).
+After creating the pull request, and after every later push, run `gh pr checks <number> --watch`. For a failed check, read its log with `gh api repos/<owner>/<repo>/actions/jobs/<job-id>/logs` (the job id ends the check's URL). A check can fail on a job that `moon ci` does not run.
+
+The step is done when every check has finished, and each failure is either fixed or listed under Blockers. Report that result to the user, and keep Blockers true to what the checks ran.
+
+## Merging
+
+The user merges. Leave the pull request open, and tell the user which merge method to pick: squash, unless they asked for another one. Merge or enable auto-merge only when the user asks for it for this pull request.
+
+If there is any blocker, keep the pull request in draft, with a "not ready to merge" line at the top of the body.
