@@ -27,28 +27,28 @@ One sentence: `rules::add` appends a validated draft to the Source as a `propose
 
 ## Ownership
 
-| Decision | Owner |
-| --- | --- |
-| Prefix syntax, Identifier format, never-reuse allocation, draft validation | model |
-| Reading `rulelink.toml` (strict, relative path inside the project) | config |
-| Reading/writing the file, atomic write, Canonical form | adapter-json |
-| Orchestration, error class mapping | app |
-| Arguments, printing the new Identifier | cli |
+| Decision                                                                   | Owner        |
+| -------------------------------------------------------------------------- | ------------ |
+| Prefix syntax, Identifier format, never-reuse allocation, draft validation | model        |
+| Reading `rulelink.toml` (strict, relative path inside the project)         | config       |
+| Reading/writing the file, atomic write, Canonical form                     | adapter-json |
+| Orchestration, error class mapping                                         | app          |
+| Arguments, printing the new Identifier                                     | cli          |
 
 Allocation takes the max of `sequences[prefix]`, the numbers of the Rules still present and the retired Identifiers with that prefix, plus one. This covers a Rule deleted by hand and a `sequences` entry lowered by hand; `sequences` never decreases.
 
 ## Input boundaries
 
-| Input | Line checked |
-| --- | --- |
-| `--title`, `--statement` | trimmed, non-empty, title 1–120 chars (counted on stored value) |
-| `--app`, `--covered`, `--excluded` | each item trimmed, non-empty, no duplicates |
-| `--module` | trimmed; empty is refused |
-| `rulelink.toml` | version 1, `source.kind = "json"` only, `source.path` relative without `..`, prefix valid, missing section is an error |
-| Source file | not found vs unreadable vs invalid JSON vs unsupported `format`; never overwritten when invalid |
-| Sequence numbers | `checked_add`, named error on overflow |
-| Failure | nothing is written; atomic temp-file + rename |
-| Error class | invalid input → `AppError::Input` (exit 2); config → 2; Source → 3 |
+| Input                              | Line checked                                                                                                           |
+| ---------------------------------- | ---------------------------------------------------------------------------------------------------------------------- |
+| `--title`, `--statement`           | trimmed, non-empty, title 1–120 chars (counted on stored value)                                                        |
+| `--app`, `--covered`, `--excluded` | each item trimmed, non-empty, no duplicates                                                                            |
+| `--module`                         | trimmed; empty is refused                                                                                              |
+| `rulelink.toml`                    | version 1, `source.kind = "json"` only, `source.path` relative without `..`, prefix valid, missing section is an error |
+| Source file                        | not found vs unreadable vs invalid JSON vs unsupported `format`; never overwritten when invalid                        |
+| Sequence numbers                   | `checked_add`, named error on overflow                                                                                 |
+| Failure                            | nothing is written; atomic temp-file + rename                                                                          |
+| Error class                        | invalid input → `AppError::Input` (exit 2); config → 2; Source → 3                                                     |
 
 ## Smells
 
@@ -63,11 +63,11 @@ Searched `map_err`, `OpenOptions`, canonical writing: reuse `RuleSet::to_canonic
 
 ## Dependent tickets
 
-| Ticket | Reuses | Missing |
-| --- | --- | --- |
-| 03 lifecycle | `read_source`/`write_source`, `RuleSet` mutation pattern, `retired` | transitions (theirs) |
-| 04 search/related | `read_source`, `RuleDraft` (`related` to add later) | `related` option on `add` is theirs |
-| 05 format | `read_source` + `write_source` (Canonical on every write) | `--check`, non-canonical detection |
-| 06 scan/where | `Config::load`, `read_source` | exclusions config (theirs) |
+| Ticket            | Reuses                                                              | Missing                             |
+| ----------------- | ------------------------------------------------------------------- | ----------------------------------- |
+| 03 lifecycle      | `read_source`/`write_source`, `RuleSet` mutation pattern, `retired` | transitions (theirs)                |
+| 04 search/related | `read_source`, `RuleDraft` (`related` to add later)                 | `related` option on `add` is theirs |
+| 05 format         | `read_source` + `write_source` (Canonical on every write)           | `--check`, non-canonical detection  |
+| 06 scan/where     | `Config::load`, `read_source`                                       | exclusions config (theirs)          |
 
 Deferred and recorded: interactive input, `--id`, `--status`, `--dry-run`, `--origin` (not in the ticket). Concurrent-modification detection (exit 5) is not covered: inherited by a later ticket if needed.

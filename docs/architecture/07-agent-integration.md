@@ -20,18 +20,18 @@
 
 ## 2. Release frame
 
-| Feature | MVP | V1 | V2 |
-|---|:-:|:-:|:-:|
-| `rulelink context` (JSON and Markdown) | ● | | |
-| `rulelink-consult` skill (consultation and annotation) | ● | | |
-| `rulelink-retrodoc` skill (retro-documentation) | ● | | |
-| Manual installation of the `skills/` folder with `npx skills` or APM | ● | | |
-| `rulelink skills install\|list\|update`, embedded copy fallback | | ● | |
-| Managed section in `AGENTS.md` | | ● | |
-| `rulelink-onboarding` skill (rule format, properties to publish, configuration) | | ● | |
-| `rulelink-spec` skill (rule generation from a specification) | | | ● |
-| `rulelink-review` skill (inconsistencies, related rules, completeness) | | | ● |
-| `rulelink-verify` skill (AI implementation check, non-blocking report) | | | ● |
+| Feature                                                                         | MVP | V1  | V2  |
+| ------------------------------------------------------------------------------- | :-: | :-: | :-: |
+| `rulelink context` (JSON and Markdown)                                          |  ●  |     |     |
+| `rulelink-consult` skill (consultation and annotation)                          |  ●  |     |     |
+| `rulelink-retrodoc` skill (retro-documentation)                                 |  ●  |     |     |
+| Manual installation of the `skills/` folder with `npx skills` or APM            |  ●  |     |     |
+| `rulelink skills install\|list\|update`, embedded copy fallback                 |     |  ●  |     |
+| Managed section in `AGENTS.md`                                                  |     |  ●  |     |
+| `rulelink-onboarding` skill (rule format, properties to publish, configuration) |     |  ●  |     |
+| `rulelink-spec` skill (rule generation from a specification)                    |     |     |  ●  |
+| `rulelink-review` skill (inconsistencies, related rules, completeness)          |     |     |  ●  |
+| `rulelink-verify` skill (AI implementation check, non-blocking report)          |     |     |  ●  |
 
 ## 3. Technical constraints
 
@@ -45,14 +45,14 @@
 
 ### 4.1 Catalogue
 
-| Skill | Trigger (in `description`) | Steps | Commands used | Release |
-|---|---|---|---|---|
-| `rulelink-consult` | Changing business code in a repository that contains `rulelink.toml` | Before: load the relevant rules. During: respect them. After: annotate, run `check --changed`, summarise the rules applied | `context`, `rules show`, `annotate`, `check` | MVP |
-| `rulelink-retrodoc` | "Document the rules of this module", legacy code without rules | Read the module, infer rules, write a proposals file, present it to the human, import, wait for validation, annotate | `rules list`, `import file --dry-run`, `import file`, `rules approve` (by the human), `annotate`, `check` | MVP |
-| `rulelink-onboarding` | First use, configuration | Choose the ID scheme, useful fields, source, publishing; run `init` | `init`, `config`, `doctor` | V1 |
-| `rulelink-spec` | "Extract the rules from this specification" | Propose rules from a document, with covered and excluded scope | `rules search`, `import file` | V2 |
-| `rulelink-review` | "Review the rules of module X" | Spot duplicates, contradictions, scope gaps, missing links | `rules list`, `rules show`, `rules edit --dry-run` | V2 |
-| `rulelink-verify` | "Check that RULE-042 is properly implemented" | Read the rule and its locations, assess, produce a report. Never blocking, never part of `check` | `where`, `rules show` | V2 |
+| Skill                 | Trigger (in `description`)                                           | Steps                                                                                                                      | Commands used                                                                                             | Release |
+| --------------------- | -------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------- | ------- |
+| `rulelink-consult`    | Changing business code in a repository that contains `rulelink.toml` | Before: load the relevant rules. During: respect them. After: annotate, run `check --changed`, summarise the rules applied | `context`, `rules show`, `annotate`, `check`                                                              | MVP     |
+| `rulelink-retrodoc`   | "Document the rules of this module", legacy code without rules       | Read the module, infer rules, write a proposals file, present it to the human, import, wait for validation, annotate       | `rules list`, `import file --dry-run`, `import file`, `rules approve` (by the human), `annotate`, `check` | MVP     |
+| `rulelink-onboarding` | First use, configuration                                             | Choose the ID scheme, useful fields, source, publishing; run `init`                                                        | `init`, `config`, `doctor`                                                                                | V1      |
+| `rulelink-spec`       | "Extract the rules from this specification"                          | Propose rules from a document, with covered and excluded scope                                                             | `rules search`, `import file`                                                                             | V2      |
+| `rulelink-review`     | "Review the rules of module X"                                       | Spot duplicates, contradictions, scope gaps, missing links                                                                 | `rules list`, `rules show`, `rules edit --dry-run`                                                        | V2      |
+| `rulelink-verify`     | "Check that RULE-042 is properly implemented"                        | Read the rule and its locations, assess, produce a report. Never blocking, never part of `check`                           | `where`, `rules show`                                                                                     | V2      |
 
 ### 4.2 Skill structure
 
@@ -193,11 +193,11 @@ classDiagram
     CompositeRelevance o-- RelevanceStrategy
 ```
 
-| Signal | Default weight | Meaning |
-|---|---|---|
-| `LocationRelevance` | 1.0 | The rule is already cited in a target file, or in its directory |
-| `TextRelevance` | 0.6 | Query words appear in the title, statement or scope |
-| `RelatedRelevance` | 0.3 | The rule is related to a rule already selected |
+| Signal              | Default weight | Meaning                                                         |
+| ------------------- | -------------- | --------------------------------------------------------------- |
+| `LocationRelevance` | 1.0            | The rule is already cited in a target file, or in its directory |
+| `TextRelevance`     | 0.6            | Query words appear in the title, statement or scope             |
+| `RelatedRelevance`  | 0.3            | The rule is related to a rule already selected                  |
 
 On equal scores, natural identifier order breaks ties. The computation is deterministic: same query, same context.
 
@@ -226,20 +226,20 @@ JSON output (`rulelink/agent-context/v1`):
 
 ### 6.1 CLI commands
 
-| Command | Options | Release |
-|---|---|---|
-| `rulelink context` | `--paths <P>...`, `--query <TXT>`, `--rules <ID>...`, `--budget <N>`, `--include-proposed`, `--format json\|markdown` | MVP |
-| `rulelink skills install` | `--via auto\|npx\|apm\|copy`, `--skills <NAME>...`, `--agents <A>...`, `--global`, `--no-agents-md` | V1 |
-| `rulelink skills list` | `--format`: installed skills, version, compatibility | V1 |
-| `rulelink skills update` | `--via` | V1 |
+| Command                   | Options                                                                                                               | Release |
+| ------------------------- | --------------------------------------------------------------------------------------------------------------------- | ------- |
+| `rulelink context`        | `--paths <P>...`, `--query <TXT>`, `--rules <ID>...`, `--budget <N>`, `--include-proposed`, `--format json\|markdown` | MVP     |
+| `rulelink skills install` | `--via auto\|npx\|apm\|copy`, `--skills <NAME>...`, `--agents <A>...`, `--global`, `--no-agents-md`                   | V1      |
+| `rulelink skills list`    | `--format`: installed skills, version, compatibility                                                                  | V1      |
+| `rulelink skills update`  | `--via`                                                                                                               | V1      |
 
 ### 6.2 Skill distribution
 
-| Channel | Command for the team |
-|---|---|
+| Channel      | Command for the team                                                                                                             |
+| ------------ | -------------------------------------------------------------------------------------------------------------------------------- |
 | `npx skills` | `npx skills add E-Jacques/rulelink` (the tool discovers the `skills/` folder; add `--skill rulelink-consult` for a single skill) |
-| APM | `apm install E-Jacques/rulelink/skills/<name>`, which adds it to `apm.yml` |
-| Rulelink | `rulelink skills install` (picks one of the two automatically, or copies) |
+| APM          | `apm install E-Jacques/rulelink/skills/<name>`, which adds it to `apm.yml`                                                       |
+| Rulelink     | `rulelink skills install` (picks one of the two automatically, or copies)                                                        |
 
 Skills are versioned with the monorepo tags aligned on the CLI (`v0.3.0`), so package managers can pin a version. Exact path syntax for both tools is to be verified at implementation time; a dedicated mirror repository remains the fallback ([repository/01](../repository/01-repository-structure.md), section 10).
 

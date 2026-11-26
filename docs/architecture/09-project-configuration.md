@@ -21,19 +21,19 @@
 
 ## 2. Release frame
 
-| Feature | MVP | V1 | V2 |
-|---|:-:|:-:|:-:|
-| `rulelink.toml`, root discovery | ● | | |
-| Layered configuration + `${env:VAR}` | ● | | |
-| Interactive and non-interactive `init`, templates | ● | | |
-| CI workflow generation (GitHub, GitLab) by `init` | | | ● |
-| `doctor`, `config show`, `config get/set`, `version`, `completions`, `schema` | ● | | |
-| Command bus, middleware, events | ● | | |
-| `migrate` (configuration and rule format) | | ● | |
-| `rulelink auth`: secrets in the OS keychain | | ● | |
-| Monorepo: `[applications]` by path | | ● | |
-| Environment profiles (`--profile ci`) | | ● | |
-| Source shared across repositories | | | ● |
+| Feature                                                                       | MVP | V1  | V2  |
+| ----------------------------------------------------------------------------- | :-: | :-: | :-: |
+| `rulelink.toml`, root discovery                                               |  ●  |     |     |
+| Layered configuration + `${env:VAR}`                                          |  ●  |     |     |
+| Interactive and non-interactive `init`, templates                             |  ●  |     |     |
+| CI workflow generation (GitHub, GitLab) by `init`                             |     |     |  ●  |
+| `doctor`, `config show`, `config get/set`, `version`, `completions`, `schema` |  ●  |     |     |
+| Command bus, middleware, events                                               |  ●  |     |     |
+| `migrate` (configuration and rule format)                                     |     |  ●  |     |
+| `rulelink auth`: secrets in the OS keychain                                   |     |  ●  |     |
+| Monorepo: `[applications]` by path                                            |     |  ●  |     |
+| Environment profiles (`--profile ci`)                                         |     |  ●  |     |
+| Source shared across repositories                                             |     |     |  ●  |
 
 ## 3. Technical constraints
 
@@ -198,33 +198,33 @@ classDiagram
     Middleware <|.. EventMiddleware
 ```
 
-| Middleware | Role | Where |
-|---|---|---|
-| `TracingMiddleware` | Duration, outcome, correlation identifier | Everywhere |
-| `SourceLockMiddleware` | Source lock for write commands | CLI, LSP |
-| `DryRunMiddleware` | For a write command in preview: returns the `ChangeSet` without applying it | Everywhere |
-| `EventMiddleware` | Publishes domain events after success | Everywhere |
+| Middleware             | Role                                                                        | Where      |
+| ---------------------- | --------------------------------------------------------------------------- | ---------- |
+| `TracingMiddleware`    | Duration, outcome, correlation identifier                                   | Everywhere |
+| `SourceLockMiddleware` | Source lock for write commands                                              | CLI, LSP   |
+| `DryRunMiddleware`     | For a write command in preview: returns the `ChangeSet` without applying it | Everywhere |
+| `EventMiddleware`      | Publishes domain events after success                                       | Everywhere |
 
 The bus applies middleware as a chain (**Chain of Responsibility**). Each middleware can also be seen as a **Decorator** of the command's execution.
 
 Command catalogue:
 
-| Command | Kind | Component | Release |
-|---|---|---|---|
-| `InitProject` | Write | 09 | MVP |
-| `ListRules`, `ShowRules`, `SearchRules` | Read | 01 | MVP |
-| `AddRule`, `EditRule`, `ApproveRules`, `ObsoleteRule`, `RejectRules` | Write | 01 | MVP |
-| `ChangeLabels` | Write | 01 | V1 |
-| `Explain`, `Where`, `Scan` | Read | 03 | MVP |
-| `Annotate` | Write (code) | 03 | MVP |
-| `RunCheck`, `Status` | Read | 04 | MVP |
-| `ManageBaseline` | Write | 04 | V1 |
-| `ImportRules` | Write | 05 | MVP (file) |
-| `ExportRules`, `PublishRules` | Read + send | 06 | V1 |
-| `BuildContext` | Read | 07 | MVP |
-| `InstallSkills` | Write (files) | 07 | MVP |
-| `PullSource`, `MigrateSource` | Write | 02 | V2 / V1 |
-| `PushSnapshot` | Read + send | 10 | V2 |
+| Command                                                              | Kind          | Component | Release    |
+| -------------------------------------------------------------------- | ------------- | --------- | ---------- |
+| `InitProject`                                                        | Write         | 09        | MVP        |
+| `ListRules`, `ShowRules`, `SearchRules`                              | Read          | 01        | MVP        |
+| `AddRule`, `EditRule`, `ApproveRules`, `ObsoleteRule`, `RejectRules` | Write         | 01        | MVP        |
+| `ChangeLabels`                                                       | Write         | 01        | V1         |
+| `Explain`, `Where`, `Scan`                                           | Read          | 03        | MVP        |
+| `Annotate`                                                           | Write (code)  | 03        | MVP        |
+| `RunCheck`, `Status`                                                 | Read          | 04        | MVP        |
+| `ManageBaseline`                                                     | Write         | 04        | V1         |
+| `ImportRules`                                                        | Write         | 05        | MVP (file) |
+| `ExportRules`, `PublishRules`                                        | Read + send   | 06        | V1         |
+| `BuildContext`                                                       | Read          | 07        | MVP        |
+| `InstallSkills`                                                      | Write (files) | 07        | MVP        |
+| `PullSource`, `MigrateSource`                                        | Write         | 02        | V2 / V1    |
+| `PushSnapshot`                                                       | Read + send   | 10        | V2         |
 
 ### 5.4 Facade — **Facade**
 
@@ -258,20 +258,20 @@ pub enum DomainEvent {
 }
 ```
 
-| Subscriber | Reaction | Release |
-|---|---|---|
-| LSP (08) | Refreshes diagnostics and CodeLens | V1 |
-| Configuration hooks `[hooks] after_import = "..."` | Runs a script (for example a notification) | V2 |
+| Subscriber                                         | Reaction                                   | Release |
+| -------------------------------------------------- | ------------------------------------------ | ------- |
+| LSP (08)                                           | Refreshes diagnostics and CodeLens         | V1      |
+| Configuration hooks `[hooks] after_import = "..."` | Runs a script (for example a notification) | V2      |
 
 ### 5.6 `init` — **Prototype** + **Template Method**
 
 `init` starts from a project template (**Prototype**), cloned then adjusted according to the answers. The three templates match the brief's three entry points.
 
-| Template | Entry point | Settings |
-|---|---|---|
-| `legacy` | Existing code without rules | `orphan-rule = off` at first, retro-documentation skill highlighted, baseline suggested (V1) |
-| `greenfield` | Active project: new rules annotated as development goes | Default settings, consultation skill |
-| `business` | Existing rule repository imported | `[import.jira]` section or CSV import prepared |
+| Template     | Entry point                                             | Settings                                                                                     |
+| ------------ | ------------------------------------------------------- | -------------------------------------------------------------------------------------------- |
+| `legacy`     | Existing code without rules                             | `orphan-rule = off` at first, retro-documentation skill highlighted, baseline suggested (V1) |
+| `greenfield` | Active project: new rules annotated as development goes | Default settings, consultation skill                                                         |
+| `business`   | Existing rule repository imported                       | `[import.jira]` section or CSV import prepared                                               |
 
 Fixed steps (**Template Method**): detect (languages, Git remote, CI, `apm.yml`, agents present) → choose a template → ask the missing questions → write the files → install the skills → print the next commands.
 
@@ -298,19 +298,19 @@ Interactive and non-interactive modes are both supported. Every question has a f
 
 ## 6. CLI entry points
 
-| Command | Options | Effect | Release |
-|---|---|---|---|
-| `rulelink init` | `--template legacy\|greenfield\|business`, `--source json\|json-dir`, `--rules-path <P>`, `--id-prefix <PREFIX>` (default `RULE`), `--ci github\|gitlab\|none` (V2), `--skills auto\|npx\|apm\|copy\|none` (V1), `--no-agents-md` (V1), `--yes` | Initialises the repository | MVP |
-| `rulelink config show` | `--resolved`, `--origin`, `--format toml\|json` | Effective configuration | MVP |
-| `rulelink config get <KEY>` | | Value of a key | MVP |
-| `rulelink config set <KEY> <VALUE>` | `--local` | Edits the file, preserving comments and order | MVP |
-| `rulelink doctor` | `--format` | Checks: configuration, readable source, ID pattern, installed and compatible skills, CI present, reachable adapters (`--network`) | MVP |
-| `rulelink migrate` | `--dry-run` | Updates `rulelink.toml` and the rule format | V1 |
-| `rulelink auth login <ADAPTER>` | `--url` | Stores a token in the keychain | V1 |
-| `rulelink auth logout <ADAPTER>` | | Removes the token | V1 |
-| `rulelink completions <SHELL>` | bash, zsh, fish, powershell, elvish | Shell completion | MVP |
-| `rulelink version` | `--json` | Version, commit, supported formats and protocols | MVP |
-| `rulelink schema <NAME>` | `rules`, `config`, `proposals`, `check-report`, `agent-context`... | JSON Schema | MVP |
+| Command                             | Options                                                                                                                                                                                                                                         | Effect                                                                                                                            | Release |
+| ----------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------- | ------- |
+| `rulelink init`                     | `--template legacy\|greenfield\|business`, `--source json\|json-dir`, `--rules-path <P>`, `--id-prefix <PREFIX>` (default `RULE`), `--ci github\|gitlab\|none` (V2), `--skills auto\|npx\|apm\|copy\|none` (V1), `--no-agents-md` (V1), `--yes` | Initialises the repository                                                                                                        | MVP     |
+| `rulelink config show`              | `--resolved`, `--origin`, `--format toml\|json`                                                                                                                                                                                                 | Effective configuration                                                                                                           | MVP     |
+| `rulelink config get <KEY>`         |                                                                                                                                                                                                                                                 | Value of a key                                                                                                                    | MVP     |
+| `rulelink config set <KEY> <VALUE>` | `--local`                                                                                                                                                                                                                                       | Edits the file, preserving comments and order                                                                                     | MVP     |
+| `rulelink doctor`                   | `--format`                                                                                                                                                                                                                                      | Checks: configuration, readable source, ID pattern, installed and compatible skills, CI present, reachable adapters (`--network`) | MVP     |
+| `rulelink migrate`                  | `--dry-run`                                                                                                                                                                                                                                     | Updates `rulelink.toml` and the rule format                                                                                       | V1      |
+| `rulelink auth login <ADAPTER>`     | `--url`                                                                                                                                                                                                                                         | Stores a token in the keychain                                                                                                    | V1      |
+| `rulelink auth logout <ADAPTER>`    |                                                                                                                                                                                                                                                 | Removes the token                                                                                                                 | V1      |
+| `rulelink completions <SHELL>`      | bash, zsh, fish, powershell, elvish                                                                                                                                                                                                             | Shell completion                                                                                                                  | MVP     |
+| `rulelink version`                  | `--json`                                                                                                                                                                                                                                        | Version, commit, supported formats and protocols                                                                                  | MVP     |
+| `rulelink schema <NAME>`            | `rules`, `config`, `proposals`, `check-report`, `agent-context`...                                                                                                                                                                              | JSON Schema                                                                                                                       | MVP     |
 
 Example `rulelink doctor`:
 

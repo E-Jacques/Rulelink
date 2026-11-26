@@ -1,0 +1,6 @@
+---
+import Badge from './Badge.astro';
+interface Props { version: string; since?: boolean }
+const { version, since = false } = Astro.props;
+---
+<Badge kind="version">{since ? 'since ' : ''}v{version.replace(/^v/, '')}</Badge>

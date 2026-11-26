@@ -5,8 +5,8 @@ members = ["cargo:."]
 [dist]
 cargo-dist-version = "0.28.0"
 ci = "github"
-# MVP: npm is the only user-facing installer. Shell, PowerShell and Homebrew come in V1.
-installers = ["npm"]
+# User-facing installers: shell, PowerShell and npm (ADR-0004). Homebrew and apt stay out of scope.
+installers = ["shell", "powershell", "npm"]
 npm-scope = "@rulelink-cli"
 publish-jobs = ["npm"]
 host-jobs = ["./smoke-test"]

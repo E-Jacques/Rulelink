@@ -31,23 +31,23 @@ One sentence: `select` reads the Source and returns the Rules that contain the t
 
 ## Ownership
 
-| Decision | Owner |
-| --- | --- |
+| Decision                                                                    | Owner                                   |
+| --------------------------------------------------------------------------- | --------------------------------------- |
 | Folding (case, accents), which fields are searched, status filter, ordering | model (`SearchText`, `RuleSet::select`) |
-| Status parsing (`FromStr`), `related` validity and uniqueness | model |
-| Load config and Source, error class | app |
-| Arguments, table printing | cli |
+| Status parsing (`FromStr`), `related` validity and uniqueness               | model                                   |
+| Load config and Source, error class                                         | app                                     |
+| Arguments, table printing                                                   | cli                                     |
 
 ## Input boundaries
 
-| Input | Line checked |
-| --- | --- |
-| `<text>` | trimmed, blank refused (`BlankSearchText`, naming "the search text", exit 2); folded with NFD, combining marks dropped, lower-cased; matched as a substring of the whole text (no word splitting, no regex) |
-| `--status` | closed set, parsed by clap through `FromStr`; unknown value is a usage error naming the value and the allowed ones |
-| `--related` | `RuleId::parse` (trim, blank refused naming `--related`); duplicate refused (`DraftError::Duplicate`); unknown refused (`AddError::UnknownRelated` names the Identifier, exit 2) |
-| Source / config | same helpers as the other commands; `list` and `search` never write |
-| Failure | refused `add` writes nothing (check before allocation, atomic write) |
-| Paths | not applicable, no path argument |
+| Input           | Line checked                                                                                                                                                                                                |
+| --------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `<text>`        | trimmed, blank refused (`BlankSearchText`, naming "the search text", exit 2); folded with NFD, combining marks dropped, lower-cased; matched as a substring of the whole text (no word splitting, no regex) |
+| `--status`      | closed set, parsed by clap through `FromStr`; unknown value is a usage error naming the value and the allowed ones                                                                                          |
+| `--related`     | `RuleId::parse` (trim, blank refused naming `--related`); duplicate refused (`DraftError::Duplicate`); unknown refused (`AddError::UnknownRelated` names the Identifier, exit 2)                            |
+| Source / config | same helpers as the other commands; `list` and `search` never write                                                                                                                                         |
+| Failure         | refused `add` writes nothing (check before allocation, atomic write)                                                                                                                                        |
+| Paths           | not applicable, no path argument                                                                                                                                                                            |
 
 Errors: one type per cause (`UnknownStatus`, `BlankSearchText`, `AddError`), converted in `app` by explicit match / single-class `From`; no `#[non_exhaustive]`.
 
@@ -66,11 +66,11 @@ Errors: one type per cause (`UnknownStatus`, `BlankSearchText`, `AddError`), con
 
 `gh api .../issues/11/dependencies/blocking` returns nothing; tickets that will touch this code:
 
-| Ticket | Reuses | Missing |
-| --- | --- | --- |
+| Ticket                      | Reuses                                  | Missing                                                                         |
+| --------------------------- | --------------------------------------- | ------------------------------------------------------------------------------- |
 | #15 RL103 unknown `related` | `Rule.related`, the same existence rule | a hand-edited Source can still hold a dangling `related`: the Finding is theirs |
-| #18 explain `--status` | `RuleStatus: FromStr` | none |
-| #20 context `--query` | `SearchText`, `RuleSet::select` | ranking (theirs) |
-| #16 `--format json` | `select` returns `Rule`s | `list`/`search` have human output only |
+| #18 explain `--status`      | `RuleStatus: FromStr`                   | none                                                                            |
+| #20 context `--query`       | `SearchText`, `RuleSet::select`         | ranking (theirs)                                                                |
+| #16 `--format json`         | `select` returns `Rule`s                | `list`/`search` have human output only                                          |
 
 Deferred, recorded: `--limit`, `--format`, `--app`/`--module` filters, ranking, `rules edit` to change `related`, cycle detection (out of scope in the issue). Search tokens are not split: `"vat rounding"` must appear as that exact phrase.

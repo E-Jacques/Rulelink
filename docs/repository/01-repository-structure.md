@@ -20,19 +20,19 @@
 
 ## 2. Release frame
 
-| Feature | MVP | V1 | V2 |
-|---|:-:|:-:|:-:|
-| Cargo workspace with all Rust crates, shared manifest settings | ● | | |
-| moon workspace orchestrating Rust tasks, affected-only CI | ● | | |
-| `xtask` crate (schema generation, architecture test) | ● | | |
-| `skills/` directory, installable from the monorepo | ● | | |
-| Committed JSON Schemas with drift check | ● | | |
-| Quality gates: fmt, clippy, nextest, deny, schema drift, architecture test | ● | | |
-| pnpm workspace (VS Code extension, TypeScript adapter SDK) | | ● | |
-| Python adapter SDK (uv) | | ● | |
-| `cargo-semver-checks` on published crates, `cargo-hack` feature matrix | | ● | |
-| Mirror repositories for the GitHub Action and the GitLab CI component | | | ● |
-| Gradle build for the IntelliJ plugin | | | ● |
+| Feature                                                                    | MVP | V1  | V2  |
+| -------------------------------------------------------------------------- | :-: | :-: | :-: |
+| Cargo workspace with all Rust crates, shared manifest settings             |  ●  |     |     |
+| moon workspace orchestrating Rust tasks, affected-only CI                  |  ●  |     |     |
+| `xtask` crate (schema generation, architecture test)                       |  ●  |     |     |
+| `skills/` directory, installable from the monorepo                         |  ●  |     |     |
+| Committed JSON Schemas with drift check                                    |  ●  |     |     |
+| Quality gates: fmt, clippy, nextest, deny, schema drift, architecture test |  ●  |     |     |
+| pnpm workspace (VS Code extension, TypeScript adapter SDK)                 |     |  ●  |     |
+| Python adapter SDK (uv)                                                    |     |  ●  |     |
+| `cargo-semver-checks` on published crates, `cargo-hack` feature matrix     |     |  ●  |     |
+| Mirror repositories for the GitHub Action and the GitLab CI component      |     |     |  ●  |
+| Gradle build for the IntelliJ plugin                                       |     |     |  ●  |
 
 ## 3. Technical constraints
 
@@ -48,26 +48,26 @@
 
 **Use a Cargo workspace as the backbone, orchestrated by moon.** Cargo stays the build system for Rust; moon adds what Cargo lacks once the repository holds several languages: a project graph across Rust, TypeScript and Kotlin, task inheritance, affected-only runs in CI, output caching, and toolchain pinning for Node and pnpm.
 
-| Option | Strengths | Weaknesses for Rulelink | Verdict |
-|---|---|---|---|
-| Cargo workspace alone + `just` | Native, zero learning cost | No project graph across languages, no affected detection, no caching outside Rust | Enough for the MVP only; rejected as the long-term base |
-| **Cargo workspace + moon** | Written in Rust, delegates to Cargo instead of replacing it, polyglot (Rust, TypeScript and others), affected-only CI, toolchain pinning | One more tool and configuration to learn | **Proposed** |
-| Nx | Mature, rich ecosystem | Node-centric; Rust support through community plugins | Rejected: Node becomes mandatory for a Rust-first product |
-| Turborepo | Simple, fast | JavaScript workspaces only | Rejected |
-| Bazel / Buck2 | Hermetic, scales to very large repositories | High setup and maintenance cost; replaces Cargo builds with `rules_rust` | Rejected: disproportionate for a solo project |
-| Pants | Good Python and Go support | Rust is not a first-class language | Rejected |
+| Option                         | Strengths                                                                                                                                | Weaknesses for Rulelink                                                           | Verdict                                                   |
+| ------------------------------ | ---------------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------- | --------------------------------------------------------- |
+| Cargo workspace alone + `just` | Native, zero learning cost                                                                                                               | No project graph across languages, no affected detection, no caching outside Rust | Enough for the MVP only; rejected as the long-term base   |
+| **Cargo workspace + moon**     | Written in Rust, delegates to Cargo instead of replacing it, polyglot (Rust, TypeScript and others), affected-only CI, toolchain pinning | One more tool and configuration to learn                                          | **Proposed**                                              |
+| Nx                             | Mature, rich ecosystem                                                                                                                   | Node-centric; Rust support through community plugins                              | Rejected: Node becomes mandatory for a Rust-first product |
+| Turborepo                      | Simple, fast                                                                                                                             | JavaScript workspaces only                                                        | Rejected                                                  |
+| Bazel / Buck2                  | Hermetic, scales to very large repositories                                                                                              | High setup and maintenance cost; replaces Cargo builds with `rules_rust`          | Rejected: disproportionate for a solo project             |
+| Pants                          | Good Python and Go support                                                                                                               | Rust is not a first-class language                                                | Rejected                                                  |
 
 Why moon from the MVP, when the MVP is pure Rust: its configuration is a few small YAML files, and adopting it before the TypeScript extension (V1) avoids a migration. Tasks stay thin wrappers around `cargo`, `pnpm` and `gradle`. If moon ever becomes a burden, removing it means replacing those wrappers with a `justfile`, with no change to the code.
 
 ### 4.2 Toolchain pinning
 
-| Tool | Pinned in | Installed by |
-|---|---|---|
-| Rust (stable, components `clippy`, `rustfmt`) | `rust-toolchain.toml` | rustup (required on the machine) |
-| Node.js, pnpm | `.moon/toolchains.yml` | moon (via proto) |
-| Python, uv | `.python-version`, `sdks/python/pyproject.toml` | uv |
-| JDK, Gradle | `editors/intellij/gradle/wrapper` | Gradle wrapper |
-| Cargo tools (`cargo-nextest`, `cargo-deny`, `release-plz`, `dist`...) | `.config/cargo-tools.toml` | `cargo binstall`, from `moon setup` |
+| Tool                                                                  | Pinned in                                       | Installed by                        |
+| --------------------------------------------------------------------- | ----------------------------------------------- | ----------------------------------- |
+| Rust (stable, components `clippy`, `rustfmt`)                         | `rust-toolchain.toml`                           | rustup (required on the machine)    |
+| Node.js, pnpm                                                         | `.moon/toolchains.yml`                          | moon (via proto)                    |
+| Python, uv                                                            | `.python-version`, `sdks/python/pyproject.toml` | uv                                  |
+| JDK, Gradle                                                           | `editors/intellij/gradle/wrapper`               | Gradle wrapper                      |
+| Cargo tools (`cargo-nextest`, `cargo-deny`, `release-plz`, `dist`...) | `.config/cargo-tools.toml`                      | `cargo binstall`, from `moon setup` |
 
 The exact name and schema of the moon toolchain file differ between moon v1 and v2; the v2 layout is assumed here and must be verified at implementation time.
 
@@ -184,12 +184,12 @@ flowchart BT
 
 Each moon project carries a `layer` tag. The rules of [architecture/00](../architecture/00-global-architecture.md) (section 5) become machine-checked in two complementary ways:
 
-| Check | Tool | What it catches |
-|---|---|---|
-| Layer relationships between projects | moon project constraints on tags (exact configuration keys to be verified at implementation time) | A domain project depending on an adapter, an adapter depending on `app` |
-| Forbidden dependencies inside domain crates | `cargo xtask arch` reading `cargo metadata` | `tokio`, `reqwest` or any I/O crate reachable from `model`, `registry`, `link`, `check` |
-| `fn main` or process-level code (signal handlers, runtime creation) outside `cli` and `xtask` | `cargo xtask arch` (section 6.3) | A server or domain crate that starts its own process |
-| Licences, advisories, duplicate versions | `cargo deny check` | GPL dependency in the MIT core, vulnerable crate |
+| Check                                                                                         | Tool                                                                                              | What it catches                                                                         |
+| --------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------- |
+| Layer relationships between projects                                                          | moon project constraints on tags (exact configuration keys to be verified at implementation time) | A domain project depending on an adapter, an adapter depending on `app`                 |
+| Forbidden dependencies inside domain crates                                                   | `cargo xtask arch` reading `cargo metadata`                                                       | `tokio`, `reqwest` or any I/O crate reachable from `model`, `registry`, `link`, `check` |
+| `fn main` or process-level code (signal handlers, runtime creation) outside `cli` and `xtask` | `cargo xtask arch` (section 6.3)                                                                  | A server or domain crate that starts its own process                                    |
+| Licences, advisories, duplicate versions                                                      | `cargo deny check`                                                                                | GPL dependency in the MIT core, vulnerable crate                                        |
 
 `cargo xtask arch` is the authoritative check for Rust: it runs with Cargo alone, so it also protects contributors who do not use moon.
 
@@ -197,31 +197,31 @@ Each moon project carries a `layer` tag. The rules of [architecture/00](../archi
 
 A Rust package is a **library** when it has a `src/lib.rs` only, and an **application** when it has a `src/main.rs` and therefore produces an executable. Only applications need an entry point. The classification below answers where `main()` is needed: in a single place, `rulelink-cli`.
 
-| Package | Component | Kind | Entry point | Published | Release |
-|---|---|---|---|---|---|
-| `rulelink-model` | 01 | Library | None | crates.io | MVP |
-| `rulelink-registry` | 01 | Library | None | crates.io | MVP |
-| `rulelink-link` | 03 | Library | None | crates.io | MVP |
-| `rulelink-check` | 04 | Library | None | crates.io | MVP |
-| `rulelink-import` | 05 | Library | None | crates.io | MVP (file), V1 |
-| `rulelink-publish` | 06 | Library | None | crates.io | V1 |
-| `rulelink-adapter-sdk` | 02 | Library | None | crates.io | MVP |
-| `rulelink-config` | 09 | Library | None | crates.io | MVP |
-| `rulelink-app` | 09 | Library | None (hosts the `Entrypoint` trait and `Bootstrap`, see below) | crates.io | MVP |
-| `rulelink-adapter-*` (`json`, `scan-fs`, `git`, `external`, `jira`, `confluence`, `csv`, `github`, `gitlab`) | 02 to 06 | Library, one per adapter family | None | crates.io | MVP to V2 |
-| `rulelink-lsp` | 08 | Library (server loop) | None: mounted by `rulelink lsp` | crates.io | V1 |
-| `rulelink-cli` | 09 | **Application**, binary `rulelink` | **`src/main.rs`** | crates.io, binaries | MVP |
-| `xtask` | Tooling | Application, run by `cargo xtask` | `src/main.rs` (maintainer tool, never distributed) | No | MVP |
-| `rulelink-e2e` (`tests/e2e`) | Tooling | Test crate, no executable of its own | None | No | MVP |
+| Package                                                                                                      | Component | Kind                                 | Entry point                                                    | Published           | Release        |
+| ------------------------------------------------------------------------------------------------------------ | --------- | ------------------------------------ | -------------------------------------------------------------- | ------------------- | -------------- |
+| `rulelink-model`                                                                                             | 01        | Library                              | None                                                           | crates.io           | MVP            |
+| `rulelink-registry`                                                                                          | 01        | Library                              | None                                                           | crates.io           | MVP            |
+| `rulelink-link`                                                                                              | 03        | Library                              | None                                                           | crates.io           | MVP            |
+| `rulelink-check`                                                                                             | 04        | Library                              | None                                                           | crates.io           | MVP            |
+| `rulelink-import`                                                                                            | 05        | Library                              | None                                                           | crates.io           | MVP (file), V1 |
+| `rulelink-publish`                                                                                           | 06        | Library                              | None                                                           | crates.io           | V1             |
+| `rulelink-adapter-sdk`                                                                                       | 02        | Library                              | None                                                           | crates.io           | MVP            |
+| `rulelink-config`                                                                                            | 09        | Library                              | None                                                           | crates.io           | MVP            |
+| `rulelink-app`                                                                                               | 09        | Library                              | None (hosts the `Entrypoint` trait and `Bootstrap`, see below) | crates.io           | MVP            |
+| `rulelink-adapter-*` (`json`, `scan-fs`, `git`, `external`, `jira`, `confluence`, `csv`, `github`, `gitlab`) | 02 to 06  | Library, one per adapter family      | None                                                           | crates.io           | MVP to V2      |
+| `rulelink-lsp`                                                                                               | 08        | Library (server loop)                | None: mounted by `rulelink lsp`                                | crates.io           | V1             |
+| `rulelink-cli`                                                                                               | 09        | **Application**, binary `rulelink`   | **`src/main.rs`**                                              | crates.io, binaries | MVP            |
+| `xtask`                                                                                                      | Tooling   | Application, run by `cargo xtask`    | `src/main.rs` (maintainer tool, never distributed)             | No                  | MVP            |
+| `rulelink-e2e` (`tests/e2e`)                                                                                 | Tooling   | Test crate, no executable of its own | None                                                           | No                  | MVP            |
 
 Outside the Cargo workspace:
 
-| Package | Kind | Entry point | Release |
-|---|---|---|---|
-| External adapters (any language) | Application started by the CLI as a child process, speaking the JSON-RPC protocol of 02 | Their own, owned by their author | V1 |
-| `editors/vscode`, `editors/intellij` | Extensions hosted by the IDE, spawning `rulelink lsp` | IDE manifest (`package.json`, `plugin.xml`) | V1, V2 |
-| `sdks/typescript`, `sdks/python` | Libraries for external adapter authors | None | V1 |
-| `skills/*`, `ci/*` | Content (Markdown, YAML), not code | None | MVP |
+| Package                              | Kind                                                                                    | Entry point                                 | Release |
+| ------------------------------------ | --------------------------------------------------------------------------------------- | ------------------------------------------- | ------- |
+| External adapters (any language)     | Application started by the CLI as a child process, speaking the JSON-RPC protocol of 02 | Their own, owned by their author            | V1      |
+| `editors/vscode`, `editors/intellij` | Extensions hosted by the IDE, spawning `rulelink lsp`                                   | IDE manifest (`package.json`, `plugin.xml`) | V1, V2  |
+| `sdks/typescript`, `sdks/python`     | Libraries for external adapter authors                                                  | None                                        | V1      |
+| `skills/*`, `ci/*`                   | Content (Markdown, YAML), not code                                                      | None                                        | MVP     |
 
 Consequences:
 
@@ -279,12 +279,12 @@ Each member manifest inherits with `version.workspace = true`, `edition.workspac
 
 ### 7.2 Cargo features
 
-| Crate | Feature | Effect | Release |
-|---|---|---|---|
-| `rulelink-cli` | `adapter-jira`, `adapter-confluence`, `adapter-csv`, `adapter-github`, `adapter-gitlab` | Compiles the matching adapter in; all enabled in distributed binaries | V1 |
-| `rulelink-cli` | `lsp` | Compiles the server subcommand in; enabled by default | V1 |
-| `rulelink-adapter-sdk` | `conformance` | Exposes the conformance kit to adapter test suites | V1 |
-| `rulelink-model` | `schema` | Derives `schemars::JsonSchema`; off for lightweight consumers | MVP |
+| Crate                  | Feature                                                                                 | Effect                                                                | Release |
+| ---------------------- | --------------------------------------------------------------------------------------- | --------------------------------------------------------------------- | ------- |
+| `rulelink-cli`         | `adapter-jira`, `adapter-confluence`, `adapter-csv`, `adapter-github`, `adapter-gitlab` | Compiles the matching adapter in; all enabled in distributed binaries | V1      |
+| `rulelink-cli`         | `lsp`                                                                                   | Compiles the server subcommand in; enabled by default                 | V1      |
+| `rulelink-adapter-sdk` | `conformance`                                                                           | Exposes the conformance kit to adapter test suites                    | V1      |
+| `rulelink-model`       | `schema`                                                                                | Derives `schemars::JsonSchema`; off for lightweight consumers         | MVP     |
 
 `cargo hack check --each-feature` (V1) guarantees that every feature compiles on its own.
 
@@ -292,35 +292,35 @@ Each member manifest inherits with `version.workspace = true`, `edition.workspac
 
 Four crate templates cover the whole workspace.
 
-| Template | Layout | Rules |
-|---|---|---|
-| Domain crate (`registry`, `link`, `check`...) | `src/lib.rs` (public surface, re-exports only), `src/error.rs`, one module per mechanism (`lifecycle/`, `ids/`, `query/`), `tests/` for integration tests | Synchronous, no I/O; every public item documented |
-| Adapter crate (`adapters/*`) | `src/lib.rs` exposing one `AdapterFamily`, `src/client/` (remote API), `src/mapping/` (to the model), `tests/conformance.rs` | Depends only on `rulelink-adapter-sdk`; must pass the conformance kit |
-| Binary crate (`cli` only) | `src/main.rs`, one module per command group, no business logic | The only `main()` of the product. Translates arguments into `AppCommand`s (09); calls `Bootstrap::execute` ([Runtime lifecycle](../architecture/10-runtime-lifecycle.md)) |
-| Server crate (`lsp`) | `src/lib.rs` exposing an `Entrypoint` implementation, `src/server.rs`, one module per request family, no business logic | Library mounted by the CLI as the `lsp` subcommand (ADR-004); owns the server loop, not the process |
+| Template                                      | Layout                                                                                                                                                    | Rules                                                                                                                                                                     |
+| --------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Domain crate (`registry`, `link`, `check`...) | `src/lib.rs` (public surface, re-exports only), `src/error.rs`, one module per mechanism (`lifecycle/`, `ids/`, `query/`), `tests/` for integration tests | Synchronous, no I/O; every public item documented                                                                                                                         |
+| Adapter crate (`adapters/*`)                  | `src/lib.rs` exposing one `AdapterFamily`, `src/client/` (remote API), `src/mapping/` (to the model), `tests/conformance.rs`                              | Depends only on `rulelink-adapter-sdk`; must pass the conformance kit                                                                                                     |
+| Binary crate (`cli` only)                     | `src/main.rs`, one module per command group, no business logic                                                                                            | The only `main()` of the product. Translates arguments into `AppCommand`s (09); calls `Bootstrap::execute` ([Runtime lifecycle](../architecture/10-runtime-lifecycle.md)) |
+| Server crate (`lsp`)                          | `src/lib.rs` exposing an `Entrypoint` implementation, `src/server.rs`, one module per request family, no business logic                                   | Library mounted by the CLI as the `lsp` subcommand (ADR-004); owns the server loop, not the process                                                                       |
 
 Test conventions:
 
-| Kind | Location | Tooling |
-|---|---|---|
-| Unit | `#[cfg(test)] mod tests` next to the code | `cargo nextest` |
-| Integration | `<crate>/tests/*.rs` | `cargo nextest` |
-| Snapshot | `<crate>/tests/snapshots/` | `insta` |
-| Shared fixtures | `testdata/` at the root | Read through a small `testdata` helper in `xtask` |
-| End to end | `tests/e2e/` against the built binary and `examples/demo-repo` | `assert_cmd`, `insta` |
-| Property | Inside unit tests | `proptest` |
+| Kind            | Location                                                       | Tooling                                           |
+| --------------- | -------------------------------------------------------------- | ------------------------------------------------- |
+| Unit            | `#[cfg(test)] mod tests` next to the code                      | `cargo nextest`                                   |
+| Integration     | `<crate>/tests/*.rs`                                           | `cargo nextest`                                   |
+| Snapshot        | `<crate>/tests/snapshots/`                                     | `insta`                                           |
+| Shared fixtures | `testdata/` at the root                                        | Read through a small `testdata` helper in `xtask` |
+| End to end      | `tests/e2e/` against the built binary and `examples/demo-repo` | `assert_cmd`, `insta`                             |
+| Property        | Inside unit tests                                              | `proptest`                                        |
 
 ## 8. Non-Rust packages
 
-| Package | Location | Tooling | Built and tested by | Release |
-|---|---|---|---|---|
-| VS Code extension | `editors/vscode` | pnpm, `vsce`, `ovsx` | moon `node` tasks | V1 |
-| TypeScript adapter SDK | `sdks/typescript` | pnpm | moon `node` tasks | V1 |
-| Python adapter SDK | `sdks/python` | uv | moon task wrapping `uv run pytest` | V1 |
-| IntelliJ plugin | `editors/intellij` | Gradle wrapper, IntelliJ Platform Gradle Plugin | moon task wrapping `./gradlew` | V2 |
-| Skills | `skills/<name>/SKILL.md` | `cargo xtask skills-lint` (front matter, links, minimum CLI version) | moon task | MVP |
-| GitHub Action | `ci/github-action` | Composite action, no build | Mirror job (section 10) | V2 |
-| GitLab CI component | `ci/gitlab-component/templates` | YAML | Mirror job (section 10) | V2 |
+| Package                | Location                        | Tooling                                                              | Built and tested by                | Release |
+| ---------------------- | ------------------------------- | -------------------------------------------------------------------- | ---------------------------------- | ------- |
+| VS Code extension      | `editors/vscode`                | pnpm, `vsce`, `ovsx`                                                 | moon `node` tasks                  | V1      |
+| TypeScript adapter SDK | `sdks/typescript`               | pnpm                                                                 | moon `node` tasks                  | V1      |
+| Python adapter SDK     | `sdks/python`                   | uv                                                                   | moon task wrapping `uv run pytest` | V1      |
+| IntelliJ plugin        | `editors/intellij`              | Gradle wrapper, IntelliJ Platform Gradle Plugin                      | moon task wrapping `./gradlew`     | V2      |
+| Skills                 | `skills/<name>/SKILL.md`        | `cargo xtask skills-lint` (front matter, links, minimum CLI version) | moon task                          | MVP     |
+| GitHub Action          | `ci/github-action`              | Composite action, no build                                           | Mirror job (section 10)            | V2      |
+| GitLab CI component    | `ci/gitlab-component/templates` | YAML                                                                 | Mirror job (section 10)            | V2      |
 
 ## 9. Tasks and CI
 
@@ -328,25 +328,25 @@ Test conventions:
 
 Tasks are declared once per language in `.moon/tasks/*.yml` and inherited by every project of that language (a declarative counterpart of the **Template Method**: the skeleton is shared, each project only overrides what differs).
 
-| Task | Rust command | TypeScript command | Release |
-|---|---|---|---|
-| `format` | `cargo fmt --check -p <crate>` | `pnpm biome format` | MVP |
-| `lint` | `cargo clippy -p <crate> --all-targets -- -D warnings` | `pnpm biome lint` | MVP |
-| `test` | `cargo nextest run -p <crate>` | `pnpm vitest run` | MVP |
-| `build` | `cargo build -p <crate>` | `pnpm build` | MVP |
-| `semver` | `cargo semver-checks -p <crate>` (published library crates) | — | V1 |
-| `package` | — | `vsce package --target <platform>` | V1 |
+| Task      | Rust command                                                | TypeScript command                 | Release |
+| --------- | ----------------------------------------------------------- | ---------------------------------- | ------- |
+| `format`  | `cargo fmt --check -p <crate>`                              | `pnpm biome format`                | MVP     |
+| `lint`    | `cargo clippy -p <crate> --all-targets -- -D warnings`      | `pnpm biome lint`                  | MVP     |
+| `test`    | `cargo nextest run -p <crate>`                              | `pnpm vitest run`                  | MVP     |
+| `build`   | `cargo build -p <crate>`                                    | `pnpm build`                       | MVP     |
+| `semver`  | `cargo semver-checks -p <crate>` (published library crates) | —                                  | V1      |
+| `package` | —                                                           | `vsce package --target <platform>` | V1      |
 
 Workspace-level tasks (root project):
 
-| Task | Command | Purpose | Release |
-|---|---|---|---|
-| `schemas` | `cargo xtask schemas` | Regenerates `schemas/`; CI fails if the result differs from the committed files | MVP |
-| `arch` | `cargo xtask arch` | Dependency rules (section 6.2) | MVP |
-| `deny` | `cargo deny check` | Licences and advisories | MVP |
-| `e2e` | `cargo nextest run -p rulelink-e2e` | End-to-end tests | MVP |
-| `docs-check` | Mermaid validation of every folder under `docs/` | Keeps this dossier renderable | MVP |
-| `release-plan` | `dist plan` | Dry run of the release on every PR (see [Release lifecycle](02-release-lifecycle.md)) | MVP |
+| Task           | Command                                          | Purpose                                                                               | Release |
+| -------------- | ------------------------------------------------ | ------------------------------------------------------------------------------------- | ------- |
+| `schemas`      | `cargo xtask schemas`                            | Regenerates `schemas/`; CI fails if the result differs from the committed files       | MVP     |
+| `arch`         | `cargo xtask arch`                               | Dependency rules (section 6.2)                                                        | MVP     |
+| `deny`         | `cargo deny check`                               | Licences and advisories                                                               | MVP     |
+| `e2e`          | `cargo nextest run -p rulelink-e2e`              | End-to-end tests                                                                      | MVP     |
+| `docs-check`   | Mermaid validation of every folder under `docs/` | Keeps this dossier renderable                                                         | MVP     |
+| `release-plan` | `dist plan`                                      | Dry run of the release on every PR (see [Release lifecycle](02-release-lifecycle.md)) | MVP     |
 
 ### 9.2 Pull request pipeline
 
@@ -367,22 +367,22 @@ flowchart LR
 
 Some distribution channels require a dedicated repository. The monorepo stays the single source; a release job pushes a copy.
 
-| Deliverable | Constraint | Mirror |
-|---|---|---|
-| GitHub Action | GitHub Marketplace lists only actions whose `action.yml` is at the repository root | `E-Jacques/check-action`, tags `v1`, `v1.x.y` |
-| GitLab CI component | The GitLab CI/CD Catalog requires a GitLab project with `templates/` | `gitlab.com/<org>/ci`, tags `1.x.y` |
-| Homebrew formula | A tap is a separate repository | `E-Jacques/homebrew-tap`, updated by `dist` |
-| Skills | Not required: `npx skills` and APM can install from a repository path | Optional `E-Jacques/rulelink-skills` mirror if a tool needs a dedicated repository (to be verified at implementation time) |
+| Deliverable         | Constraint                                                                         | Mirror                                                                                                                     |
+| ------------------- | ---------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------- |
+| GitHub Action       | GitHub Marketplace lists only actions whose `action.yml` is at the repository root | `E-Jacques/check-action`, tags `v1`, `v1.x.y`                                                                              |
+| GitLab CI component | The GitLab CI/CD Catalog requires a GitLab project with `templates/`               | `gitlab.com/<org>/ci`, tags `1.x.y`                                                                                        |
+| Homebrew formula    | A tap is a separate repository                                                     | `E-Jacques/homebrew-tap`, updated by `dist`                                                                                |
+| Skills              | Not required: `npx skills` and APM can install from a repository path              | Optional `E-Jacques/rulelink-skills` mirror if a tool needs a dedicated repository (to be verified at implementation time) |
 
 Mirror repositories are read-only for humans; their README points to the monorepo for issues and contributions.
 
 ## 11. Decisions
 
-| # | Decision | Status | Rationale |
-|---|---|---|---|
-| ADR-013 | Single monorepo for every component, deliverable and the design dossier | Proposed | One source, atomic changes across CLI, skills and extensions |
-| ADR-014 | Cargo workspace orchestrated by moon; Cargo alone remains sufficient for Rust contributors | Proposed | Polyglot graph and affected CI without replacing Cargo |
-| ADR-015 | Dependency rules enforced by `cargo xtask arch` (authoritative) and moon tag constraints | Proposed | Hexagonal rules that do not rely on review discipline |
+| #       | Decision                                                                                   | Status   | Rationale                                                    |
+| ------- | ------------------------------------------------------------------------------------------ | -------- | ------------------------------------------------------------ |
+| ADR-013 | Single monorepo for every component, deliverable and the design dossier                    | Proposed | One source, atomic changes across CLI, skills and extensions |
+| ADR-014 | Cargo workspace orchestrated by moon; Cargo alone remains sufficient for Rust contributors | Proposed | Polyglot graph and affected CI without replacing Cargo       |
+| ADR-015 | Dependency rules enforced by `cargo xtask arch` (authoritative) and moon tag constraints   | Proposed | Hexagonal rules that do not rely on review discipline        |
 
 ## 12. Tests and acceptance criteria
 

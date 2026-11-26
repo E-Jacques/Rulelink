@@ -1,0 +1,31 @@
+---
+import CopyButton from './CopyButton.astro';
+import './code.css';
+interface Props {
+  /** Header text: a file name or "Terminal". */
+  title?: string;
+  /** What the copy button copies: the command only, never the prompt or the output. */
+  copy: string;
+  /** Show the copy button (default true). */
+  copyable?: boolean;
+  /** Print the title in monospace (file names). */
+  mono?: boolean;
+}
+const { title = 'Terminal', copy, copyable = true, mono = false } = Astro.props;
+---
+<div class="rl-code" data-code data-copy-text={copy}>
+  <div class="rl-code-head">
+    <span class:list={[{ 'rl-mono': mono }]}>{title}</span>
+    {copyable && <CopyButton label="Copy code" />}
+  </div>
+  <pre class="rl-code-pre" tabindex="0"><slot /></pre>
+</div>
+
+
+<script>
+  import { copyText } from './copy';
+  document.addEventListener('click', (e) => {
+    const btn = (e.target as HTMLElement).closest<HTMLElement>('[data-code] [data-copy]');
+    if (btn) copyText(btn, btn.closest<HTMLElement>('[data-code]')!.dataset.copyText ?? '');
+  });
+</script>

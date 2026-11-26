@@ -18,6 +18,27 @@ jobs:
       - run: moon setup
       - run: moon ci
       - run: moon run :schemas :arch :deny :e2e :release-plan
+  # The site is built only when it or the public documentation changed (always on main), so
+  # Rust-only pull requests pay nothing for Node, pnpm or Astro. A skipped job counts as passed.
+  site:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with: { fetch-depth: 0 }
+      - id: changed
+        env:
+          EVENT: ${{ github.event_name }}
+          BASE: ${{ github.event.pull_request.base.sha }}
+        run: |
+          if [ "$EVENT" = push ] || git diff --name-only "$BASE" HEAD |
+            grep -qE '^(site/|docs/public/|pnpm-lock\.yaml|pnpm-workspace\.yaml|\.moon/|\.prototools|\.github/workflows/ci\.yml)'; then
+            echo "run=true" >> "$GITHUB_OUTPUT"
+          fi
+      - if: steps.changed.outputs.run == 'true'
+        uses: moonrepo/setup-toolchain@v0
+      - if: steps.changed.outputs.run == 'true'
+        # These tasks are left out of `moon ci`; `moon run` would skip them on a runner too.
+        run: moon exec --ignore-ci-checks site:test site:build
   e2e:
     name: e2e (${{ matrix.os }})
     strategy:

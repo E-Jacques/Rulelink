@@ -26,21 +26,21 @@ One sentence: `format` rewrites the Source into Canonical form if it is not alre
 
 ## Ownership
 
-| Decision | Owner |
-| --- | --- |
-| What Canonical form is (order, layout) | model (`RuleSet::to_canonical`, unchanged) |
-| Read, compare bytes, atomic write | adapter-json (`rewrite_source`) |
-| Which file, error class | app |
-| Printing "formatted" / "already canonical" | cli |
+| Decision                                   | Owner                                      |
+| ------------------------------------------ | ------------------------------------------ |
+| What Canonical form is (order, layout)     | model (`RuleSet::to_canonical`, unchanged) |
+| Read, compare bytes, atomic write          | adapter-json (`rewrite_source`)            |
+| Which file, error class                    | app                                        |
+| Printing "formatted" / "already canonical" | cli                                        |
 
 ## Input boundaries
 
-| Input | Line checked |
-| --- | --- |
-| Arguments | none: the command takes no argument; clap refuses any extra one (usage error) |
-| Source path | from `rulelink.toml`, same as the other commands; missing is `Error::Source` naming the path, unreadable is distinguished |
-| Source content | parsed by the same code as `read_source`: invalid JSON, unknown field, foreign `format` refused, file untouched |
-| Failure | atomic temporary file and rename; unchanged file is not rewritten |
+| Input              | Line checked                                                                                                                    |
+| ------------------ | ------------------------------------------------------------------------------------------------------------------------------- |
+| Arguments          | none: the command takes no argument; clap refuses any extra one (usage error)                                                   |
+| Source path        | from `rulelink.toml`, same as the other commands; missing is `Error::Source` naming the path, unreadable is distinguished       |
+| Source content     | parsed by the same code as `read_source`: invalid JSON, unknown field, foreign `format` refused, file untouched                 |
+| Failure            | atomic temporary file and rename; unchanged file is not rewritten                                                               |
 | Line endings / BOM | CRLF or extra whitespace parse fine and are normalised to LF; a BOM is refused by serde as invalid JSON (named, file untouched) |
 
 Errors: reuses `adapter-json::Error` and its explicit `match` in `app`; no new error type, no new class.
@@ -57,8 +57,8 @@ Errors: reuses `adapter-json::Error` and its explicit `match` in `app`; no new e
 
 ## Dependent tickets
 
-| Ticket | Reuses | Missing |
-| --- | --- | --- |
+| Ticket                            | Reuses                           | Missing                                                                                                                                                                               |
+| --------------------------------- | -------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | #15 RL106 "not canonical" Finding | the text-vs-canonical comparison | `rewrite_source` writes; #15 only needs the comparison. `RuleSet::is_canonical(text)` is built now, in the model, and used by `rewrite_source`; #15 reads the file text and calls it. |
 
 Deferred: `--check` (report without writing; `check` does it through RL106), formatting several files (`json-dir` is V1), `--path`.

@@ -22,22 +22,22 @@ This sentence appears in the command help, in the CI summary and in the document
 
 ## 2. Release frame
 
-| Feature | MVP | V1 | V2 |
-|---|:-:|:-:|:-:|
-| The brief's 5 checks + source integrity | ● | | |
-| Configurable severity policy | ● | | |
-| `human`, `json` reports | ● | | |
-| `sarif`, `github` reports | | | ● |
-| GitHub Action (annotations, SARIF, summary) | | | ● |
-| GitLab CI component (codequality report) | | | ● |
-| `rulelink status`: coverage and counters | ● | | |
-| `junit`, `gitlab`, `markdown` (PR comment) reports | | ● | |
-| `check --changed` (files changed since the PR base) | ● | | |
-| Baseline for adoption on legacy code | | ● | |
-| Pre-commit hook (pre-commit and lefthook frameworks) | | ● | |
-| Warning on a rule approved in the same commit that created it (agent self-approval control) | | ● | |
-| Additional checks: untested rule, rule outside its application, malformed annotation | | ● | |
-| Symbol-level checks (rule moved out of its function) | | | ● |
+| Feature                                                                                     | MVP | V1  | V2  |
+| ------------------------------------------------------------------------------------------- | :-: | :-: | :-: |
+| The brief's 5 checks + source integrity                                                     |  ●  |     |     |
+| Configurable severity policy                                                                |  ●  |     |     |
+| `human`, `json` reports                                                                     |  ●  |     |     |
+| `sarif`, `github` reports                                                                   |     |     |  ●  |
+| GitHub Action (annotations, SARIF, summary)                                                 |     |     |  ●  |
+| GitLab CI component (codequality report)                                                    |     |     |  ●  |
+| `rulelink status`: coverage and counters                                                    |  ●  |     |     |
+| `junit`, `gitlab`, `markdown` (PR comment) reports                                          |     |  ●  |     |
+| `check --changed` (files changed since the PR base)                                         |  ●  |     |     |
+| Baseline for adoption on legacy code                                                        |     |  ●  |     |
+| Pre-commit hook (pre-commit and lefthook frameworks)                                        |     |  ●  |     |
+| Warning on a rule approved in the same commit that created it (agent self-approval control) |     |  ●  |     |
+| Additional checks: untested rule, rule outside its application, malformed annotation        |     |  ●  |     |
+| Symbol-level checks (rule moved out of its function)                                        |     |     |  ●  |
 
 ## 3. Technical constraints
 
@@ -49,18 +49,18 @@ This sentence appears in the command help, in the CI summary and in the document
 
 ## 4. Check catalogue
 
-| Code | Name (config key) | Detected case | Default level | Release |
-|---|---|---|---|---|
-| `RL001` | `unknown-reference` | The code cites an identifier missing from the source | Error | MVP |
-| `RL002` | `obsolete-reference` | The code still cites an `obsolete` rule (the message suggests `superseded_by` when present) | Error | MVP |
-| `RL003` | `duplicate-id` | Two rules share the same identifier | Error | MVP |
-| `RL004` | `orphan-rule` | A `validated` rule is cited nowhere | Warning | MVP |
-| `RL005` | `unvalidated-reference` | The code cites a rule that is still `proposed` | Warning | MVP |
-| `RL006` | `malformed-annotation` | `@rule` without a valid identifier | Warning | V1 |
-| `RL007` | `untested-rule` | `validated` rule cited in the implementation but in no test | Off | V1 |
-| `RL008` | `wrong-application` | Rule cited in a path mapped to an application not listed in the rule's `applications` | Off | V1 |
-| `RL009` | `retired-reference` | The code cites a `rejected` rule, or an identifier retired without a rule in the source (an `obsolete` rule is reported by `RL002`) | Error | MVP |
-| `RL100`–`RL106` | source integrity | See 01, section 5.3 | As in 01 | MVP / V1 |
+| Code            | Name (config key)       | Detected case                                                                                                                       | Default level | Release  |
+| --------------- | ----------------------- | ----------------------------------------------------------------------------------------------------------------------------------- | ------------- | -------- |
+| `RL001`         | `unknown-reference`     | The code cites an identifier missing from the source                                                                                | Error         | MVP      |
+| `RL002`         | `obsolete-reference`    | The code still cites an `obsolete` rule (the message suggests `superseded_by` when present)                                         | Error         | MVP      |
+| `RL003`         | `duplicate-id`          | Two rules share the same identifier                                                                                                 | Error         | MVP      |
+| `RL004`         | `orphan-rule`           | A `validated` rule is cited nowhere                                                                                                 | Warning       | MVP      |
+| `RL005`         | `unvalidated-reference` | The code cites a rule that is still `proposed`                                                                                      | Warning       | MVP      |
+| `RL006`         | `malformed-annotation`  | `@rule` without a valid identifier                                                                                                  | Warning       | V1       |
+| `RL007`         | `untested-rule`         | `validated` rule cited in the implementation but in no test                                                                         | Off           | V1       |
+| `RL008`         | `wrong-application`     | Rule cited in a path mapped to an application not listed in the rule's `applications`                                               | Off           | V1       |
+| `RL009`         | `retired-reference`     | The code cites a `rejected` rule, or an identifier retired without a rule in the source (an `obsolete` rule is reported by `RL002`) | Error         | MVP      |
+| `RL100`–`RL106` | source integrity        | See 01, section 5.3                                                                                                                 | As in 01      | MVP / V1 |
 
 On an empty Source (no rules yet, as right after `init`), `check` passes with exit code 0 and an info message ("no rules yet"). A missing or unreadable Source file still fails with exit code 3.
 
@@ -174,11 +174,11 @@ Levels: `error`, `warning`, `info`, `off`.
 
 `rulelink baseline create` records the current findings in `.rulelink/baseline.json` (versioned). Each finding is identified by a stable fingerprint (code, rule identifier, path, normalised line text) rather than a line number, so it survives line shifts. The baseline is a **Memento** of the findings' state: the engine does not know its internal format, it only asks whether a finding is in it.
 
-| Command | Effect |
-|---|---|
+| Command                    | Effect                                        |
+| -------------------------- | --------------------------------------------- |
 | `rulelink baseline create` | Writes the baseline from the current findings |
-| `rulelink baseline update` | Removes resolved findings, never adds any |
-| `rulelink baseline show` | Lists suppressed findings, by code |
+| `rulelink baseline update` | Removes resolved findings, never adds any     |
+| `rulelink baseline show`   | Lists suppressed findings, by code            |
 
 ### 5.5 Reports — **Strategy** + **Template Method**
 
@@ -216,15 +216,15 @@ classDiagram
 - **Strategy**: the format is chosen with `--format`. Several formats can be produced in one run: `--format sarif=rulelink.sarif,github,markdown=summary.md`.
 - **Template Method**: text formats share the header → grouped findings → footer skeleton. The footer always restates the promise ("link verified, not correctness").
 
-| Format | Use | Release |
-|---|---|---|
-| `human` | Terminal, with colours and `miette` excerpts | MVP |
-| `json` | Agents, scripts. Schema `rulelink/check-report/v1` | MVP |
-| `sarif` | GitHub Code Scanning, SAST tools | V2 |
-| `github` | `::error file=...` commands: inline annotations on the PR | V2 |
-| `junit` | GitLab, Jenkins, Azure test reports | V1 |
-| `gitlab` | GitLab Code Quality report | V1 |
-| `markdown` | Job summary, PR comment | V1 |
+| Format     | Use                                                       | Release |
+| ---------- | --------------------------------------------------------- | ------- |
+| `human`    | Terminal, with colours and `miette` excerpts              | MVP     |
+| `json`     | Agents, scripts. Schema `rulelink/check-report/v1`        | MVP     |
+| `sarif`    | GitHub Code Scanning, SAST tools                          | V2      |
+| `github`   | `::error file=...` commands: inline annotations on the PR | V2      |
+| `junit`    | GitLab, Jenkins, Azure test reports                       | V1      |
+| `gitlab`   | GitLab Code Quality report                                | V1      |
+| `markdown` | Job summary, PR comment                                   | V1      |
 
 ### 5.6 Command — full run
 
@@ -283,11 +283,11 @@ pub struct CoverageStats { pub rules_by_status: BTreeMap<RuleStatus, usize>,
 
 ### 6.2 CLI commands
 
-| Command | Options | Effect | Release |
-|---|---|---|---|
-| `rulelink check` | `--format <F[=FILE]>...`, `--changed`, `--base <REF>`, `--paths <P>...`, `--rules <ID>...`, `--level <KEY>=<LEVEL>`, `--warnings-as-errors`, `--no-baseline`, `--fresh` (V2) | Runs the checks; exit code 0 or 1 | MVP (`--changed`, `--base` in V1) |
-| `rulelink status` | `--format human\|json\|markdown` | Counters by status, coverage of validated rules by code and by tests | MVP |
-| `rulelink baseline create\|update\|show` | `--format` | Baseline management | V1 |
+| Command                                  | Options                                                                                                                                                                      | Effect                                                               | Release                           |
+| ---------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------- | --------------------------------- |
+| `rulelink check`                         | `--format <F[=FILE]>...`, `--changed`, `--base <REF>`, `--paths <P>...`, `--rules <ID>...`, `--level <KEY>=<LEVEL>`, `--warnings-as-errors`, `--no-baseline`, `--fresh` (V2) | Runs the checks; exit code 0 or 1                                    | MVP (`--changed`, `--base` in V1) |
+| `rulelink status`                        | `--format human\|json\|markdown`                                                                                                                                             | Counters by status, coverage of validated rules by code and by tests | MVP                               |
+| `rulelink baseline create\|update\|show` | `--format`                                                                                                                                                                   | Baseline management                                                  | V1                                |
 
 Example `human` output:
 

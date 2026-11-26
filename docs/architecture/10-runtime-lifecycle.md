@@ -19,23 +19,23 @@
 
 ## 2. Release frame
 
-| Feature | MVP | V1 | V2 |
-|---|:-:|:-:|:-:|
-| Common bootstrap (`Entrypoint`) for the CLI | ● | | |
-| Cancellation token, Ctrl-C handling, panic hook, exit codes | ● | | |
-| Interrupt-safe writes (relies on 02) | ● | | |
-| Long-running server state machine (LSP) | | ● | |
-| Configuration hot reload in servers | | ● | |
-| External adapter process reuse with idle timeout | | ● | |
+| Feature                                                     | MVP | V1  | V2  |
+| ----------------------------------------------------------- | :-: | :-: | :-: |
+| Common bootstrap (`Entrypoint`) for the CLI                 |  ●  |     |     |
+| Cancellation token, Ctrl-C handling, panic hook, exit codes |  ●  |     |     |
+| Interrupt-safe writes (relies on 02)                        |  ●  |     |     |
+| Long-running server state machine (LSP)                     |     |  ●  |     |
+| Configuration hot reload in servers                         |     |  ●  |     |
+| External adapter process reuse with idle timeout            |     |  ●  |     |
 
 ## 3. Technical constraints
 
-| Topic | Target |
-|---|---|
-| CLI cold start to first output (`rulelink version`) | < 30 ms |
-| Graceful stop after first Ctrl-C (CLI) | < 1 s, no partially written file |
-| LSP server: `initialize` to `initialized` with cached index | < 2 s on 50,000 files |
-| Configuration reload in a server | < 500 ms, no request lost |
+| Topic                                                       | Target                           |
+| ----------------------------------------------------------- | -------------------------------- |
+| CLI cold start to first output (`rulelink version`)         | < 30 ms                          |
+| Graceful stop after first Ctrl-C (CLI)                      | < 1 s, no partially written file |
+| LSP server: `initialize` to `initialized` with cached index | < 2 s on 50,000 files            |
+| Configuration reload in a server                            | < 500 ms, no request lost        |
 
 - **Async runtime**: Tokio is created only by entry points, never by domain crates (00, section 5, rule 1). The CLI uses a current-thread runtime; CPU-bound scanning runs on the `ignore` / `rayon` thread pools, outside the runtime. Servers use a multi-thread runtime.
 - **Cancellation**: one `CancellationToken` (`tokio-util`) per process, passed down through `AppContext` (09) and `AdapterContext` (02). Every loop over files, pages or items checks it.
@@ -126,13 +126,13 @@ sequenceDiagram
 
 Signal and failure handling:
 
-| Event | Behaviour | Exit code |
-|---|---|---|
-| First SIGINT (Ctrl-C) | Cancel the token; commands stop at the next checkpoint; locks and temporary files released | 130 |
-| Second SIGINT | Immediate exit; atomic writes guarantee that no file is half-written | 130 |
-| SIGTERM | Same as the first SIGINT | 143 |
-| SIGPIPE (output piped to `head`) | Stop quietly, no error message | 0 |
-| Panic | Panic hook prints a short message, the version and a link to report the issue; full backtrace with `RUST_BACKTRACE=1` | 10 |
+| Event                            | Behaviour                                                                                                             | Exit code |
+| -------------------------------- | --------------------------------------------------------------------------------------------------------------------- | --------- |
+| First SIGINT (Ctrl-C)            | Cancel the token; commands stop at the next checkpoint; locks and temporary files released                            | 130       |
+| Second SIGINT                    | Immediate exit; atomic writes guarantee that no file is half-written                                                  | 130       |
+| SIGTERM                          | Same as the first SIGINT                                                                                              | 143       |
+| SIGPIPE (output piped to `head`) | Stop quietly, no error message                                                                                        | 0         |
+| Panic                            | Panic hook prints a short message, the version and a link to report the issue; full backtrace with `RUST_BACKTRACE=1` | 10        |
 
 Windows maps Ctrl-C and Ctrl-Break to the same token.
 
@@ -183,22 +183,22 @@ classDiagram
     Server --> ServerState
 ```
 
-| State | Requests | Notes |
-|---|---|---|
-| `Initializing` | Rejected with "server not initialised" (LSP error `-32002`) | Builds the context and loads the index cache (03) |
-| `Ready` | Served with the current context | — |
-| `Reloading` | Served with the **previous** context | New context built in the background, then swapped atomically (`ArcSwap`); in-flight requests keep the context they started with |
-| `Degraded` | Served with the last valid context | A diagnostic on `rulelink.toml` explains the configuration error |
-| `Draining` | New requests rejected | Waits for `TaskTracker` to empty, at most 5 s |
+| State          | Requests                                                    | Notes                                                                                                                           |
+| -------------- | ----------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------- |
+| `Initializing` | Rejected with "server not initialised" (LSP error `-32002`) | Builds the context and loads the index cache (03)                                                                               |
+| `Ready`        | Served with the current context                             | —                                                                                                                               |
+| `Reloading`    | Served with the **previous** context                        | New context built in the background, then swapped atomically (`ArcSwap`); in-flight requests keep the context they started with |
+| `Degraded`     | Served with the last valid context                          | A diagnostic on `rulelink.toml` explains the configuration error                                                                |
+| `Draining`     | New requests rejected                                       | Waits for `TaskTracker` to empty, at most 5 s                                                                                   |
 
 Shutdown triggers:
 
-| Trigger | Server |
-|---|---|
-| LSP `shutdown` then `exit` | LSP |
-| End of stdin | LSP |
-| Parent process exited (LSP `processId`, checked every 10 s) | LSP |
-| SIGTERM | LSP |
+| Trigger                                                     | Server |
+| ----------------------------------------------------------- | ------ |
+| LSP `shutdown` then `exit`                                  | LSP    |
+| End of stdin                                                | LSP    |
+| Parent process exited (LSP `processId`, checked every 10 s) | LSP    |
+| SIGTERM                                                     | LSP    |
 
 File watching uses the `notify` crate with a 300 ms debounce. Watching is an **Observer**: the watcher publishes `ConfigChanged` and `SourceChanged` events; the server state, the index store (03) and the diagnostics publisher (08) subscribe.
 
@@ -206,23 +206,23 @@ File watching uses the `notify` crate with a 300 ms debounce. Watching is an **O
 
 Every resource that must be released is owned by a guard whose drop releases it (RAII, non-GoF), so that cancellation, errors and panics all release resources the same way.
 
-| Resource | Owner | Released by |
-|---|---|---|
-| Source write lock (`rules.json.lock`) | `SourceLockMiddleware` (09) | Guard drop at the end of the command |
-| Temporary file of an atomic write | `JsonFileSource::apply` (02) | Rename on success, deletion on drop otherwise |
-| External adapter child process | `ExternalAdapterProxy` (02) | `shutdown` request, then kill after 2 s (`kill_on_drop`) |
-| HTTP connection pool | `AdapterContext` | Context drop |
-| Index cache file | `IndexStore` (03) | Written on clean shutdown and every 60 s in servers |
+| Resource                              | Owner                        | Released by                                              |
+| ------------------------------------- | ---------------------------- | -------------------------------------------------------- |
+| Source write lock (`rules.json.lock`) | `SourceLockMiddleware` (09)  | Guard drop at the end of the command                     |
+| Temporary file of an atomic write     | `JsonFileSource::apply` (02) | Rename on success, deletion on drop otherwise            |
+| External adapter child process        | `ExternalAdapterProxy` (02)  | `shutdown` request, then kill after 2 s (`kill_on_drop`) |
+| HTTP connection pool                  | `AdapterContext`             | Context drop                                             |
+| Index cache file                      | `IndexStore` (03)            | Written on clean shutdown and every 60 s in servers      |
 
 ### 4.5 External adapter processes
 
 The protocol lifecycle is specified in 02 (section 5.5). The process policy depends on the host:
 
-| Host | Policy |
-|---|---|
-| CLI | Started on first use, reused for the rest of the command, stopped at the end |
+| Host       | Policy                                                                                           |
+| ---------- | ------------------------------------------------------------------------------------------------ |
+| CLI        | Started on first use, reused for the rest of the command, stopped at the end                     |
 | LSP server | Started on first use, reused across requests, stopped after 5 minutes idle or on server shutdown |
-| Crash | Restarted once per command; a second crash fails the command with exit code 4 |
+| Crash      | Restarted once per command; a second crash fails the command with exit code 4                    |
 
 ## 5. Interactions
 

@@ -1,0 +1,72 @@
+---
+// Showcase part: the Versions page. Real data only: it is fed by the generated release notes
+// (docs/public/release-notes/cli.md). With no released version it says so, and lists what is
+// waiting for the first release instead of inventing a version.
+import { readFileSync } from 'node:fs';
+import { fileURLToPath } from 'node:url';
+import Layout from './Layout.astro';
+import { parseReleaseNotes } from './releases.mjs';
+import { REPO_URL, DOCS_SOURCE, route } from '../../site.config.mjs';
+
+const notes = readFileSync(fileURLToPath(new URL(`../../${DOCS_SOURCE}/release-notes/cli.md`, import.meta.url)), 'utf8');
+const { versions, unreleased } = parseReleaseNotes(notes);
+const latest = versions[0];
+---
+<Layout title="Versions: Rulelink" description="Every released version of Rulelink and what changed in it, written from the commits." mainId="versions">
+  <section class="sc-hero sc-ver-hero">
+    <div class="sc-wrap sc-hero-in sc-ver-in">
+      <div class="sc-hero-copy">
+        <h1>Versions</h1>
+        <p>Every released version of Rulelink and what changed in it. Each release adds an entry here; older ones stay readable.</p>
+      </div>
+    </div>
+  </section>
+
+  <section class="sc-section sc-wrap" aria-labelledby="ver-state">
+    {latest ? (
+      <>
+        <h2 id="ver-state">Available now: <span class="sc-mono">v{latest.version}</span></h2>
+        {latest.date && <p class="sc-lead">Released on {latest.date}.</p>}
+      </>
+    ) : (
+      <article class="sc-card sc-pad sc-ver-empty">
+        <span class="sc-role">First release upcoming</span>
+        <h2 id="ver-state">No version is published yet</h2>
+        <p>Rulelink has not been released. The first version will appear on this page when it ships, with its notes written from the commits. Until then, the changes already merged are listed below, and the <a href={route('roadmap')}>roadmap</a> shows what is announced.</p>
+      </article>
+    )}
+  </section>
+
+  {versions.map((v) => (
+    <section class="sc-section sc-wrap sc-ver-block" aria-label={`Version ${v.version}`}>
+      <h2 class="sc-mono">v{v.version}{v.date && <span class="sc-faint sc-ver-date"> · {v.date}</span>}</h2>
+      <div class="sc-grid sc-grid-250">
+        {v.groups.map((g) => (
+          <article class="sc-card sc-pad"><h3>{g.title}</h3><ul>{g.items.map((i) => <li>{i.text}{i.migration && <p class="sc-faint">Migration: {i.migration}</p>}</li>)}</ul></article>
+        ))}
+      </div>
+    </section>
+  ))}
+
+  {unreleased.length > 0 && (
+    <section class="sc-band" aria-labelledby="ver-next">
+      <div class="sc-wrap sc-section">
+        <h2 id="ver-next">Waiting for the next release</h2>
+        <p class="sc-lead">Merged, not released yet. This is what the next version will contain so far.</p>
+        <div class="sc-grid sc-grid-300">
+          {unreleased.map((g) => (
+            <article class="sc-card sc-pad"><h3>{g.title}</h3><ul>{g.items.map((i) => <li>{i.text}{i.migration && <p class="sc-faint">Migration: {i.migration}</p>}</li>)}</ul></article>
+          ))}
+        </div>
+      </div>
+    </section>
+  )}
+
+  <section class="sc-section sc-wrap" aria-labelledby="ver-more">
+    <h2 id="ver-more">Follow the releases</h2>
+    <div class="sc-row sc-ver-links">
+      <a class="sc-btn sc-btn-p" href={route('releaseNotes')}>Read the release notes</a>
+      <a class="sc-btn sc-btn-s" href={`${REPO_URL}/releases`}>Releases on GitHub</a>
+    </div>
+  </section>
+</Layout>

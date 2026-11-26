@@ -1,0 +1,68 @@
+---
+// Site-only page: the component library on show. Not part of docs/public, not in the sidebar.
+import StarlightPage from '@astrojs/starlight/components/StarlightPage.astro';
+import InstallTabs from '../components/InstallTabs.astro';
+import CodeBlock from '../components/CodeBlock.astro';
+import Callout from '../components/Callout.astro';
+import ParamTable from '../components/ParamTable.astro';
+import RuleStatus from '../components/RuleStatus.astro';
+import Badge from '../components/Badge.astro';
+import VersionBadge from '../components/VersionBadge.astro';
+import ComingSoon from '../components/ComingSoon.astro';
+
+import { INSTALLER_URL } from '../../site.config.mjs';
+
+const installer = INSTALLER_URL;
+const tabs = [
+  { id: 'mac', label: 'macOS', platform: 'mac' as const, cmd: `curl --proto '=https' --tlsv1.2 -LsSf ${installer}/rulelink-cli-installer.sh | sh` },
+  { id: 'linux', label: 'Linux', platform: 'linux' as const, cmd: `curl --proto '=https' --tlsv1.2 -LsSf ${installer}/rulelink-cli-installer.sh | sh` },
+  { id: 'win', label: 'Windows', platform: 'win' as const, prompt: 'PS>', cmd: `powershell -ExecutionPolicy ByPass -c "irm ${installer}/rulelink-cli-installer.ps1 | iex"` },
+  { id: 'npm', label: 'npm', cmd: 'npm install -g @rulelink-cli/rulelink-cli' },
+];
+const options = [
+  { name: '--source <PATH>', default: 'from config', description: 'Path to the Source.' },
+  { name: '--state <STATE>', description: 'Filter by lifecycle state. One of <code>proposed</code>, <code>validated</code>, <code>obsolete</code>, <code>rejected</code>.' },
+];
+const args = [
+  { name: '<ID>', required: true, description: 'The Rule identifier, for example <code>RULE-077</code>.' },
+  { name: '[PATH]', required: false, description: 'Limit the scan to this folder.' },
+];
+---
+<StarlightPage frontmatter={{ title: 'Components', description: 'The reusable parts of the Rulelink site.', head: [{ tag: 'meta', attrs: { name: 'robots', content: 'noindex' } }],tableOfContents: { minHeadingLevel: 2, maxHeadingLevel: 2 } }}>
+  <p>The reusable parts used to build pages, in the active theme. Switch the theme in the header to check both.</p>
+
+  <h2 id="install-tabs">Install tabs</h2>
+  <p>The visitor's system is selected first. The choice is remembered across tabs and pages.</p>
+  <InstallTabs tabs={tabs} />
+
+  <h2 id="code-block">Code block</h2>
+  <p>Copy copies the command only, never the prompt or the output.</p>
+  <CodeBlock title="Terminal" copy="rulelink check"><span class="rl-out">$ </span>rulelink check
+<span class="rl-ok">✓ 12 Rules · 14 Annotations · 0 Findings</span></CodeBlock>
+  <CodeBlock title="src/pricing.py" mono copy={'# @rule RULE-077\ndef discount(order):\n    ...'}><span class="rl-ann"># @rule RULE-077</span>
+def discount(order):
+    …</CodeBlock>
+
+  <h2 id="callouts">Callouts</h2>
+  <Callout kind="note">Extra context that helps, but is not required.</Callout>
+  <Callout kind="tip">A shorter path, once you know the basics.</Callout>
+  <Callout kind="warning">Something that can surprise you. Read before running.</Callout>
+  <Callout kind="breaking">Only in release notes and migration guides.</Callout>
+
+  <h2 id="arguments-and-options">Arguments and options</h2>
+  <ParamTable rows={args} kind="argument" />
+  <ParamTable rows={options} />
+
+  <h2 id="rule-status">Rule status</h2>
+  <p>
+    <RuleStatus state="proposed" /> <RuleStatus state="validated" /> <RuleStatus state="obsolete" /> <RuleStatus state="rejected" />
+  </p>
+  <p>Findings: <Badge kind="error">error</Badge> <Badge kind="warning">warning</Badge> <Badge kind="success">0 Findings</Badge></p>
+
+  <h2 id="version-and-coming-soon">Version and coming soon</h2>
+  <p>
+    <VersionBadge version="0.1.0" /> <VersionBadge version="0.1.0" since /> <Badge kind="latest">Latest</Badge>
+    <ComingSoon /> <ComingSoon cloud />
+  </p>
+  <p>Blue for open source features. Brass only next to Rulelink Cloud.</p>
+</StarlightPage>

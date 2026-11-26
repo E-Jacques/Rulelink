@@ -1,0 +1,74 @@
+/* Design tokens of the mock-up (ds/rulelinkcloud/tokens.json), light and dark.
+   Naming follows the mock-up; theme.css maps them onto Starlight. */
+:root {
+  --rl-font-sans: 'IBM Plex Sans', system-ui, -apple-system, 'Segoe UI', sans-serif;
+  --rl-font-mono: 'IBM Plex Mono', ui-monospace, 'SF Mono', Menlo, monospace;
+  --rl-space-1: 4px;
+  --rl-space-2: 8px;
+  --rl-space-3: 12px;
+  --rl-space-4: 16px;
+  --rl-space-6: 24px;
+  --rl-space-8: 32px;
+  --rl-radius-sm: 4px;
+  --rl-radius-md: 6px;
+  --rl-radius-lg: 10px;
+
+  /* dark (Starlight's default) */
+  --rl-surface-0: #0d1220;
+  --rl-surface-100: #141a2a;
+  --rl-surface-200: #1b2235;
+  --rl-surface-300: #252e44;
+  --rl-border-subtle: #232b3f;
+  --rl-border-strong: #636f8c;
+  --rl-ink: #e7ebf3;
+  --rl-ink-muted: #a4aec2;
+  --rl-ink-subtle: #8691a8;
+  --rl-brand-deep: #091330;
+  --rl-brand: #6e8ce6;
+  --rl-brand-hover: #88a2ee;
+  --rl-on-brand: #0a1230;
+  --rl-brand-text: #9db2f2;
+  --rl-brand-subtle: #1a2650;
+  --rl-success-text: #63c792;
+  --rl-success-subtle: #11281c;
+  --rl-warning-text: #f0b451;
+  --rl-warning-subtle: #2e2310;
+  --rl-danger-text: #f38a80;
+  --rl-danger-subtle: #34181b;
+  --rl-obsolete-text: #9aa4b8;
+}
+
+:root[data-theme='light'] {
+  --rl-surface-0: #f6f7f9;
+  --rl-surface-100: #ffffff;
+  --rl-surface-200: #eef1f5;
+  --rl-surface-300: #e2e7ee;
+  --rl-border-subtle: #e3e7ed;
+  --rl-border-strong: #848da0;
+  --rl-ink: #121a2e;
+  --rl-ink-muted: #4a5468;
+  --rl-ink-subtle: #5e687b;
+  --rl-brand-deep: #12224f;
+  --rl-brand: #2547a8;
+  --rl-brand-hover: #1d3a8c;
+  --rl-on-brand: #ffffff;
+  --rl-brand-text: #2547a8;
+  --rl-brand-subtle: #e8edfa;
+  --rl-success-text: #1e7347;
+  --rl-success-subtle: #e5f3eb;
+  --rl-warning-text: #94560a;
+  --rl-warning-subtle: #fcf0db;
+  --rl-danger-text: #b42318;
+  --rl-danger-subtle: #fce9e7;
+  --rl-obsolete-text: #5a6375;
+}
+
+/* Brass accent, used only next to Rulelink Cloud. */
+:root {
+  --rl-accent-text: #e0b865;
+  --rl-accent-subtle: #2c2414;
+}
+:root[data-theme='light'] {
+  --rl-accent-text: #85601c;
+  --rl-accent-subtle: #f7efdf;
+}

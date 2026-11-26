@@ -1,0 +1,226 @@
+---
+// Showcase part: the product home. It reads site.config.mjs, src/components and the shared
+// design tokens, never docs logic; src/docs never imports from here (tests/boundaries.test.mjs).
+import InstallTabs from '../components/InstallTabs.astro';
+import ComingSoon from '../components/ComingSoon.astro';
+import Layout from './Layout.astro';
+import { REPO_URL, INSTALLER_URL, route } from '../../site.config.mjs';
+
+const tabs = [
+  { id: 'mac', label: 'macOS', platform: 'mac' as const, cmd: `curl --proto '=https' --tlsv1.2 -LsSf ${INSTALLER_URL}/rulelink-cli-installer.sh | sh` },
+  { id: 'linux', label: 'Linux', platform: 'linux' as const, cmd: `curl --proto '=https' --tlsv1.2 -LsSf ${INSTALLER_URL}/rulelink-cli-installer.sh | sh` },
+  { id: 'win', label: 'Windows', platform: 'win' as const, prompt: 'PS>', cmd: `powershell -ExecutionPolicy ByPass -c "irm ${INSTALLER_URL}/rulelink-cli-installer.ps1 | iex"` },
+  { id: 'npm', label: 'npm', cmd: 'npm install -g @rulelink-cli/rulelink-cli' },
+];
+const entries = [
+  { kind: 'Get started', name: 'Quickstart', desc: 'Install, write your first Rule, annotate the code.', sample: 'rulelink init', label: 'Start the Quickstart', href: route('quickstart') },
+  { kind: 'Guides', name: 'Guides', desc: 'Write a good Rule, bring Rules in, manage the lifecycle, run Rulelink in CI.', sample: '// @rule RULE-001', label: 'Read the guides', href: route('guides') },
+  { kind: 'Reference', name: 'CLI reference', desc: 'One page per command, with arguments, options and examples.', sample: 'rulelink <command> --help', label: 'Open the CLI reference', href: route('cli') },
+  { kind: 'Reference', name: 'Crate reference', desc: 'The Rust crates, to embed Rulelink in your own tools.', sample: 'cargo doc --open', label: 'Read about the crates', href: route('crates') },
+];
+const commands = [
+  { cmd: 'rulelink init', desc: 'Creates the Source and the repository config.' },
+  { cmd: 'rulelink rules add', desc: 'Adds a Rule. It starts as proposed.' },
+  { cmd: 'rulelink rules search', desc: 'Finds a Rule by words.' },
+  { cmd: 'rulelink rules list', desc: 'Lists Rules, filtered by status.' },
+  { cmd: 'rulelink where', desc: 'Lists the places in your code that cite a Rule.' },
+];
+const now = ['Create, review, search and retire Rules', 'Annotations in any language', 'Find the code that cites a Rule', 'Keep the Source in its canonical form', 'Rust crates'];
+const next = ['Findings for the whole project', 'Help your AI agent propose Rules', 'Propose Rules from an external file', 'Install with a package manager'];
+const later = ['Import from Jira, CSV files and GitHub issues', 'Publish Rules to Confluence', 'More ways to read Findings, such as in CI tools'];
+---
+<Layout title="Rulelink: every business rule, linked to its code" description="Rulelink links the business rules of your product to the code that implements them, so the knowledge stays in the repository when the team changes.">
+      <section id="produit" class="sc-hero">
+        <div class="sc-wrap sc-hero-in">
+          <div class="sc-hero-copy">
+            <h1>Every business rule, linked to its code.</h1>
+            <p>Rulelink links your business rules to the code that implements them. You write the Identifier of a Rule in a comment, and one command lists every place that cites it. Business knowledge stays in the repository when the team changes.</p>
+            <div class="sc-row">
+              <a class="sc-btn sc-btn-p" href="#installer">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M12 4v11M7 10l5 5 5-5M5 20h14"></path></svg>
+                Install Rulelink
+              </a>
+              <a class="sc-btn sc-btn-s" href={REPO_URL}>View on GitHub</a>
+            </div>
+          </div>
+          <div class="sc-checker">
+            <div class="sc-card">
+              <div class="sc-card-bar"><span class="sc-mono">src/billing/invoice.rs</span><span class="sc-faint">Rust</span></div>
+              <pre class="sc-pre sc-mono"><span class="sc-ann">// @rule RULE-042</span>
+<span class="sc-faint">// A validated invoice can no longer be edited.</span>
+fn update_invoice(inv: &amp;mut Invoice) -&gt; Result&lt;()&gt; {'{'}
+    if inv.status == Status::Validated {'{'}
+        return Err(Error::Locked);
+    {'}'}
+    …
+{'}'}</pre>
+              <div class="sc-card-bar sc-bar-mid"><span class="sc-mono">$ rulelink where RULE-042</span></div>
+              <div class="sc-out sc-mono">
+                <div>src/billing/invoice.rs:12</div>
+                <div>tests/invoice_test.rs:40</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section class="sc-section sc-wrap" aria-labelledby="pourqui">
+        <h2 id="pourqui">One question, three readers</h2>
+        <p class="sc-lead">Which business rule does this code implement? Which Rules have no code? Rulelink answers each of them in the tools your team already uses.</p>
+        <div class="sc-grid sc-grid-280">
+          <article class="sc-card sc-pad">
+            <span class="sc-role">Developer</span>
+            <h3>Know why this code exists</h3>
+            <p>Add an Annotation with <code class="sc-mono sc-chip">// @rule</code> in any language. Find the Rule from your terminal before you touch a line.</p>
+            <code class="sc-mono sc-foot">rulelink rules search invoice</code>
+          </article>
+          <article class="sc-card sc-pad">
+            <span class="sc-role">Product owner</span>
+            <h3>Keep the Rules in one place</h3>
+            <p>Rules live in one versioned Source. Each Rule is proposed, then validated by a person: AI can draft, a human decides.</p>
+            <code class="sc-mono sc-foot">rulelink rules list</code>
+          </article>
+          <article class="sc-card sc-pad">
+            <span class="sc-role">CTO, IT leadership</span>
+            <h3>Keep the knowledge when the team changes</h3>
+            <p>MIT license, no server, nothing leaves your repository. Adopt it one Rule at a time.</p>
+            <a class="sc-foot" href={route('roadmap')}>See the roadmap</a>
+          </article>
+        </div>
+      </section>
+
+      <section class="sc-band" aria-labelledby="comment">
+        <div class="sc-wrap sc-section">
+          <h2 id="comment">Three steps, no server</h2>
+          <ol class="sc-grid sc-grid-300 sc-steps">
+            <li>
+              <div class="sc-step-h"><span class="sc-num sc-mono">1</span><h3>Write the Rules</h3></div>
+              <p>One Source, in JSON, versioned with the code.</p>
+              <pre class="sc-pre sc-mono sc-pre-s">$ rulelink init
+$ rulelink rules add --title "…"</pre>
+            </li>
+            <li>
+              <div class="sc-step-h"><span class="sc-num sc-mono">2</span><h3>Annotate the code</h3></div>
+              <p>An Annotation is a comment, whatever the language.</p>
+              <pre class="sc-pre sc-mono sc-pre-s"><span class="sc-ann">// @rule RULE-042</span>
+<span class="sc-ann">#  @rule RULE-042</span>
+<span class="sc-ann">-- @rule RULE-042</span></pre>
+            </li>
+            <li>
+              <div class="sc-step-h"><span class="sc-num sc-mono">3</span><h3>Find the code</h3></div>
+              <p>One command lists every place that cites a Rule, tests included.</p>
+              <pre class="sc-pre sc-mono sc-pre-s">$ rulelink where RULE-042</pre>
+            </li>
+          </ol>
+        </div>
+      </section>
+
+      <section class="sc-section sc-wrap" aria-labelledby="cinq">
+        <div class="sc-split">
+          <div class="sc-col">
+            <h2 id="cinq">Findings are next</h2>
+            <p class="sc-lead">Rulelink shows that a Rule is linked to code. It does not prove the code is correct, which is what keeps it deterministic. A project-wide report of problems, called Findings, is announced. <ComingSoon /></p>
+            <a href={route('roadmap')}>Read the roadmap</a>
+          </div>
+          <div class="sc-card sc-flex2">
+            <ul class="sc-list">
+              <li>An unknown Rule cited in code</li>
+              <li>An obsolete Rule still cited in code</li>
+              <li>A validated Rule with no code</li>
+            </ul>
+          </div>
+        </div>
+      </section>
+
+      <section id="installer" class="sc-band" aria-labelledby="install-title">
+        <div class="sc-wrap sc-section">
+          <h2 id="install-title">Install</h2>
+          <p class="sc-lead">One binary, no dependencies. Your system is selected first; the others are one click away.</p>
+          <p class="sc-lead"><strong>No release yet:</strong> these commands will work after the first release.</p>
+          <div class="sc-split">
+            <div class="sc-flex2"><InstallTabs tabs={tabs} label="Platform" /></div>
+            <aside class="sc-card sc-pad sc-aside">
+              <h3>Next</h3>
+              <ol>
+                <li><code class="sc-mono">rulelink init</code> at the repository root</li>
+                <li>Create your first Rule and annotate the code</li>
+                <li>Find it with <code class="sc-mono">rulelink where</code></li>
+              </ol>
+              <a class="sc-btn sc-btn-p sc-self" href={route('quickstart')}>Get started with the Quickstart</a>
+              <a href={route('installation')}>All installation options</a>
+            </aside>
+          </div>
+        </div>
+      </section>
+
+      <section id="docs" class="sc-section sc-wrap" aria-labelledby="docs-title">
+        <div class="sc-head">
+          <div>
+            <h2 id="docs-title">Documentation</h2>
+            <p class="sc-lead">Start with the ideas, then the commands, then the Rust crates. The docs describe what is available now; everything else is on the roadmap.</p>
+          </div>
+          <a class="sc-btn sc-btn-p" href={route('introduction')}>Open the docs</a>
+        </div>
+        <div class="sc-grid sc-grid-260">
+          {entries.map((e) => (
+            <article class="sc-card sc-pad">
+              <span class="sc-mono sc-faint sc-small">{e.kind}</span>
+              <h3>{e.name}</h3>
+              <p>{e.desc}</p>
+              <code class="sc-mono sc-sample">{e.sample}</code>
+              <a class="sc-rule" href={e.href}>{e.label}</a>
+            </article>
+          ))}
+        </div>
+        <div class="sc-card sc-pad sc-glossary">
+          <div><strong>Glossary</strong><span>The words Rulelink uses, one meaning each: Rule, Identifier, Source, Annotation and more.</span></div>
+          <a class="sc-btn sc-btn-s" href={route('glossary')}>Read the glossary</a>
+        </div>
+      </section>
+
+      <section id="reference" class="sc-band" aria-labelledby="ref-title">
+        <div class="sc-wrap sc-section sc-split">
+          <div class="sc-col">
+            <h2 id="ref-title">Quick reference</h2>
+            <p class="sc-lead">Everyday commands. <code class="sc-mono">rulelink &lt;command&gt; --help</code> shows the same in your terminal.</p>
+            <a href={route('cli')}>Full CLI reference</a>
+          </div>
+          <div class="sc-card sc-flex2 sc-scroll">
+            <table class="sc-table">
+              <tbody>
+                {commands.map((c) => (<tr><th scope="row"><code class="sc-mono">{c.cmd}</code></th><td>{c.desc}</td></tr>))}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+
+      <section id="roadmap" class="sc-section sc-wrap" aria-labelledby="road-title">
+        <h2 id="road-title">Roadmap</h2>
+        <p class="sc-lead">What you can use today, and what comes next. No dates: features ship when they are ready.</p>
+        <div class="sc-grid sc-grid-250">
+          <article class="sc-card sc-pad sc-now"><h3>Available now</h3><ul>{now.map((i) => <li>{i}</li>)}</ul></article>
+          <article class="sc-card sc-pad"><h3>Next <ComingSoon /></h3><ul>{next.map((i) => <li>{i}</li>)}</ul></article>
+          <article class="sc-card sc-pad"><h3>Later</h3><ul>{later.map((i) => <li>{i}</li>)}</ul></article>
+          <article id="cloud" class="sc-card sc-pad sc-cloud"><h3>Rulelink Cloud <ComingSoon cloud /></h3></article>
+        </div>
+      </section>
+
+      <section class="sc-band" aria-labelledby="cl-title">
+        <div class="sc-wrap sc-section sc-split">
+          <div class="sc-flex2 sc-col">
+            <h2 id="cl-title">What's new</h2>
+            <p class="sc-lead">Every release, written from its commits.</p>
+            <p><a href={route('releaseNotes')}>Read the release notes</a> · <a href={route('versions')}>Versions</a></p>
+          </div>
+          <div class="sc-col">
+            <h3>Contribute and get help</h3>
+            <a class="sc-btn sc-btn-p sc-self" href={REPO_URL}>View on GitHub</a>
+            <ul class="sc-links">
+              <li><a href={`${REPO_URL}/issues`}>Report an issue</a></li>
+              <li><a href={`${REPO_URL}/blob/main/CONTRIBUTING.md`}>Contributing guide</a></li>
+            </ul>
+          </div>
+        </div>
+      </section>
+</Layout>

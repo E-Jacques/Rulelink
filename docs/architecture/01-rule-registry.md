@@ -22,19 +22,19 @@
 
 ## 2. Release frame
 
-| Feature | MVP | V1 | V2 |
-|---|:-:|:-:|:-:|
-| Model v1: the brief's fields + `labels`, `superseded_by`, `extensions` | ● | | |
-| Generated and published JSON Schema | ● | | |
-| Lifecycle (State) and `approve`, `obsolete`, `reject` commands | ● | | |
-| `rules format`: rewrite the source in canonical form (repairs a hand-merged file) | ● | | |
-| Sequence-based ID allocation, list of retired IDs | ● | | |
-| ID policies: extracted from the source, ticket key | | ● | |
-| Basic search (substring, accent- and case-insensitive) | ● | | |
-| Filter language (`status:validated module:vat "rounding"`) | | ● | |
-| Labels: commands and filter | | ● | |
-| Related-rule checks (unknown references, supersession cycles) | ● unknown | ● cycles | |
-| Revert to `proposed` when the statement of a validated rule changes | | ● | |
+| Feature                                                                           |    MVP    |    V1    | V2  |
+| --------------------------------------------------------------------------------- | :-------: | :------: | :-: |
+| Model v1: the brief's fields + `labels`, `superseded_by`, `extensions`            |     ●     |          |     |
+| Generated and published JSON Schema                                               |     ●     |          |     |
+| Lifecycle (State) and `approve`, `obsolete`, `reject` commands                    |     ●     |          |     |
+| `rules format`: rewrite the source in canonical form (repairs a hand-merged file) |     ●     |          |     |
+| Sequence-based ID allocation, list of retired IDs                                 |     ●     |          |     |
+| ID policies: extracted from the source, ticket key                                |           |    ●     |     |
+| Basic search (substring, accent- and case-insensitive)                            |     ●     |          |     |
+| Filter language (`status:validated module:vat "rounding"`)                        |           |    ●     |     |
+| Labels: commands and filter                                                       |           |    ●     |     |
+| Related-rule checks (unknown references, supersession cycles)                     | ● unknown | ● cycles |     |
+| Revert to `proposed` when the statement of a validated rule changes               |           |    ●     |     |
 
 ## 3. Technical constraints
 
@@ -48,20 +48,20 @@
 
 ### 4.1 Mapping to the brief (ADR-003, accepted)
 
-| Brief field | JSON key | Type | Required | Note |
-|---|---|---|:-:|---|
-| `id` | `id` | `RuleId` | Yes | Matches the configured pattern, never reused |
-| `titre` | `title` | string, 1 to 120 characters | Yes | |
-| `énoncé` | `statement` | string, restricted Markdown | Yes | |
-| `statut` | `status` | `proposed`, `validated`, `obsolete`, `rejected` | Yes | |
-| `application` | `applications` | list of strings | No | Names declared in `[applications]` of `rulelink.toml` (09). Empty or absent: the rule applies to the whole project |
-| `module` | `module` | string | No | |
-| `périmètre` | `scope` | `{ covered: [], excluded: [] }` | No | Covered and excluded cases, as required by the brief |
-| `origine` | `origin` | `{ kind, ref?, url? }` | No | `kind`: `jira`, `github`, `gitlab`, `url`, `retrodoc`, `manual`, `spec`, or an adapter name |
-| `liées` | `related` | list of `RuleId` | No | |
-| *(addition)* | `labels` | list of lower-case strings | No | Advanced feature from `projet.svg`, V1 |
-| *(addition)* | `superseded_by` | `RuleId` | No | For an `obsolete` rule that has been replaced |
-| *(addition)* | `extensions` | `x-*` object | No | Free-form adapter metadata |
+| Brief field   | JSON key        | Type                                            | Required | Note                                                                                                               |
+| ------------- | --------------- | ----------------------------------------------- | :------: | ------------------------------------------------------------------------------------------------------------------ |
+| `id`          | `id`            | `RuleId`                                        |   Yes    | Matches the configured pattern, never reused                                                                       |
+| `titre`       | `title`         | string, 1 to 120 characters                     |   Yes    |                                                                                                                    |
+| `énoncé`      | `statement`     | string, restricted Markdown                     |   Yes    |                                                                                                                    |
+| `statut`      | `status`        | `proposed`, `validated`, `obsolete`, `rejected` |   Yes    |                                                                                                                    |
+| `application` | `applications`  | list of strings                                 |    No    | Names declared in `[applications]` of `rulelink.toml` (09). Empty or absent: the rule applies to the whole project |
+| `module`      | `module`        | string                                          |    No    |                                                                                                                    |
+| `périmètre`   | `scope`         | `{ covered: [], excluded: [] }`                 |    No    | Covered and excluded cases, as required by the brief                                                               |
+| `origine`     | `origin`        | `{ kind, ref?, url? }`                          |    No    | `kind`: `jira`, `github`, `gitlab`, `url`, `retrodoc`, `manual`, `spec`, or an adapter name                        |
+| `liées`       | `related`       | list of `RuleId`                                |    No    |                                                                                                                    |
+| _(addition)_  | `labels`        | list of lower-case strings                      |    No    | Advanced feature from `projet.svg`, V1                                                                             |
+| _(addition)_  | `superseded_by` | `RuleId`                                        |    No    | For an `obsolete` rule that has been replaced                                                                      |
+| _(addition)_  | `extensions`    | `x-*` object                                    |    No    | Free-form adapter metadata                                                                                         |
 
 All keys are English (ADR-003, accepted). The tool does not localise anything. Values such as `title` and `statement` can be written in any language; they are data and are never validated beyond their length and Markdown subset.
 
@@ -257,11 +257,11 @@ classDiagram
     IdAllocator --> IdPolicy
 ```
 
-| Strategy | Example | Use |
-|---|---|---|
-| `sequential` (default) | `RULE-043` after `sequences.RULE = 42` | Rules created locally, retro-documentation |
-| `extracted` | `RULE-{code}` → `RULE-FACT_3` | Jira import with the "RULE XXXX_N : ..." pattern |
-| `ticket-key` | `FAC-1289`, then `FAC-1289.2` if the ticket holds several rules | Teams whose standard is the Jira key |
+| Strategy               | Example                                                         | Use                                              |
+| ---------------------- | --------------------------------------------------------------- | ------------------------------------------------ |
+| `sequential` (default) | `RULE-043` after `sequences.RULE = 42`                          | Rules created locally, retro-documentation       |
+| `extracted`            | `RULE-{code}` → `RULE-FACT_3`                                   | Jira import with the "RULE XXXX_N : ..." pattern |
+| `ticket-key`           | `FAC-1289`, then `FAC-1289.2` if the ticket holds several rules | Teams whose standard is the Jira key             |
 
 Invariants, whatever the strategy:
 
@@ -302,16 +302,16 @@ classDiagram
     ValidatorGroup o-- RuleSetValidator
 ```
 
-| Validator | Finding code | Default level | Release |
-|---|---|---|---|
-| `SchemaValidator` | `RL100` invalid schema | Error | MVP |
-| `DuplicateIdValidator` | `RL003` duplicate identifier (brief) | Error | MVP |
-| `IdPatternValidator` | `RL101` identifier outside the pattern | Error | MVP |
-| `RetiredReuseValidator` | `RL102` retired identifier reused | Error | MVP |
-| `UnknownRelatedValidator` | `RL103` unknown related rule | Warning | MVP |
-| `SupersessionValidator` | `RL104` supersession to an unknown or obsolete rule, or in a cycle | Warning | V1 |
-| `RequiredFieldsValidator` | `RL105` empty required field | Error | MVP |
-| `CanonicalFormatValidator` | `RL106` source file not in canonical form (fix with `rulelink rules format`) | Warning | MVP |
+| Validator                  | Finding code                                                                 | Default level | Release |
+| -------------------------- | ---------------------------------------------------------------------------- | ------------- | ------- |
+| `SchemaValidator`          | `RL100` invalid schema                                                       | Error         | MVP     |
+| `DuplicateIdValidator`     | `RL003` duplicate identifier (brief)                                         | Error         | MVP     |
+| `IdPatternValidator`       | `RL101` identifier outside the pattern                                       | Error         | MVP     |
+| `RetiredReuseValidator`    | `RL102` retired identifier reused                                            | Error         | MVP     |
+| `UnknownRelatedValidator`  | `RL103` unknown related rule                                                 | Warning       | MVP     |
+| `SupersessionValidator`    | `RL104` supersession to an unknown or obsolete rule, or in a cycle           | Warning       | V1      |
+| `RequiredFieldsValidator`  | `RL105` empty required field                                                 | Error         | MVP     |
+| `CanonicalFormatValidator` | `RL106` source file not in canonical form (fix with `rulelink rules format`) | Warning       | MVP     |
 
 The `sink` collects findings: validation does not stop at the first error.
 
@@ -421,23 +421,23 @@ The `plan_*` methods change nothing: they return a `ChangeSet`. Application-laye
 
 ### 6.2 CLI commands
 
-| Command | Arguments and options | Effect | Release |
-|---|---|---|---|
-| `rulelink rules list` | `--status`, `--app`, `--module`, `--label`, `--filter <EXPR>`, `--format human\|json\|csv` | Sorted list | MVP (`--filter`, `--label` in V1) |
-| `rulelink rules show <ID>...` | `--with-locations`, `--format` | Details; with code locations (03) | MVP |
-| `rulelink rules search <TEXT>` | `--limit <N>`, `--status`, `--format` | Ranked full-text search | MVP |
-| `rulelink rules add` | `--title`, `--statement`, `--app`, `--module`, `--covered <TXT>`..., `--excluded <TXT>`..., `--related <ID>`..., `--origin <KIND:REF>`, `--id <ID>`, `--status proposed\|validated`, `--dry-run` | Creates a rule; ID allocated if absent. Without options: interactive input | MVP |
-| `rulelink rules edit <ID>` | same fields as `add`, `--keep-validated`, `--dry-run` | Edits; may revert to `proposed` (V1) | MVP |
-| `rulelink rules approve <ID>...` | `--all-proposed`, `--dry-run` | `proposed` → `validated` | MVP |
-| `rulelink rules obsolete <ID>` | `--superseded-by <ID>`, `--dry-run` | `validated` → `obsolete` | MVP |
-| `rulelink rules format` | `--check` | Rewrites the source in canonical form; with `--check`, exits 1 if it is not canonical | MVP |
-| `rulelink rules reject <ID>...` | `--reason <TXT>`, `--dry-run` | `proposed` → `rejected`: the rule stays in the source, its ID is retired, a later import of the same candidate is reported as previously rejected | MVP |
-| `rulelink rules next-id` | `--count <N>`, `--hint <CODE>` | Shows the next IDs, without reserving them | MVP |
-| `rulelink rules lint` | `--format` | Runs only the validators from section 5.3 | MVP |
-| `rulelink labels list` | `--format` | Labels in use, with their rule count | V1 |
-| `rulelink labels add <ID> <LABEL>...` | `--dry-run` | Adds labels | V1 |
-| `rulelink labels remove <ID> <LABEL>...` | `--dry-run` | Removes labels | V1 |
-| `rulelink schema rules` | `--output <FILE>` | Writes the JSON Schema of the current format | MVP |
+| Command                                  | Arguments and options                                                                                                                                                                            | Effect                                                                                                                                            | Release                           |
+| ---------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------- | --------------------------------- |
+| `rulelink rules list`                    | `--status`, `--app`, `--module`, `--label`, `--filter <EXPR>`, `--format human\|json\|csv`                                                                                                       | Sorted list                                                                                                                                       | MVP (`--filter`, `--label` in V1) |
+| `rulelink rules show <ID>...`            | `--with-locations`, `--format`                                                                                                                                                                   | Details; with code locations (03)                                                                                                                 | MVP                               |
+| `rulelink rules search <TEXT>`           | `--limit <N>`, `--status`, `--format`                                                                                                                                                            | Ranked full-text search                                                                                                                           | MVP                               |
+| `rulelink rules add`                     | `--title`, `--statement`, `--app`, `--module`, `--covered <TXT>`..., `--excluded <TXT>`..., `--related <ID>`..., `--origin <KIND:REF>`, `--id <ID>`, `--status proposed\|validated`, `--dry-run` | Creates a rule; ID allocated if absent. Without options: interactive input                                                                        | MVP                               |
+| `rulelink rules edit <ID>`               | same fields as `add`, `--keep-validated`, `--dry-run`                                                                                                                                            | Edits; may revert to `proposed` (V1)                                                                                                              | MVP                               |
+| `rulelink rules approve <ID>...`         | `--all-proposed`, `--dry-run`                                                                                                                                                                    | `proposed` → `validated`                                                                                                                          | MVP                               |
+| `rulelink rules obsolete <ID>`           | `--superseded-by <ID>`, `--dry-run`                                                                                                                                                              | `validated` → `obsolete`                                                                                                                          | MVP                               |
+| `rulelink rules format`                  | `--check`                                                                                                                                                                                        | Rewrites the source in canonical form; with `--check`, exits 1 if it is not canonical                                                             | MVP                               |
+| `rulelink rules reject <ID>...`          | `--reason <TXT>`, `--dry-run`                                                                                                                                                                    | `proposed` → `rejected`: the rule stays in the source, its ID is retired, a later import of the same candidate is reported as previously rejected | MVP                               |
+| `rulelink rules next-id`                 | `--count <N>`, `--hint <CODE>`                                                                                                                                                                   | Shows the next IDs, without reserving them                                                                                                        | MVP                               |
+| `rulelink rules lint`                    | `--format`                                                                                                                                                                                       | Runs only the validators from section 5.3                                                                                                         | MVP                               |
+| `rulelink labels list`                   | `--format`                                                                                                                                                                                       | Labels in use, with their rule count                                                                                                              | V1                                |
+| `rulelink labels add <ID> <LABEL>...`    | `--dry-run`                                                                                                                                                                                      | Adds labels                                                                                                                                       | V1                                |
+| `rulelink labels remove <ID> <LABEL>...` | `--dry-run`                                                                                                                                                                                      | Removes labels                                                                                                                                    | V1                                |
+| `rulelink schema rules`                  | `--output <FILE>`                                                                                                                                                                                | Writes the JSON Schema of the current format                                                                                                      | MVP                               |
 
 Example output of `rulelink rules show RULE-042 --format json`:
 

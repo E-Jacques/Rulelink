@@ -11,7 +11,7 @@ Use the `gh` CLI. If it is not available, stop and tell the user.
 
 Write the body with the `pr` skill (Summary, Evidence, Merge Danger). Then append these project sections:
 
-```markdown
+````markdown
 ## Blockers
 
 <none, or what blocks the merge, e.g. e2e tests still failing after 3 attempts>
@@ -33,7 +33,7 @@ Report: <path to the `code-review-report` file>
 | critical | 0     |
 | high     | 0     |
 | minor    | 0     |
-```
+````
 
 Copy the counts from the report's summary.
 

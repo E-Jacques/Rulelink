@@ -1,0 +1,28 @@
+---
+interface Props { kind?: 'note' | 'tip' | 'warning' | 'breaking'; title?: string }
+const { kind = 'note', title } = Astro.props;
+const heading = title ?? { note: 'Note', tip: 'Tip', warning: 'Warning', breaking: 'Breaking' }[kind];
+const icons = {
+  note: '<circle cx="12" cy="12" r="9"></circle><path d="M12 11v6M12 7.5v.5"></path>',
+  tip: '<path d="M9 18h6M10 21h4M12 3a6 6 0 0 0-4 10.5c.8.8 1 1.5 1 2.5h6c0-1 .2-1.7 1-2.5A6 6 0 0 0 12 3z"></path>',
+  warning: '<path d="M12 3l10 18H2z"></path><path d="M12 10v5M12 18v.5"></path>',
+  breaking: '<circle cx="12" cy="12" r="9"></circle><path d="M9 9l6 6M15 9l-6 6"></path>',
+};
+---
+<div class={`rl-callout rl-callout-${kind}`} role="note">
+  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true" set:html={icons[kind]} />
+  <div class="rl-callout-body"><strong>{heading}</strong><div><slot /></div></div>
+</div>
+
+<style is:global>
+  .rl-callout { display: flex; gap: var(--rl-space-3); padding: 14px 16px; border-radius: var(--rl-radius-md); border: 1px solid var(--c); background: var(--bg); color: var(--c); margin-block: var(--rl-space-4); }
+  .rl-callout > svg { flex: none; margin-top: 3px; }
+  .rl-callout-body { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+  .rl-callout-body strong { font-size: 15px; color: var(--c); }
+  .rl-callout-body > div { font-size: 15px; line-height: 24px; color: var(--rl-ink); }
+  .rl-callout-body p { margin: 0; }
+  .rl-callout-note { --c: var(--rl-brand-text); --bg: var(--rl-brand-subtle); border-color: var(--rl-brand); }
+  .rl-callout-tip { --c: var(--rl-success-text); --bg: var(--rl-success-subtle); }
+  .rl-callout-warning { --c: var(--rl-warning-text); --bg: var(--rl-warning-subtle); }
+  .rl-callout-breaking { --c: var(--rl-danger-text); --bg: var(--rl-danger-subtle); }
+</style>

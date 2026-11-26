@@ -2,87 +2,60 @@
 
 **Every business rule stays attached to its code, even when the team changes.**
 
-Rulelink answers two questions:
+Rulelink links each business rule to the code that implements it. It helps you answer two questions:
 
-1. **Which business rule does this code implement?**
-2. **Which rules no longer have any code?**
-
-> **Status: design phase.** The product and architecture are specified in [`docs/`](docs/README.md); no code has been written yet. The MVP is the only committed release.
+1. Which rule does this code implement?
+2. Which rules no longer have any code?
 
 ## How it works
 
-Rules live in a source of truth (a JSON file in the MVP):
+A **Rule** is one short, verifiable statement with a permanent identifier. Rules are kept in a **Source**, a JSON file in the current version:
 
 ```json
 {
   "id": "RULE-042",
   "title": "Line-level VAT rounding",
   "statement": "VAT is calculated and rounded to the cent on each invoice line, then summed.",
-  "status": "validated",
-  "applications": ["billing"],
-  "module": "VAT calculation"
+  "status": "validated"
 }
 ```
 
-Code points to them with a comment, in any language:
+Code points to a Rule with an **Annotation**, a comment that works in any language:
 
 ```rust
 // @rule RULE-042 -- rounding applied before the sum
 fn line_vat(line: &InvoiceLine) -> Money { ... }
 ```
 
-A deterministic check runs in CI:
+Rulelink reads these comments, so a Rule can be traced to its code and back.
 
-| Check | Case detected | Default level |
-|---|---|---|
-| Unknown reference | The code cites an identifier missing from the source | Error |
-| Obsolete rule cited | The code still cites an abandoned rule | Error |
-| Duplicate identifier | Two rules share the same identifier | Error |
-| Rule without code | A validated rule is cited nowhere | Warning |
-| Unvalidated rule cited | The code cites a rule that is still proposed | Warning |
+## Installation
 
-AI only intervenes through skills run by the developer's own agent, always with human validation.
+No release is published yet, so these commands will work once the first release is out. Details and a check step: [Installation](docs/public/installation.md).
 
-## Planned CLI (MVP)
-
-| Command | Purpose |
-|---|---|
-| `rulelink init` | Create the configuration and install the skills |
-| `rulelink check` | Run the checks (locally or in CI) |
-| `rulelink explain <file>` | List the rules implemented in a file |
-| `rulelink where <rule-id>` | List the code locations of a rule |
-
-## Roadmap
-
-| Release | Target | Theme |
-|---|---|---|
-| **MVP** | Developer working with AI agents | Rule format, CLI, JSON source, CI check, two skills |
-| V1 | Product Owner, community | Jira → JSON → Confluence flow, IDE access, external adapters |
-| V2 | Teams and large organisations | AI authoring skills, remote sources, IntelliJ |
-
-Details: [Features and releases](docs/product/02-features-and-releases.md).
+```sh
+# macOS and Linux
+curl --proto '=https' --tlsv1.2 -LsSf https://github.com/E-Jacques/rulelink/releases/latest/download/rulelink-cli-installer.sh | sh
+# Windows (PowerShell)
+powershell -ExecutionPolicy Bypass -c "irm https://github.com/E-Jacques/rulelink/releases/latest/download/rulelink-cli-installer.ps1 | iex"
+# Any system with Node.js
+npm install -g @rulelink-cli/rulelink-cli
+```
 
 ## Documentation
 
-| Part | Start here |
-|---|---|
-| Product — what and why | [Product overview](docs/product/01-product-overview.md) |
-| Architecture — how it works | [Global architecture](docs/architecture/00-global-architecture.md) |
-| Repository — how it is built and shipped | [Repository structure](docs/repository/01-repository-structure.md) |
+**Public documentation** is for people who use Rulelink. It will be published at <https://rulelink.dev> (not live yet). Until then, read it in this repository:
 
-Full index: [`docs/README.md`](docs/README.md).
+- [Rule format](docs/public/concepts/rule-format.md): what a Rule is and how it is named.
+- [Specify rules in code](docs/public/concepts/specify-rules-in-code.md): how to write an Annotation.
+- [CLI reference](docs/public/cli/init.md): one page per command, in the same folder.
 
-## Development
+**Contributor documentation** is for people who build Rulelink. Start with the [documentation index](docs/README.md), then see the [product overview](docs/product/01-product-overview.md), the [global architecture](docs/architecture/00-global-architecture.md) and the [repository structure](docs/repository/01-repository-structure.md). Terms are defined in the [glossary](GLOSSARY.md).
 
-Planned stack: Rust (Cargo workspace) orchestrated by [moon](https://moonrepo.dev). Once the code exists, a fresh clone will build and test with:
+## Contributing
 
-```sh
-moon setup
-moon run :test      # or: cargo test --workspace
-```
-
-Working notes for AI agents are in [`AGENTS.md`](AGENTS.md). Specs and issues live as GitHub issues (see [`docs/agents/issue-tracker.md`](docs/agents/issue-tracker.md)).
+Contributions are welcome. [CONTRIBUTING.md](CONTRIBUTING.md) explains how to write commits and open a pull request. Working notes for AI agents are in [AGENTS.md](AGENTS.md).
 
 ## License
 
-[MIT](LICENSE) (see ADR-012 in the [global architecture](docs/architecture/00-global-architecture.md)).
+[MIT](LICENSE)

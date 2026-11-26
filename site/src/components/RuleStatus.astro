@@ -1,0 +1,6 @@
+---
+import Badge from './Badge.astro';
+interface Props { state: 'proposed' | 'validated' | 'obsolete' | 'rejected' }
+const { state } = Astro.props;
+---
+<Badge kind={state}>{state}</Badge>

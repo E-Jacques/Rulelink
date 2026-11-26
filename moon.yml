@@ -11,7 +11,33 @@ tasks:
     command: 'cargo nextest run -p rulelink-e2e'
   docs-check:
     command: 'cargo xtask docs-check'
+  # Reference of the reusable crates (the application crates are excluded), warnings denied.
+  api-docs:
+    command: 'cargo doc --no-deps -p rulelink-model -p rulelink-registry -p rulelink-link -p rulelink-check -p rulelink-import -p rulelink-config -p rulelink-adapter-sdk'
+    env:
+      RUSTDOCFLAGS: '-D warnings'
+    inputs:
+      - 'crates/*/src/**/*'
+      - 'crates/*/Cargo.toml'
+      - 'Cargo.toml'
+      - 'Cargo.lock'
+    outputs: ['target/doc']
+  # The site and the crate reference in one folder (target/site), crate reference under /api/.
+  # Needs site:build done first (the release workflow does it); not run by `moon ci`.
+  site-bundle:
+    command: 'bash site/assemble.sh'
+    deps: ['api-docs', 'site:build']
+    inputs: ['site/assemble.sh']
+    outputs: ['target/site']
+    options:
+      runInCI: false
   skills-lint:
     command: 'cargo xtask skills-lint'
   release-plan:
     command: 'dist plan'
+  # Regenerates the Release notes from the commit history before a site upload.
+  # Not a CI check: the output changes with every merged commit.
+  release-notes:
+    command: 'cargo xtask release-notes'
+    options:
+      runInCI: false

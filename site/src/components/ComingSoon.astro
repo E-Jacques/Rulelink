@@ -1,0 +1,6 @@
+---
+import Badge from './Badge.astro';
+interface Props { cloud?: boolean }
+const { cloud = false } = Astro.props;
+---
+<Badge kind={cloud ? 'soon-cloud' : 'soon'}>Coming soon</Badge>
