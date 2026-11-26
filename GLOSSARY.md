@@ -69,8 +69,8 @@ The product, architecture and repository documents written for the people who bu
 _Avoid_: Internal docs, dossier
 
 **Product**:
-A distinct deliverable that users install or use: the CLI, or an editor extension. Release notes and the Roadmap are organised by Product, never by crate.
-_Avoid_: Component, module, crate (when speaking to users)
+A distinct deliverable that users install or use: the CLI, or IDE Support. Release notes and the Roadmap are organised by Product, never by crate.
+_Avoid_: Component, module, crate (when speaking to users), editor extension (as a Product name)
 
 **Release notes**:
 The changes a Product brings between two versions, written for its users and generated from commit messages. Detail per crate belongs to the contributor-facing developer pages, not to Release notes.

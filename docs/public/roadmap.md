@@ -34,7 +34,7 @@ The command line, `rulelink`.
 - Install from more places.
 - More ways to read Findings, such as in CI tools.
 
-## Editor extensions
+## IDE Support
 
 ### Now
 
