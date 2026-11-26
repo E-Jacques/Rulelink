@@ -17,6 +17,8 @@ export default defineConfig({
     sitemap({ filter: (page) => !page.includes('/components/') }),
     starlight({
       title: 'Rulelink',
+      // The mark sits beside the title, which stays visible.
+      logo: { src: './src/assets/logo.svg', alt: '' },
       customCss: [
         '@fontsource/ibm-plex-sans/400.css',
         '@fontsource/ibm-plex-sans/600.css',
