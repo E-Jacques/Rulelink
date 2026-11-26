@@ -22,20 +22,20 @@
 
 ## 2. Release frame
 
-| Feature | MVP | V1 | V2 |
-|---|:-:|:-:|:-:|
-| `@rule` grammar with several IDs per line | ● | | |
-| Lexical scan restricted to comments, 30 common languages | ● | | |
-| Generic fallback for unknown extensions | ● | | |
-| Implementation or test classification by path pattern | ● | | |
-| `explain`, `where`, `scan` | ● | | |
-| `annotate` (insertion and removal) | ● | | |
-| On-disk index cache (`.rulelink/cache`) | | ● | |
-| Incremental index for the LSP server | | ● | |
-| Application mapping by path (monorepo) | | ● | |
-| Labels shown on the implementation (`explain` output, LSP hover) | | ● | |
-| Enclosing symbol (function, class) via tree-sitter | | | ● |
-| Code permalinks (GitHub, GitLab) in outputs | | ● | |
+| Feature                                                          | MVP | V1  | V2  |
+| ---------------------------------------------------------------- | :-: | :-: | :-: |
+| `@rule` grammar with several IDs per line                        |  ●  |     |     |
+| Lexical scan restricted to comments, 30 common languages         |  ●  |     |     |
+| Generic fallback for unknown extensions                          |  ●  |     |     |
+| Implementation or test classification by path pattern            |  ●  |     |     |
+| `explain`, `where`, `scan`                                       |  ●  |     |     |
+| `annotate` (insertion and removal)                               |  ●  |     |     |
+| On-disk index cache (`.rulelink/cache`)                          |     |  ●  |     |
+| Incremental index for the LSP server                             |     |  ●  |     |
+| Application mapping by path (monorepo)                           |     |  ●  |     |
+| Labels shown on the implementation (`explain` output, LSP hover) |     |  ●  |     |
+| Enclosing symbol (function, class) via tree-sitter               |     |     |  ●  |
+| Code permalinks (GitHub, GitLab) in outputs                      |     |  ●  |     |
 
 ## 3. Technical constraints
 
@@ -64,15 +64,19 @@ Valid examples, all inside a comment:
 // @rule RULE-042, RULE-043
 // @rule RULE-042 -- rounding applied before the sum
 ```
+
 ```python
 # @rule RULE-017
 ```
+
 ```sql
 -- @rule RULE-101
 ```
+
 ```html
 <!-- @rule RULE-205 -->
 ```
+
 ```java
 /**
  * @rule RULE-042
@@ -86,6 +90,7 @@ The MVP scan is lexical (no syntax tree), so what counts as an annotation is def
 **Valid identifier.** `PREFIX-SUFFIX`: a prefix that starts with an upper-case ASCII letter then continues with upper-case letters, digits or `_`; one hyphen; a non-empty suffix of upper-case letters, digits or `_`. Valid: `RULE-042`, `BR-7`, `PRICING_V2-A1`. Not valid: `rule-042` (lower case), `RULE042` (no hyphen), `RULE-` (empty suffix), `1RULE-042` (prefix starts with a digit), `RULE-04a`.
 
 **What makes `@rule` an annotation.**
+
 - `@rule` is followed by whitespace (`@rules` and `@ruleRULE-1` are not annotations) and by at least one valid identifier.
 - The identifiers are separated by spaces or commas. The list stops at the first token that is not an identifier (`--`, `*/`, `-->`, a note). A trailing `.`, `:`, `;`, `)`, `]`, `"` or `'` on an identifier is ignored.
 - `@rule` is in a comment, decided by the text before it on the same line:
@@ -354,12 +359,12 @@ pub fn plan_annotation(file_text: &str, path: &RelPath, line: u32, ids: &[RuleId
 
 ### 6.2 CLI commands
 
-| Command | Arguments and options | Output | Release |
-|---|---|---|---|
-| `rulelink explain <PATH>[:LINE]` | `--format human\|json\|markdown`, `--status <S>`, `--with-statement` | Rules cited in the file (or at the line), with title, status, labels, statement on request | MVP |
-| `rulelink where <ID>...` | `--kind impl\|test\|doc`, `--format human\|json\|vimgrep`, `--first`, `--permalink` | `path:line:column` locations | MVP |
-| `rulelink scan` | `--paths <P>...`, `--format json\|ndjson`, `--stats` | Raw index, for debugging and tooling | MVP |
-| `rulelink annotate <PATH>:<LINE> <ID>...` | `--remove`, `--dry-run`, `--placement above\|inline\|doc` | Inserts or removes, prints the diff | MVP |
+| Command                                   | Arguments and options                                                               | Output                                                                                     | Release |
+| ----------------------------------------- | ----------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------ | ------- |
+| `rulelink explain <PATH>[:LINE]`          | `--format human\|json\|markdown`, `--status <S>`, `--with-statement`                | Rules cited in the file (or at the line), with title, status, labels, statement on request | MVP     |
+| `rulelink where <ID>...`                  | `--kind impl\|test\|doc`, `--format human\|json\|vimgrep`, `--first`, `--permalink` | `path:line:column` locations                                                               | MVP     |
+| `rulelink scan`                           | `--paths <P>...`, `--format json\|ndjson`, `--stats`                                | Raw index, for debugging and tooling                                                       | MVP     |
+| `rulelink annotate <PATH>:<LINE> <ID>...` | `--remove`, `--dry-run`, `--placement above\|inline\|doc`                           | Inserts or removes, prints the diff                                                        | MVP     |
 
 Example `rulelink explain src/billing/vat.rs`:
 

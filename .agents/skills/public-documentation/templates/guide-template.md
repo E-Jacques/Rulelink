@@ -31,9 +31,9 @@ description: {{ description }}
 
 ## Do and do not
 
-| Do                    | Do not                  |
-| --------------------- | ----------------------- |
-| {{ good_example }}    | {{ bad_example }}       |
+| Do                 | Do not            |
+| ------------------ | ----------------- |
+| {{ good_example }} | {{ bad_example }} |
 
 <!-- endif -->
 

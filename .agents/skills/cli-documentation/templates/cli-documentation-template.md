@@ -37,10 +37,10 @@ since: {{ version }}
 
 ## Exit codes
 
-| code | meaning                    |
-| ---- | -------------------------- |
-| `0`  | {{ success_meaning }}      |
-| `2`  | {{ invalid_meaning }}      |
+| code | meaning               |
+| ---- | --------------------- |
+| `0`  | {{ success_meaning }} |
+| `2`  | {{ invalid_meaning }} |
 
 ## See also
 

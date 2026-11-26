@@ -26,23 +26,23 @@ One sentence: each call moves one Rule along the lifecycle or fails without touc
 
 ## Ownership
 
-| Decision | Owner |
-| --- | --- |
-| Allowed transitions, retiring, `superseded_by` validity | model (`RuleSet`) |
-| Read-modify-write of the Source | app (`with_source`, shared with `add`) |
-| Error class (refused value/transition = input, exit 2) | app |
-| Arguments, printing the new status | cli |
+| Decision                                                | Owner                                  |
+| ------------------------------------------------------- | -------------------------------------- |
+| Allowed transitions, retiring, `superseded_by` validity | model (`RuleSet`)                      |
+| Read-modify-write of the Source                         | app (`with_source`, shared with `add`) |
+| Error class (refused value/transition = input, exit 2)  | app                                    |
+| Arguments, printing the new status                      | cli                                    |
 
 ## Input boundaries
 
-| Input | Line checked |
-| --- | --- |
-| `<id>` | exact match with an existing Rule; otherwise `RuleNotFound` naming the value. No normalisation (case-sensitive, as stored) |
-| `--superseded-by` | exists in the Source, differs from `<id>`; only on `obsolete` |
-| Current status | one named error per refusal, naming the Rule, its status and the required one |
-| Source / config | as in `rules add` (same helper) |
-| Failure | nothing written; atomic rename |
-| Error class | not found / refused transition / bad replacement -> `Input` (exit 2); config 2; Source 3 |
+| Input             | Line checked                                                                                                               |
+| ----------------- | -------------------------------------------------------------------------------------------------------------------------- |
+| `<id>`            | exact match with an existing Rule; otherwise `RuleNotFound` naming the value. No normalisation (case-sensitive, as stored) |
+| `--superseded-by` | exists in the Source, differs from `<id>`; only on `obsolete`                                                              |
+| Current status    | one named error per refusal, naming the Rule, its status and the required one                                              |
+| Source / config   | as in `rules add` (same helper)                                                                                            |
+| Failure           | nothing written; atomic rename                                                                                             |
+| Error class       | not found / refused transition / bad replacement -> `Input` (exit 2); config 2; Source 3                                   |
 
 ## Smells
 
@@ -57,11 +57,11 @@ One sentence: each call moves one Rule along the lifecycle or fails without touc
 
 ## Dependent tickets
 
-| Ticket | Reuses | Missing |
-| --- | --- | --- |
-| #11 search/filter/related | `RuleStatus` Display, `with_source` | filters (theirs) |
-| #12 format | `with_source` | `--check` (theirs) |
-| #14 check core | status semantics (validated expected to have code), `superseded_by` | findings (theirs) |
+| Ticket                    | Reuses                                                              | Missing            |
+| ------------------------- | ------------------------------------------------------------------- | ------------------ |
+| #11 search/filter/related | `RuleStatus` Display, `with_source`                                 | filters (theirs)   |
+| #12 format                | `with_source`                                                       | `--check` (theirs) |
+| #14 check core            | status semantics (validated expected to have code), `superseded_by` | findings (theirs)  |
 
 Known limit, inherited by #14: `--superseded-by` only has to exist; it may be a rejected, obsolete or proposed Rule, and a cycle is possible. RL002 must tolerate it. `<id>` is trimmed and refused when blank (`RuleId::parse`); hand-edited duplicates are not detected.
 

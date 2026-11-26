@@ -75,12 +75,12 @@ Every validated Rule should print at least one place. See [Specify Rules in code
 
 ## Do and do not
 
-| Do                                                   | Do not                                                                      |
-| ---------------------------------------------------- | --------------------------------------------------------------------------- |
-| "The surface field must be filled."                  | "The form must be valid." (vague: valid how?)                               |
-| "The surface must not be above 10,000."              | "The surface must be filled and must not be above 10,000." (two criteria)   |
-| "The surface must not be below 9 m²."                | "Use a `for` loop to reject surfaces below 9." (an instruction, not a Rule) |
-| One Rule, one `@rule` comment, one test.             | One long Rule cited by half of the project.                                 |
+| Do                                       | Do not                                                                      |
+| ---------------------------------------- | --------------------------------------------------------------------------- |
+| "The surface field must be filled."      | "The form must be valid." (vague: valid how?)                               |
+| "The surface must not be above 10,000."  | "The surface must be filled and must not be above 10,000." (two criteria)   |
+| "The surface must not be below 9 m²."    | "Use a `for` loop to reject surfaces below 9." (an instruction, not a Rule) |
+| One Rule, one `@rule` comment, one test. | One long Rule cited by half of the project.                                 |
 
 ## Next steps
 

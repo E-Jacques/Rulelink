@@ -45,18 +45,18 @@ End the report with one line: what the refactor step changed, or `none, because 
 
 Use one of these. When a finding fits several, pick the category of its root cause, not of its symptom (e.g. a crash caused by a swallowed error is `error-handling`, not `bug`). If none fits, use `other` and say why in the description. If `other` keeps appearing for the same reason, propose a new category to the user.
 
-| category         | covers                                                                    |
-| ---------------- | ------------------------------------------------------------------------- |
-| `bug`            | logic or behaviour errors                                                 |
-| `spec-gap`       | behaviour missing, partial or extra compared with the issue or spec       |
-| `rust-idiom`     | ownership, needless clones, iterator misuse, clippy-level problems        |
-| `error-handling` | swallowed errors, panics on user input, unhelpful messages                |
-| `design`         | duplication, speculative code, anything design-related not listed below   |
+| category            | covers                                                                      |
+| ------------------- | --------------------------------------------------------------------------- |
+| `bug`               | logic or behaviour errors                                                   |
+| `spec-gap`          | behaviour missing, partial or extra compared with the issue or spec         |
+| `rust-idiom`        | ownership, needless clones, iterator misuse, clippy-level problems          |
+| `error-handling`    | swallowed errors, panics on user input, unhelpful messages                  |
+| `design`            | duplication, speculative code, anything design-related not listed below     |
 | `temporal-coupling` | calls that must happen in a given order, or state changed before validation |
-| `layering`       | domain logic in `app` or `cli`, a layer that knows too much               |
-| `boundary`       | an unchecked line of the `input-boundaries` checklist                     |
-| `atomicity`      | a failure leaves a file or state half-changed; concurrent writers         |
-| `naming`         | names that do not match `GLOSSARY.md` or do not reveal intent             |
-| `tests`          | missing, brittle, or implementation-coupled tests                         |
-| `docs`           | CLI documentation page or other docs out of sync with the code            |
-| `other`          | anything else                                                             |
+| `layering`          | domain logic in `app` or `cli`, a layer that knows too much                 |
+| `boundary`          | an unchecked line of the `input-boundaries` checklist                       |
+| `atomicity`         | a failure leaves a file or state half-changed; concurrent writers           |
+| `naming`            | names that do not match `GLOSSARY.md` or do not reveal intent               |
+| `tests`             | missing, brittle, or implementation-coupled tests                           |
+| `docs`              | CLI documentation page or other docs out of sync with the code              |
+| `other`             | anything else                                                               |

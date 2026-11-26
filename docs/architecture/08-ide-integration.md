@@ -20,17 +20,17 @@
 
 ## 2. Release frame
 
-| Feature | MVP | V1 | V2 |
-|---|:-:|:-:|:-:|
-| LSP server: hover, diagnostics, completion, definition, references | | ● | |
-| CodeLens and inlay hints (title, status) | | ● | |
-| Code actions "annotate with…", "replace the obsolete rule" | | ● | |
-| Diagnostics in `rules.json` (schema, duplicates, unknown related rules) | | ● | |
-| VS Code extension + "Rules" view + "Rules in this file" view | | ● | |
-| Distribution on the VS Code Marketplace and Open VSX | | ● | |
-| IntelliJ plugin (LSP4IJ or the platform LSP API) | | | ● |
-| Symbol-level CodeLens (tree-sitter) | | | ● |
-| Coverage view per folder | | | ● |
+| Feature                                                                 | MVP | V1  | V2  |
+| ----------------------------------------------------------------------- | :-: | :-: | :-: |
+| LSP server: hover, diagnostics, completion, definition, references      |     |  ●  |     |
+| CodeLens and inlay hints (title, status)                                |     |  ●  |     |
+| Code actions "annotate with…", "replace the obsolete rule"              |     |  ●  |     |
+| Diagnostics in `rules.json` (schema, duplicates, unknown related rules) |     |  ●  |     |
+| VS Code extension + "Rules" view + "Rules in this file" view            |     |  ●  |     |
+| Distribution on the VS Code Marketplace and Open VSX                    |     |  ●  |     |
+| IntelliJ plugin (LSP4IJ or the platform LSP API)                        |     |     |  ●  |
+| Symbol-level CodeLens (tree-sitter)                                     |     |     |  ●  |
+| Coverage view per folder                                                |     |     |  ●  |
 
 The MVP deliberately stays CLI-only; `explain` and `where --format vimgrep` already give access from any editor.
 
@@ -114,28 +114,28 @@ When `rules.json` changes (on disk or in a buffer), `CachedSource` (02) reloads 
 
 ### 4.3 LSP features
 
-| LSP request | Behaviour | Component called |
-|---|---|---|
-| `hover` on an identifier after `@rule` | Title, status, statement, scope, labels, links to the other locations | 01, 03 |
-| `completion` after `@rule ` | Sorted identifiers: rules already cited in the file, then text close to the current symbol, then natural order. Obsolete rules excluded | 01, 03 |
-| `definition` on an identifier | Opens `rules.json` at the rule's line (positions from 02) | 02 |
-| `references` on an identifier, or on the `id` in `rules.json` | Every location (`where`) | 03 |
-| `publishDiagnostics` | RL001, RL002, RL005, RL006, RL009 in the code; RL003, RL004, RL1xx in `rules.json` | 04 |
-| `codeLens` | Above an annotation: "RULE-042 · validated · 3 locations". In `rules.json`: "3 locations · 1 test" or "no code" | 01, 03 |
-| `inlayHint` | Short title after the identifier, can be disabled | 01 |
-| `codeAction` | "Annotate with a rule…", "Replace RULE-007 (obsolete) with RULE-042", "Add an unknown identifier as a proposed rule" | 03, 01 |
-| `workspace/symbol` | Rule search by identifier or title | 01 |
-| `documentSymbol` in `rules.json` | File outline by application, module, rule | 01 |
+| LSP request                                                   | Behaviour                                                                                                                               | Component called |
+| ------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------- | ---------------- |
+| `hover` on an identifier after `@rule`                        | Title, status, statement, scope, labels, links to the other locations                                                                   | 01, 03           |
+| `completion` after `@rule `                                   | Sorted identifiers: rules already cited in the file, then text close to the current symbol, then natural order. Obsolete rules excluded | 01, 03           |
+| `definition` on an identifier                                 | Opens `rules.json` at the rule's line (positions from 02)                                                                               | 02               |
+| `references` on an identifier, or on the `id` in `rules.json` | Every location (`where`)                                                                                                                | 03               |
+| `publishDiagnostics`                                          | RL001, RL002, RL005, RL006, RL009 in the code; RL003, RL004, RL1xx in `rules.json`                                                      | 04               |
+| `codeLens`                                                    | Above an annotation: "RULE-042 · validated · 3 locations". In `rules.json`: "3 locations · 1 test" or "no code"                         | 01, 03           |
+| `inlayHint`                                                   | Short title after the identifier, can be disabled                                                                                       | 01               |
+| `codeAction`                                                  | "Annotate with a rule…", "Replace RULE-007 (obsolete) with RULE-042", "Add an unknown identifier as a proposed rule"                    | 03, 01           |
+| `workspace/symbol`                                            | Rule search by identifier or title                                                                                                      | 01               |
+| `documentSymbol` in `rules.json`                              | File outline by application, module, rule                                                                                               | 01               |
 
 Rulelink-specific requests (`rulelink/` prefix), used by the extension's views:
 
-| Method | Parameters | Result |
-|---|---|---|
-| `rulelink/listRules` | `filter?` | Rules with status and location count |
-| `rulelink/explainFile` | `uri` | Output of `explain` |
-| `rulelink/whereRule` | `ids` | Output of `where` |
-| `rulelink/runCheck` | `changed?` | Full report |
-| `rulelink/status` | — | Coverage, for the status bar |
+| Method                 | Parameters | Result                               |
+| ---------------------- | ---------- | ------------------------------------ |
+| `rulelink/listRules`   | `filter?`  | Rules with status and location count |
+| `rulelink/explainFile` | `uri`      | Output of `explain`                  |
+| `rulelink/whereRule`   | `ids`      | Output of `where`                    |
+| `rulelink/runCheck`    | `changed?` | Full report                          |
+| `rulelink/status`      | —          | Coverage, for the status bar         |
 
 ### 4.4 VS Code extension — **Proxy** for the server
 
@@ -172,34 +172,34 @@ classDiagram
 
 The extension is a local **proxy** for the server: every view and command delegates to the LSP client (`vscode-languageclient`). It never reads `rules.json` itself.
 
-| VS Code element | Content |
-|---|---|
-| "Rules" view (side bar) | Application → module → rule tree, status icon, filter |
-| "Rules in this file" view | Rules cited in the active editor |
-| Status bar | "Rulelink: 94/118 linked"; click: run `check` |
-| Commands | `Rulelink: Run check`, `Explain current file`, `Where is rule…`, `Annotate selection with rule…`, `Open rule definition` |
-| Settings | `rulelink.path`, `rulelink.inlayHints.enabled`, `rulelink.diagnostics.debounceMs`, `rulelink.trace.server` |
-| Activation | Presence of `rulelink.toml` in the workspace |
+| VS Code element           | Content                                                                                                                  |
+| ------------------------- | ------------------------------------------------------------------------------------------------------------------------ |
+| "Rules" view (side bar)   | Application → module → rule tree, status icon, filter                                                                    |
+| "Rules in this file" view | Rules cited in the active editor                                                                                         |
+| Status bar                | "Rulelink: 94/118 linked"; click: run `check`                                                                            |
+| Commands                  | `Rulelink: Run check`, `Explain current file`, `Where is rule…`, `Annotate selection with rule…`, `Open rule definition` |
+| Settings                  | `rulelink.path`, `rulelink.inlayHints.enabled`, `rulelink.diagnostics.debounceMs`, `rulelink.trace.server`               |
+| Activation                | Presence of `rulelink.toml` in the workspace                                                                             |
 
 ### 4.5 IntelliJ plugin (V2)
 
 Same principle: a thin LSP client, in Kotlin. Two integration options:
 
-| Option | Advantage | Limitation |
-|---|---|---|
-| LSP4IJ (Red Hat) | Also works on Community editions, supports CodeLens and inlay hints | Depends on a third-party plugin |
-| JetBrains platform LSP API | Native, maintained by JetBrains | Availability and feature coverage vary by IDE and edition |
+| Option                     | Advantage                                                           | Limitation                                                |
+| -------------------------- | ------------------------------------------------------------------- | --------------------------------------------------------- |
+| LSP4IJ (Red Hat)           | Also works on Community editions, supports CodeLens and inlay hints | Depends on a third-party plugin                           |
+| JetBrains platform LSP API | Native, maintained by JetBrains                                     | Availability and feature coverage vary by IDE and edition |
 
 Recommendation: LSP4IJ, to cover IntelliJ IDEA Community, which part of the Java teams use. The "Rules" view is a `ToolWindow` fed by `rulelink/listRules`.
 
 ## 5. Entry points
 
-| Entry point | Description | Release |
-|---|---|---|
-| `rulelink lsp` | Starts the server over stdio. Options: `--log-file <F>`, `--root <DIR>` | V1 |
-| `vscode-rulelink` | VS Code Marketplace and Open VSX extension | V1 |
-| `intellij-rulelink` | JetBrains Marketplace plugin | V2 |
-| Other editors | Neovim, Helix, Zed, Emacs: documented LSP configuration, no extension | V1 |
+| Entry point         | Description                                                             | Release |
+| ------------------- | ----------------------------------------------------------------------- | ------- |
+| `rulelink lsp`      | Starts the server over stdio. Options: `--log-file <F>`, `--root <DIR>` | V1      |
+| `vscode-rulelink`   | VS Code Marketplace and Open VSX extension                              | V1      |
+| `intellij-rulelink` | JetBrains Marketplace plugin                                            | V2      |
+| Other editors       | Neovim, Helix, Zed, Emacs: documented LSP configuration, no extension   | V1      |
 
 Example Neovim configuration:
 

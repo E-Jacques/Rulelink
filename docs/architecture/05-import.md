@@ -22,21 +22,21 @@
 
 ## 2. Release frame
 
-| Feature | MVP | V1 | V2 |
-|---|:-:|:-:|:-:|
-| Import of a JSON proposals file (format from 01, or a list of drafts) | ● | | |
-| Preview (`--dry-run`) and interactive confirmation | ● | | |
-| Reconciliation by identifier and by title similarity | ● | | |
-| Candidates matching a `rejected` rule: skipped, listed in the preview as "previously rejected", overridable with an explicit flag | ● | | |
-| Jira Cloud (REST v3, ADF) and Data Center (REST v2, wiki markup) import | | ● | |
-| Configurable regex extraction, several rules per issue | | ● | |
-| Mapping of Jira fields to application, module, labels | | ● | |
-| CSV import with column mapping | | ● | |
-| GitHub Issues and GitLab Issues import | | ● | |
-| Incremental cursor | | ● | |
-| Import through an external adapter | | ● | |
-| Scheduled CI import that opens a PR | | | ● |
-| Import from a specification through the generation skill (07) | | | ● |
+| Feature                                                                                                                           | MVP | V1  | V2  |
+| --------------------------------------------------------------------------------------------------------------------------------- | :-: | :-: | :-: |
+| Import of a JSON proposals file (format from 01, or a list of drafts)                                                             |  ●  |     |     |
+| Preview (`--dry-run`) and interactive confirmation                                                                                |  ●  |     |     |
+| Reconciliation by identifier and by title similarity                                                                              |  ●  |     |     |
+| Candidates matching a `rejected` rule: skipped, listed in the preview as "previously rejected", overridable with an explicit flag |  ●  |     |     |
+| Jira Cloud (REST v3, ADF) and Data Center (REST v2, wiki markup) import                                                           |     |  ●  |     |
+| Configurable regex extraction, several rules per issue                                                                            |     |  ●  |     |
+| Mapping of Jira fields to application, module, labels                                                                             |     |  ●  |     |
+| CSV import with column mapping                                                                                                    |     |  ●  |     |
+| GitHub Issues and GitLab Issues import                                                                                            |     |  ●  |     |
+| Incremental cursor                                                                                                                |     |  ●  |     |
+| Import through an external adapter                                                                                                |     |  ●  |     |
+| Scheduled CI import that opens a PR                                                                                               |     |     |  ●  |
+| Import from a specification through the generation skill (07)                                                                     |     |     |  ●  |
 
 ## 3. Technical constraints
 
@@ -103,11 +103,11 @@ The cursor is saved only after a successful `apply`. An interrupted import there
 
 ### 4.2 Extraction — **Strategy**
 
-| Strategy | Input | Output | Use |
-|---|---|---|---|
-| `RegexExtractor` | Issue text converted to plain text | 0 to n candidates per item | Jira, issues: "RULE XXXX_N : my business rule" pattern |
-| `FieldExtractor` | Structured fields | 1 candidate per item | CSV, a custom Jira "Business rule" field |
-| `PassthroughExtractor` | Drafts already in Rulelink format | 1 candidate per draft | Proposals file (retro-documentation, skills) |
+| Strategy               | Input                              | Output                     | Use                                                    |
+| ---------------------- | ---------------------------------- | -------------------------- | ------------------------------------------------------ |
+| `RegexExtractor`       | Issue text converted to plain text | 0 to n candidates per item | Jira, issues: "RULE XXXX_N : my business rule" pattern |
+| `FieldExtractor`       | Structured fields                  | 1 candidate per item       | CSV, a custom Jira "Business rule" field               |
+| `PassthroughExtractor` | Drafts already in Rulelink format  | 1 candidate per draft      | Proposals file (retro-documentation, skills)           |
 
 Default pattern, taken from the brief's decisions, with named groups:
 
@@ -160,13 +160,13 @@ classDiagram
     JiraFamily ..> JiraImporter
 ```
 
-| Aspect | Cloud | Data Center |
-|---|---|---|
-| Detection | `edition = "auto"`: `GET /rest/api/2/serverInfo` → `deploymentType` | Same |
-| Search | v3 JQL search endpoint, `nextPageToken` pagination | `/rest/api/2/search`, `startAt` / `maxResults` pagination |
-| Description | Atlassian Document Format (JSON) | Wiki markup (text) |
-| Authentication | Email + API token (basic) | PAT (`Bearer`) |
-| Link | `https://<site>.atlassian.net/browse/<KEY>` | `<base>/browse/<KEY>` |
+| Aspect         | Cloud                                                               | Data Center                                               |
+| -------------- | ------------------------------------------------------------------- | --------------------------------------------------------- |
+| Detection      | `edition = "auto"`: `GET /rest/api/2/serverInfo` → `deploymentType` | Same                                                      |
+| Search         | v3 JQL search endpoint, `nextPageToken` pagination                  | `/rest/api/2/search`, `startAt` / `maxResults` pagination |
+| Description    | Atlassian Document Format (JSON)                                    | Wiki markup (text)                                        |
+| Authentication | Email + API token (basic)                                           | PAT (`Bearer`)                                            |
+| Link           | `https://<site>.atlassian.net/browse/<KEY>`                         | `<base>/browse/<KEY>`                                     |
 
 Exact endpoints are verified by `wiremock` tests on recorded responses. The adapter documentation states the minimum supported Data Center version.
 
@@ -222,11 +222,11 @@ flowchart TD
     Q1 -->|"retired identifier"| RET["Rejected (RL102)"]
 ```
 
-| Policy (`--merge`) | Existing proposed rule, different content |
-|---|---|
-| `skip` (default) | Keeps the existing rule, reports the difference |
-| `update` | Replaces imported fields, keeps local fields (`labels`, `related`) |
-| `replace` | Replaces the whole rule |
+| Policy (`--merge`) | Existing proposed rule, different content                          |
+| ------------------ | ------------------------------------------------------------------ |
+| `skip` (default)   | Keeps the existing rule, reports the difference                    |
+| `update`           | Replaces imported fields, keeps local fields (`labels`, `related`) |
+| `replace`          | Replaces the whole rule                                            |
 
 ### 4.7 Import command — **Command** + **Memento**
 
@@ -272,14 +272,14 @@ This is the format produced by the retro-documentation skill and accepted by `im
 
 ### 5.1 CLI commands
 
-| Command | Specific options | Release |
-|---|---|---|
-| `rulelink import file <FILE>` | `--origin <KIND>` | MVP |
-| `rulelink import jira` | `--jql <JQL>`, `--project <KEY>`, `--since <DATE\|cursor>`, `--edition auto\|cloud\|datacenter`, `--pattern <REGEX>` | V1 |
-| `rulelink import csv <FILE>` | `--map <COLUMN>=<FIELD>...`, `--delimiter`, `--encoding` | V1 |
-| `rulelink import github` | `--repo <OWNER/NAME>`, `--label <L>`, `--state open\|closed\|all` | V1 |
-| `rulelink import gitlab` | `--project <ID\|PATH>`, `--label <L>`, `--state` | V1 |
-| `rulelink import <external>` | `--query <JSON>` | V1 |
+| Command                       | Specific options                                                                                                     | Release |
+| ----------------------------- | -------------------------------------------------------------------------------------------------------------------- | ------- |
+| `rulelink import file <FILE>` | `--origin <KIND>`                                                                                                    | MVP     |
+| `rulelink import jira`        | `--jql <JQL>`, `--project <KEY>`, `--since <DATE\|cursor>`, `--edition auto\|cloud\|datacenter`, `--pattern <REGEX>` | V1      |
+| `rulelink import csv <FILE>`  | `--map <COLUMN>=<FIELD>...`, `--delimiter`, `--encoding`                                                             | V1      |
+| `rulelink import github`      | `--repo <OWNER/NAME>`, `--label <L>`, `--state open\|closed\|all`                                                    | V1      |
+| `rulelink import gitlab`      | `--project <ID\|PATH>`, `--label <L>`, `--state`                                                                     | V1      |
+| `rulelink import <external>`  | `--query <JSON>`                                                                                                     | V1      |
 
 Common options: `--dry-run`, `--yes`, `--merge skip|update|replace`, `--allow-similar`, `--update-validated`, `--limit <N>`, `--format human|json`.
 

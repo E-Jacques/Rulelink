@@ -20,25 +20,25 @@
 
 ## 2. Release frame
 
-| Feature | MVP | V1 | V2 |
-|---|:-:|:-:|:-:|
-| Release pipeline: release-plz + dist, GitHub releases, npm package | ● | | |
-| Shell and PowerShell installers (amends ADR-0001, see ADR-0004) | ● | | |
-| Docker image | | ● | |
-| crates.io publication of every library crate | ● | | |
-| Signed artefacts, SBOM, build provenance attestations | ● | | |
-| Homebrew, Scoop, winget | | ● | |
-| VS Code extension release (per-platform VSIX) | | ● | |
-| Nightly pre-release channel | | ● | |
-| `rulelink self update` for script-installed binaries | | ● | |
+| Feature                                                            | MVP | V1  | V2  |
+| ------------------------------------------------------------------ | :-: | :-: | :-: |
+| Release pipeline: release-plz + dist, GitHub releases, npm package |  ●  |     |     |
+| Shell and PowerShell installers (amends ADR-0001, see ADR-0004)    |  ●  |     |     |
+| Docker image                                                       |     |  ●  |     |
+| crates.io publication of every library crate                       |  ●  |     |     |
+| Signed artefacts, SBOM, build provenance attestations              |  ●  |     |     |
+| Homebrew, Scoop, winget                                            |     |  ●  |     |
+| VS Code extension release (per-platform VSIX)                      |     |  ●  |     |
+| Nightly pre-release channel                                        |     |  ●  |     |
+| `rulelink self update` for script-installed binaries               |     |  ●  |     |
 
 ## 3. Technical constraints
 
-| Topic | Target |
-|---|---|
-| Release pipeline, tag to published binaries | < 45 min |
-| Release dry run on every PR | Required status check |
-| Artefacts | Reproducible from a tag, with checksums, SBOM and provenance |
+| Topic                                       | Target                                                       |
+| ------------------------------------------- | ------------------------------------------------------------ |
+| Release pipeline, tag to published binaries | < 45 min                                                     |
+| Release dry run on every PR                 | Required status check                                        |
+| Artefacts                                   | Reproducible from a tag, with checksums, SBOM and provenance |
 
 ## 4. Delivery lifecycle
 
@@ -52,19 +52,19 @@
 
 Public contracts are versioned independently of the binary, because they evolve at a different pace and have external consumers ([architecture/00](../architecture/00-global-architecture.md), section 9.7).
 
-| Artefact | Scheme | Strategy | Published to |
-|---|---|---|---|
-| `rulelink` binary (`rulelink-cli`) | SemVer, `0.x` until the format is frozen | Lockstep with every internal crate (`workspace.package.version`) | GitHub releases (archives, shell and PowerShell installers), npm, crates.io (V1: Docker, Homebrew) |
-| Other library crates (`registry`, `link`, `check`, `import`, `publish`, `config`, `app`, `lsp`, `adapters/*`) | Same as the binary | Lockstep, published in dependency order by release-plz | crates.io |
-| `xtask`, `rulelink-e2e` | — | `publish = false` | — |
-| `rulelink-model` | SemVer, `1.x` from the first public release | Independent, checked by `cargo-semver-checks` | crates.io |
-| `rulelink-adapter-sdk` | SemVer | Independent, checked by `cargo-semver-checks` | crates.io |
-| Rule file format | Integer (`"format": 1`) | Bumped only on breaking change | JSON Schema in `schemas/` |
-| External adapter protocol | `major.minor` (`1.0`) | Negotiated at `initialize` ([architecture/02](../architecture/02-sources-of-truth.md)) | JSON Schema |
-| JSON output schemas | `name/vN` | One version per breaking change | JSON Schema |
-| Skills | Tag aligned on the binary's minor (`v0.3.0`) | Declare a minimum binary version | Monorepo tag, optional mirror |
-| VS Code extension | SemVer, own version | Bundles a pinned binary version | VS Code Marketplace, Open VSX |
-| GitHub Action (V2) | Major tag `v1`, plus `v1.x.y` | Independent | Mirror repository |
+| Artefact                                                                                                      | Scheme                                       | Strategy                                                                               | Published to                                                                                       |
+| ------------------------------------------------------------------------------------------------------------- | -------------------------------------------- | -------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------- |
+| `rulelink` binary (`rulelink-cli`)                                                                            | SemVer, `0.x` until the format is frozen     | Lockstep with every internal crate (`workspace.package.version`)                       | GitHub releases (archives, shell and PowerShell installers), npm, crates.io (V1: Docker, Homebrew) |
+| Other library crates (`registry`, `link`, `check`, `import`, `publish`, `config`, `app`, `lsp`, `adapters/*`) | Same as the binary                           | Lockstep, published in dependency order by release-plz                                 | crates.io                                                                                          |
+| `xtask`, `rulelink-e2e`                                                                                       | —                                            | `publish = false`                                                                      | —                                                                                                  |
+| `rulelink-model`                                                                                              | SemVer, `1.x` from the first public release  | Independent, checked by `cargo-semver-checks`                                          | crates.io                                                                                          |
+| `rulelink-adapter-sdk`                                                                                        | SemVer                                       | Independent, checked by `cargo-semver-checks`                                          | crates.io                                                                                          |
+| Rule file format                                                                                              | Integer (`"format": 1`)                      | Bumped only on breaking change                                                         | JSON Schema in `schemas/`                                                                          |
+| External adapter protocol                                                                                     | `major.minor` (`1.0`)                        | Negotiated at `initialize` ([architecture/02](../architecture/02-sources-of-truth.md)) | JSON Schema                                                                                        |
+| JSON output schemas                                                                                           | `name/vN`                                    | One version per breaking change                                                        | JSON Schema                                                                                        |
+| Skills                                                                                                        | Tag aligned on the binary's minor (`v0.3.0`) | Declare a minimum binary version                                                       | Monorepo tag, optional mirror                                                                      |
+| VS Code extension                                                                                             | SemVer, own version                          | Bundles a pinned binary version                                                        | VS Code Marketplace, Open VSX                                                                      |
+| GitHub Action (V2)                                                                                            | Major tag `v1`, plus `v1.x.y`                | Independent                                                                            | Mirror repository                                                                                  |
 
 ### 4.3 Release pipeline
 
@@ -91,37 +91,37 @@ sequenceDiagram
     GH->>CH: follow-up jobs: V1: Docker image, VSIX per platform, skills tag. V2: Action and GitLab mirrors
 ```
 
-| Step | Tool | Release |
-|---|---|---|
-| Version bumps, changelogs, tags, crates.io | release-plz | MVP |
-| Cross-platform binaries, shell and PowerShell installers, npm wrapper | dist (formerly cargo-dist) | MVP |
-| Homebrew | dist | V1 |
-| Release dry run on every PR | `dist plan` ([Repository structure](01-repository-structure.md), section 9.1) | MVP |
-| Docker image | GitHub Actions, multi-arch build from the release binaries | V1 |
-| Signatures and provenance | GitHub artifact attestations; SBOM with `cargo-cyclonedx` | MVP |
-| VS Code extension | `vsce publish --target <platform>`, `ovsx publish` | V1 |
-| Scoop, winget | Manifests generated from the release | V1 |
+| Step                                                                  | Tool                                                                          | Release |
+| --------------------------------------------------------------------- | ----------------------------------------------------------------------------- | ------- |
+| Version bumps, changelogs, tags, crates.io                            | release-plz                                                                   | MVP     |
+| Cross-platform binaries, shell and PowerShell installers, npm wrapper | dist (formerly cargo-dist)                                                    | MVP     |
+| Homebrew                                                              | dist                                                                          | V1      |
+| Release dry run on every PR                                           | `dist plan` ([Repository structure](01-repository-structure.md), section 9.1) | MVP     |
+| Docker image                                                          | GitHub Actions, multi-arch build from the release binaries                    | V1      |
+| Signatures and provenance                                             | GitHub artifact attestations; SBOM with `cargo-cyclonedx`                     | MVP     |
+| VS Code extension                                                     | `vsce publish --target <platform>`, `ovsx publish`                            | V1      |
+| Scoop, winget                                                         | Manifests generated from the release                                          | V1      |
 
 **Risk on dist.** The dist repository has seen little activity since mid-2025. The release workflow is isolated in a single file and dist only produces artefacts; if it becomes unmaintained, a hand-written GitHub Actions matrix (`cargo zigbuild` for Linux, native runners for macOS and Windows) replaces it without touching release-plz or the channels.
 
 ### 4.4 Channels
 
-| Channel | Source | Audience | Release |
-|---|---|---|---|
-| Stable | Tagged releases | Everyone | MVP |
-| Nightly | Last green `main`, pre-release tag `nightly` | Early adopters, the author's own projects | V1 |
+| Channel | Source                                       | Audience                                  | Release |
+| ------- | -------------------------------------------- | ----------------------------------------- | ------- |
+| Stable  | Tagged releases                              | Everyone                                  | MVP     |
+| Nightly | Last green `main`, pre-release tag `nightly` | Early adopters, the author's own projects | V1      |
 
 ### 4.5 Compatibility, deprecation and support
 
-| Policy | Rule |
-|---|---|
-| Rule file format | A binary reads every earlier format; `rulelink migrate` rewrites to the current one. Writing an older format is not supported |
-| External adapter protocol | A binary supports the current and the previous minor versions; a major change keeps the previous major for 12 months |
-| CLI flags and commands | Deprecated items print a warning for at least one minor release before removal; removals only in a major release (or a `0.x` minor before 1.0) |
-| JSON outputs | Stable within a schema version; a new version is opt-in (`--format json --schema-version 2`) for one minor release before becoming the default |
-| MSRV | Latest stable Rust minus two minor versions; raising it is a minor change, noted in the changelog |
-| Support | Fixes on the latest minor; security fixes back-ported to the previous minor |
-| Skills | A skill refuses to run below its declared minimum binary version ([architecture/07](../architecture/07-agent-integration.md)) |
+| Policy                    | Rule                                                                                                                                           |
+| ------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------- |
+| Rule file format          | A binary reads every earlier format; `rulelink migrate` rewrites to the current one. Writing an older format is not supported                  |
+| External adapter protocol | A binary supports the current and the previous minor versions; a major change keeps the previous major for 12 months                           |
+| CLI flags and commands    | Deprecated items print a warning for at least one minor release before removal; removals only in a major release (or a `0.x` minor before 1.0) |
+| JSON outputs              | Stable within a schema version; a new version is opt-in (`--format json --schema-version 2`) for one minor release before becoming the default |
+| MSRV                      | Latest stable Rust minus two minor versions; raising it is a minor change, noted in the changelog                                              |
+| Support                   | Fixes on the latest minor; security fixes back-ported to the previous minor                                                                    |
+| Skills                    | A skill refuses to run below its declared minimum binary version ([architecture/07](../architecture/07-agent-integration.md))                  |
 
 ### 4.6 Supply-chain security
 
@@ -134,10 +134,10 @@ sequenceDiagram
 
 ### 5.1 CLI
 
-| Command | Options | Effect | Release |
-|---|---|---|---|
-| `rulelink version` | `--json` | Version, commit, build date, target, supported rule formats, protocol versions, JSON schema versions | MVP |
-| `rulelink self update` | `--channel stable\|nightly`, `--check` | Updates a binary installed by the shell or PowerShell installer; refuses and names the package manager otherwise | V1 |
+| Command                | Options                                | Effect                                                                                                           | Release |
+| ---------------------- | -------------------------------------- | ---------------------------------------------------------------------------------------------------------------- | ------- |
+| `rulelink version`     | `--json`                               | Version, commit, build date, target, supported rule formats, protocol versions, JSON schema versions             | MVP     |
+| `rulelink self update` | `--channel stable\|nightly`, `--check` | Updates a binary installed by the shell or PowerShell installer; refuses and names the package manager otherwise | V1      |
 
 Example `rulelink version --json`:
 
@@ -155,13 +155,13 @@ Example `rulelink version --json`:
 
 ### 5.2 Maintainer commands (`xtask`)
 
-| Command | Effect | Release |
-|---|---|---|
-| `cargo xtask schemas` | Regenerates `schemas/` from the Rust types | MVP |
-| `cargo xtask arch` | Checks the dependency rules ([Repository structure](01-repository-structure.md), section 6.2) | MVP |
-| `cargo xtask skills-lint` | Validates skill front matter, links and minimum versions | MVP |
-| `cargo xtask release-check` | Verifies that format, protocol and schema versions in `version --json` match `schemas/` | MVP |
-| `cargo xtask mirror <action\|gitlab>` | Prepares the mirror repository content (used by CI) | V2 |
+| Command                               | Effect                                                                                        | Release |
+| ------------------------------------- | --------------------------------------------------------------------------------------------- | ------- |
+| `cargo xtask schemas`                 | Regenerates `schemas/` from the Rust types                                                    | MVP     |
+| `cargo xtask arch`                    | Checks the dependency rules ([Repository structure](01-repository-structure.md), section 6.2) | MVP     |
+| `cargo xtask skills-lint`             | Validates skill front matter, links and minimum versions                                      | MVP     |
+| `cargo xtask release-check`           | Verifies that format, protocol and schema versions in `version --json` match `schemas/`       | MVP     |
+| `cargo xtask mirror <action\|gitlab>` | Prepares the mirror repository content (used by CI)                                           | V2      |
 
 ## 6. Interactions
 

@@ -12,7 +12,7 @@ An annotation links a piece of code to a business rule. It is a tag followed by 
 
 - Tag: `@rule` by default (configurable by `scan.tag`).
 - Identifiers match the project's pattern, `RULE-[A-Z0-9_]+` by default. Separate several with a comma or a space.
-- An optional note follows ` -- ` and runs to the end of the line. `check` ignores it.
+- An optional note follows `--` and runs to the end of the line. `check` ignores it.
 - Several annotations per file, and one rule in several places (tests included), are normal.
 - A tag without a valid identifier is reported as malformed (`RL006`).
 - Only comments are scanned. `@rule` inside a string literal is not an annotation.
@@ -22,20 +22,25 @@ An annotation links a piece of code to a business rule. It is a tag followed by 
 ```rust
 // @rule RULE-042
 ```
+
 ```python
 # @rule RULE-017
 ```
+
 ```sql
 -- @rule RULE-101
 ```
+
 ```html
 <!-- @rule RULE-205 -->
 ```
+
 ```java
 /**
  * @rule RULE-042
  */
 ```
+
 ```c
 /* @rule RULE-042 */
 ```

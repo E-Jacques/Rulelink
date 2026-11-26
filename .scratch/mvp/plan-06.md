@@ -31,21 +31,21 @@ One sentence: `where` scans the project for `@rule` Annotations and lists those 
 
 ## Ownership
 
-| Decision | Owner |
-| --- | --- |
-| What an Annotation is (tag, comment openers, id shape) | link |
-| Which files are visited (ignore files, exclusions, size, binary, encoding) | adapter-scan-fs |
-| Unknown / retired / uncited wording | cli (status from app) |
-| Location ordering | link (`LinkIndex` sorts by path then line) |
+| Decision                                                                   | Owner                                      |
+| -------------------------------------------------------------------------- | ------------------------------------------ |
+| What an Annotation is (tag, comment openers, id shape)                     | link                                       |
+| Which files are visited (ignore files, exclusions, size, binary, encoding) | adapter-scan-fs                            |
+| Unknown / retired / uncited wording                                        | cli (status from app)                      |
+| Location ordering                                                          | link (`LinkIndex` sorts by path then line) |
 
 ## Input boundaries
 
-| Input | Line checked |
-| --- | --- |
-| `<id>` | blank refused (`RuleId::parse`); unknown refused with the value |
-| `scan.exclude` | each entry must be a valid gitignore glob; invalid names the pattern |
-| Files | binary (NUL) and non-UTF-8 files skipped; files over 2 MB skipped; hidden files skipped; symlinks not followed; unreadable file is an error naming the path |
-| Ignore files | `.gitignore`, `.ignore`, `.rulelinkignore`, honoured even outside a Git repository |
+| Input           | Line checked                                                                                                                                                          |
+| --------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `<id>`          | blank refused (`RuleId::parse`); unknown refused with the value                                                                                                       |
+| `scan.exclude`  | each entry must be a valid gitignore glob; invalid names the pattern                                                                                                  |
+| Files           | binary (NUL) and non-UTF-8 files skipped; files over 2 MB skipped; hidden files skipped; symlinks not followed; unreadable file is an error naming the path           |
+| Ignore files    | `.gitignore`, `.ignore`, `.rulelinkignore`, honoured even outside a Git repository                                                                                    |
 | Annotation text | `@rule` must be followed by whitespace and sit after a comment opener on its line; the id list stops at the first token that is not an Identifier (`--`, `*/`, `-->`) |
 
 ## Smells
@@ -59,7 +59,7 @@ One sentence: `where` scans the project for `@rule` Annotations and lists those 
 
 ## Dependent tickets
 
-| Ticket | Reuses | Missing |
-| --- | --- | --- |
-| explain / annotate | `LinkIndex`, `scan` | `at(path, line)` query; added then |
+| Ticket                  | Reuses                   | Missing                                                                                      |
+| ----------------------- | ------------------------ | -------------------------------------------------------------------------------------------- |
+| explain / annotate      | `LinkIndex`, `scan`      | `at(path, line)` query; added then                                                           |
 | check RL004/RL005/RL006 | `LinkIndex`, `locations` | malformed Annotations are not reported yet (`annotations` drops an `@rule` with no valid id) |

@@ -17,16 +17,16 @@ An Identifier is:
 2. one hyphen;
 3. a suffix: one or more upper-case letters, digits or `_`.
 
-| Identifier      | Valid | Why                                    |
-| --------------- | :---: | -------------------------------------- |
-| `RULE-042`      |  yes  |                                        |
-| `BR-7`          |  yes  |                                        |
-| `PRICING_V2-A1` |  yes  |                                        |
-| `rule-042`      |  no   | Lower case.                            |
-| `RULE042`       |  no   | No hyphen.                             |
-| `RULE-`         |  no   | Empty suffix.                          |
-| `1RULE-042`     |  no   | The prefix starts with a digit.        |
-| `RULE-04a`      |  no   | Lower case in the suffix.              |
+| Identifier      | Valid | Why                             |
+| --------------- | :---: | ------------------------------- |
+| `RULE-042`      |  yes  |                                 |
+| `BR-7`          |  yes  |                                 |
+| `PRICING_V2-A1` |  yes  |                                 |
+| `rule-042`      |  no   | Lower case.                     |
+| `RULE042`       |  no   | No hyphen.                      |
+| `RULE-`         |  no   | Empty suffix.                   |
+| `1RULE-042`     |  no   | The prefix starts with a digit. |
+| `RULE-04a`      |  no   | Lower case in the suffix.       |
 
 ## Lifecycle
 

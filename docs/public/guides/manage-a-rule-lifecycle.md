@@ -13,12 +13,12 @@ A Rule moves through four states. A person decides each move, and a command reco
 
 ## The four states
 
-| State       | Meaning                                                     |
-| ----------- | ----------------------------------------------------------- |
-| `proposed`  | The Rule waits for a review. Every new Rule starts here.    |
-| `validated` | A person approved the Rule. It is expected to have code.    |
-| `obsolete`  | A validated Rule that no longer applies.                    |
-| `rejected`  | A person declined a proposed Rule.                          |
+| State       | Meaning                                                  |
+| ----------- | -------------------------------------------------------- |
+| `proposed`  | The Rule waits for a review. Every new Rule starts here. |
+| `validated` | A person approved the Rule. It is expected to have code. |
+| `obsolete`  | A validated Rule that no longer applies.                 |
+| `rejected`  | A person declined a proposed Rule.                       |
 
 Rulelink never changes a state on its own. A person runs the command.
 

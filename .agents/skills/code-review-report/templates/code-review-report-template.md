@@ -10,8 +10,8 @@ base: {{ merge-base sha }}
 
 ## Summary
 
-| severity | count |
-| -------- | ----- |
+| severity | count   |
+| -------- | ------- |
 | critical | {{ n }} |
 | high     | {{ n }} |
 | minor    | {{ n }} |
@@ -20,9 +20,10 @@ base: {{ merge-base sha }}
 
 <!-- If there are none, replace the table with: No findings. -->
 
-| # | severity | category | location | description | fixed | blocks |
-| - | -------- | -------- | -------- | ----------- | ----- | ------ |
-| 1 | {{ critical, high or minor }} | {{ category }} | `{{ path:line }}` | {{ one sentence }} | {{ yes or no }} | {{ ticket numbers or none }} |
+| #   | severity                      | category       | location          | description        | fixed           | blocks                       |
+| --- | ----------------------------- | -------------- | ----------------- | ------------------ | --------------- | ---------------------------- |
+| 1   | {{ critical, high or minor }} | {{ category }} | `{{ path:line }}` | {{ one sentence }} | {{ yes or no }} | {{ ticket numbers or none }} |
+
 <!-- endif -->
 
 ## Review passes

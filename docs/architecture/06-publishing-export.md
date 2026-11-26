@@ -20,18 +20,18 @@
 
 ## 2. Release frame
 
-| Feature | MVP | V1 | V2 |
-|---|:-:|:-:|:-:|
-| `rules list --format csv\|json` (raw export) | ● | | |
-| Structured document + `export markdown`, `export csv`, `export json` | | ● | |
-| Confluence Cloud and Data Center publishing, single page | | ● | |
-| Status, coverage and code permalinks in the document | | ● | |
-| Manual-edit detection, idempotent publishing | | ● | |
-| Customisable templates (sections, columns, labels) | | ● | |
-| One page per application or module (page tree) | | | ● |
-| Self-contained static HTML export (client-side search) | | | ● |
-| Publishing through an external adapter (Notion, SharePoint...) | | ● | |
-| Automatic publishing in CI after merge | | ● | |
+| Feature                                                              | MVP | V1  | V2  |
+| -------------------------------------------------------------------- | :-: | :-: | :-: |
+| `rules list --format csv\|json` (raw export)                         |  ●  |     |     |
+| Structured document + `export markdown`, `export csv`, `export json` |     |  ●  |     |
+| Confluence Cloud and Data Center publishing, single page             |     |  ●  |     |
+| Status, coverage and code permalinks in the document                 |     |  ●  |     |
+| Manual-edit detection, idempotent publishing                         |     |  ●  |     |
+| Customisable templates (sections, columns, labels)                   |     |  ●  |     |
+| One page per application or module (page tree)                       |     |     |  ●  |
+| Self-contained static HTML export (client-side search)               |     |     |  ●  |
+| Publishing through an external adapter (Notion, SharePoint...)       |     |  ●  |     |
+| Automatic publishing in CI after merge                               |     |  ●  |     |
 
 ## 3. Technical constraints
 
@@ -128,13 +128,13 @@ classDiagram
     DocumentVisitor <|.. JsonRenderer
 ```
 
-| Renderer | Specifics |
-|---|---|
-| `MarkdownRenderer` | GitHub Flavored Markdown, stable anchors `#rg-042`, usable in a Git-based wiki |
+| Renderer                    | Specifics                                                                                                                          |
+| --------------------------- | ---------------------------------------------------------------------------------------------------------------------------------- |
+| `MarkdownRenderer`          | GitHub Flavored Markdown, stable anchors `#rg-042`, usable in a Git-based wiki                                                     |
 | `ConfluenceStorageRenderer` | Coloured `status` macro (validated green, proposed yellow, obsolete grey), one `anchor` per rule, `expand` for scope and locations |
-| `HtmlRenderer` | Self-contained page, embedded CSS, client-side search (V2) |
-| `CsvRenderer` | One row per rule, configurable columns; ignores sections |
-| `JsonRenderer` | Full document, schema `rulelink/publication/v1`, for external adapters |
+| `HtmlRenderer`              | Self-contained page, embedded CSS, client-side search (V2)                                                                         |
+| `CsvRenderer`               | One row per rule, configurable columns; ignores sections                                                                           |
+| `JsonRenderer`              | Full document, schema `rulelink/publication/v1`, for external adapters                                                             |
 
 Labels ("Scope", "Excluded cases") are fixed English strings and can be overridden by a template. There is no translation catalogue (ADR-003).
 
@@ -178,13 +178,13 @@ classDiagram
     ConfluenceApi <|.. ConfluenceDataCenterApi
 ```
 
-| Aspect | Confluence Cloud | Confluence Data Center |
-|---|---|---|
-| API | REST v2 (`/wiki/api/v2/pages/{id}`) | REST `/rest/api/content/{id}` |
-| Body | `body.representation = storage` | `body.storage` |
-| Version | Version number incremented on each update | Same |
-| Content property | v2 page properties | `/rest/api/content/{id}/property` |
-| Authentication | Email + API token | PAT `Bearer` |
+| Aspect           | Confluence Cloud                          | Confluence Data Center            |
+| ---------------- | ----------------------------------------- | --------------------------------- |
+| API              | REST v2 (`/wiki/api/v2/pages/{id}`)       | REST `/rest/api/content/{id}`     |
+| Body             | `body.representation = storage`           | `body.storage`                    |
+| Version          | Version number incremented on each update | Same                              |
+| Content property | v2 page properties                        | `/rest/api/content/{id}/property` |
+| Authentication   | Email + API token                         | PAT `Bearer`                      |
 
 ### 4.4 Publishing pipeline — **Template Method**
 
@@ -236,14 +236,14 @@ pub struct PublishRules {
 
 ### 5.1 CLI commands
 
-| Command | Options | Release |
-|---|---|---|
-| `rulelink export markdown` | `--output <FILE>`, `--group-by app,module`, `--filter <EXPR>`, `--include-obsolete`, `--no-locations`, `--template <FILE>` | V1 |
-| `rulelink export csv` | `--output`, `--columns id,title,status,module,...`, `--filter` | V1 |
-| `rulelink export json` | `--output`, `--document` (full document) or raw rules | V1 |
-| `rulelink export html` | `--output <DIR>` | V2 |
-| `rulelink publish confluence` | `--space <KEY>`, `--parent <ID>`, `--page <ID\|TITLE>`, `--dry-run`, `--force`, `--edition auto\|cloud\|datacenter` | V1 |
-| `rulelink publish <external>` | `--target <JSON>`, `--dry-run` | V1 |
+| Command                       | Options                                                                                                                    | Release |
+| ----------------------------- | -------------------------------------------------------------------------------------------------------------------------- | ------- |
+| `rulelink export markdown`    | `--output <FILE>`, `--group-by app,module`, `--filter <EXPR>`, `--include-obsolete`, `--no-locations`, `--template <FILE>` | V1      |
+| `rulelink export csv`         | `--output`, `--columns id,title,status,module,...`, `--filter`                                                             | V1      |
+| `rulelink export json`        | `--output`, `--document` (full document) or raw rules                                                                      | V1      |
+| `rulelink export html`        | `--output <DIR>`                                                                                                           | V2      |
+| `rulelink publish confluence` | `--space <KEY>`, `--parent <ID>`, `--page <ID\|TITLE>`, `--dry-run`, `--force`, `--edition auto\|cloud\|datacenter`        | V1      |
+| `rulelink publish <external>` | `--target <JSON>`, `--dry-run`                                                                                             | V1      |
 
 ### 5.2 Configuration
 

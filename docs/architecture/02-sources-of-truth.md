@@ -24,35 +24,35 @@
 
 The brief replaces "9 interfaces at the same level" with three roles. One tool can play several roles depending on the release.
 
-| Tool | Source | Import | Publishing |
-|---|:-:|:-:|:-:|
-| Local JSON file | MVP | MVP (proposals file) | V1 (export) |
-| JSON directory (one file per rule) | V1 | | |
-| CSV | | V1 | V1 (export) |
-| Jira Cloud / Data Center | V2 | V1 | |
-| Confluence Cloud / Data Center | | | V1 |
-| GitHub Issues, GitLab Issues | | V1 | |
-| Markdown, HTML | | | V1 / V2 |
-| SQL database | via external adapter | | |
-| External adapter | V1 | V1 | V1 |
+| Tool                               |        Source        |        Import        | Publishing  |
+| ---------------------------------- | :------------------: | :------------------: | :---------: |
+| Local JSON file                    |         MVP          | MVP (proposals file) | V1 (export) |
+| JSON directory (one file per rule) |          V1          |                      |             |
+| CSV                                |                      |          V1          | V1 (export) |
+| Jira Cloud / Data Center           |          V2          |          V1          |             |
+| Confluence Cloud / Data Center     |                      |                      |     V1      |
+| GitHub Issues, GitLab Issues       |                      |          V1          |             |
+| Markdown, HTML                     |                      |                      |   V1 / V2   |
+| SQL database                       | via external adapter |                      |             |
+| External adapter                   |          V1          |          V1          |     V1      |
 
 ## 3. Release frame
 
-| Feature | MVP | V1 | V2 |
-|---|:-:|:-:|:-:|
-| `RuleSource` port, single-file JSON source | ● | | |
-| Canonical, line-oriented, atomic writes with lock and fingerprint | ● | | |
-| Rule positions in the file | ● | | |
-| Published `rulelink-adapter-sdk` contract (native traits) | ● | | |
-| Adapter registry (Factory Method, Abstract Factory) | ● | | |
-| JSON directory source | | ● | |
-| External adapter protocol 1.0 + proxy | | ● | |
-| Conformance kit, reference external adapter in Python | | ● | |
-| `source migrate` (JSON → directory...) | | ● | |
-| `CachedSource`, `ReadOnlySource` decorators | ● read-only | ● cache | |
-| Remote sources: Jira | | | ● |
-| Offline snapshot `.rulelink/source.lock.json` | | | ● |
-| Several repositories sharing one source | | | ● |
+| Feature                                                           |     MVP     |   V1    | V2  |
+| ----------------------------------------------------------------- | :---------: | :-----: | :-: |
+| `RuleSource` port, single-file JSON source                        |      ●      |         |     |
+| Canonical, line-oriented, atomic writes with lock and fingerprint |      ●      |         |     |
+| Rule positions in the file                                        |      ●      |         |     |
+| Published `rulelink-adapter-sdk` contract (native traits)         |      ●      |         |     |
+| Adapter registry (Factory Method, Abstract Factory)               |      ●      |         |     |
+| JSON directory source                                             |             |    ●    |     |
+| External adapter protocol 1.0 + proxy                             |             |    ●    |     |
+| Conformance kit, reference external adapter in Python             |             |    ●    |     |
+| `source migrate` (JSON → directory...)                            |             |    ●    |     |
+| `CachedSource`, `ReadOnlySource` decorators                       | ● read-only | ● cache |     |
+| Remote sources: Jira                                              |             |         |  ●  |
+| Offline snapshot `.rulelink/source.lock.json`                     |             |         |  ●  |
+| Several repositories sharing one source                           |             |         |  ●  |
 
 ## 4. Technical constraints
 
@@ -257,12 +257,12 @@ classDiagram
     SourceDecorator o-- RuleSource
 ```
 
-| Decorator | Used by | Effect | Release |
-|---|---|---|---|
-| `ReadOnlySource` | `check`, `explain`, `where`, `context` | Forbids any write | MVP |
-| `TracingSource` | Always, at `-vv` | Durations and volumes in logs | MVP |
-| `CachedSource` | LSP (long-running process) | Reloads only when the fingerprint changes | V1 |
-| `SnapshotSource` | `check` with a remote source | Reads `.rulelink/source.lock.json`, guarantees offline operation (ADR-008) | V2 |
+| Decorator        | Used by                                | Effect                                                                     | Release |
+| ---------------- | -------------------------------------- | -------------------------------------------------------------------------- | ------- |
+| `ReadOnlySource` | `check`, `explain`, `where`, `context` | Forbids any write                                                          | MVP     |
+| `TracingSource`  | Always, at `-vv`                       | Durations and volumes in logs                                              | MVP     |
+| `CachedSource`   | LSP (long-running process)             | Reloads only when the fingerprint changes                                  | V1      |
+| `SnapshotSource` | `check` with a remote source           | Reads `.rulelink/source.lock.json`, guarantees offline operation (ADR-008) | V2      |
 
 Typical composition for a `check` with Jira as the source (V2): `TracingSource(ReadOnlySource(SnapshotSource(JiraSource)))`.
 
@@ -296,19 +296,19 @@ sequenceDiagram
 
 **Protocol 1.0 methods**
 
-| Method | Parameters | Result | Role |
-|---|---|---|---|
-| `initialize` | `protocol`, `rulelink_version`, `config`, `workspace_root`, `secrets` (only those declared) | `protocol`, `name`, `version`, `roles`, `config_schema?` | All |
-| `health` | — | `{ status: ok\|degraded\|error, details }` | All |
-| `source/load` | — | `{ ruleset, fingerprint, positions? }` | Source |
-| `source/fingerprint` | — | `{ fingerprint }` | Source |
-| `source/apply` | `{ changeset }` | `{ fingerprint, summary }` or a `conflict` error | Source |
-| `import/fetch` | `{ query, cursor? }` | `{ items: [RawItem], next_cursor? }` | Import |
-| `publish/preview` | `{ document, target }` | `{ plan }` | Publishing |
-| `publish/run` | `{ document, target, expected_version? }` | `{ receipt }` | Publishing |
-| `shutdown` | — | `{}` | All |
-| `$/log` (notification) | `{ level, message }` | — | All |
-| `$/progress` (notification) | `{ done, total? }` | — | All |
+| Method                      | Parameters                                                                                  | Result                                                   | Role       |
+| --------------------------- | ------------------------------------------------------------------------------------------- | -------------------------------------------------------- | ---------- |
+| `initialize`                | `protocol`, `rulelink_version`, `config`, `workspace_root`, `secrets` (only those declared) | `protocol`, `name`, `version`, `roles`, `config_schema?` | All        |
+| `health`                    | —                                                                                           | `{ status: ok\|degraded\|error, details }`               | All        |
+| `source/load`               | —                                                                                           | `{ ruleset, fingerprint, positions? }`                   | Source     |
+| `source/fingerprint`        | —                                                                                           | `{ fingerprint }`                                        | Source     |
+| `source/apply`              | `{ changeset }`                                                                             | `{ fingerprint, summary }` or a `conflict` error         | Source     |
+| `import/fetch`              | `{ query, cursor? }`                                                                        | `{ items: [RawItem], next_cursor? }`                     | Import     |
+| `publish/preview`           | `{ document, target }`                                                                      | `{ plan }`                                               | Publishing |
+| `publish/run`               | `{ document, target, expected_version? }`                                                   | `{ receipt }`                                            | Publishing |
+| `shutdown`                  | —                                                                                           | `{}`                                                     | All        |
+| `$/log` (notification)      | `{ level, message }`                                                                        | —                                                        | All        |
+| `$/progress` (notification) | `{ done, total? }`                                                                          | —                                                        | All        |
 
 Specific JSON-RPC error codes: `-32001` conflict, `-32002` authentication, `-32003` quota, `-32004` target not found, `-32005` unsupported format.
 
@@ -330,15 +330,15 @@ Safeguards:
 
 `rulelink-adapter-sdk::conformance` provides a test suite with a fixed skeleton. The adapter supplies only the hooks (factory, seed data, cleanup). The same suite runs against a native or an external adapter: `rulelink adapters check <name>`.
 
-| Scenario | Source | Import | Publishing |
-|---|:-:|:-:|:-:|
-| `initialize` and `health` respond | ● | ● | ● |
-| Round trip `load` → `apply(empty)` → `load` is identical | ● | | |
-| `apply` with a stale fingerprint → conflict | ● | | |
-| `extensions` fields preserved | ● | | |
-| Pagination until exhaustion, with no duplicates | | ● | |
-| `preview` has no side effects, `run` is idempotent | | | ● |
-| Timeout and cancellation honoured | ● | ● | ● |
+| Scenario                                                 | Source | Import | Publishing |
+| -------------------------------------------------------- | :----: | :----: | :--------: |
+| `initialize` and `health` respond                        |   ●    |   ●    |     ●      |
+| Round trip `load` → `apply(empty)` → `load` is identical |   ●    |        |            |
+| `apply` with a stale fingerprint → conflict              |   ●    |        |            |
+| `extensions` fields preserved                            |   ●    |        |            |
+| Pagination until exhaustion, with no duplicates          |        |   ●    |            |
+| `preview` has no side effects, `run` is idempotent       |        |        |     ●      |
+| Timeout and cancellation honoured                        |   ●    |   ●    |     ●      |
 
 ### 5.7 Source migration (V1)
 
@@ -362,27 +362,27 @@ flowchart LR
 
 ### 6.1 CLI commands
 
-| Command | Options | Effect | Release |
-|---|---|---|---|
-| `rulelink source info` | `--format` | Kind, location, fingerprint, capabilities, rule counts by status | MVP |
-| `rulelink source pull` | `--check` (fails if the snapshot is stale) | Refreshes the snapshot of a remote source | V2 |
-| `rulelink source migrate` | `--to <KIND>`, target options, `--dry-run` | Changes the source of truth | V1 |
-| `rulelink adapters list` | `--format` | Native and external adapters, roles, versions | V1 |
-| `rulelink adapters check <NAME>` | `--role`, `--format` | Conformance kit | V1 |
-| `rulelink adapters new <NAME>` | `--lang python\|typescript\|rust` | Generates an adapter skeleton | V1 |
+| Command                          | Options                                    | Effect                                                           | Release |
+| -------------------------------- | ------------------------------------------ | ---------------------------------------------------------------- | ------- |
+| `rulelink source info`           | `--format`                                 | Kind, location, fingerprint, capabilities, rule counts by status | MVP     |
+| `rulelink source pull`           | `--check` (fails if the snapshot is stale) | Refreshes the snapshot of a remote source                        | V2      |
+| `rulelink source migrate`        | `--to <KIND>`, target options, `--dry-run` | Changes the source of truth                                      | V1      |
+| `rulelink adapters list`         | `--format`                                 | Native and external adapters, roles, versions                    | V1      |
+| `rulelink adapters check <NAME>` | `--role`, `--format`                       | Conformance kit                                                  | V1      |
+| `rulelink adapters new <NAME>`   | `--lang python\|typescript\|rust`          | Generates an adapter skeleton                                    | V1      |
 
 ### 6.2 `rulelink-adapter-sdk` crate API
 
-| Element | Kind |
-|---|---|
-| `Adapter`, `RuleSource`, `RuleImporter`, `RulePublisher` | Role traits |
-| `AdapterFamily`, `AdapterDescriptor` | Factory and metadata |
-| `AdapterContext`, `SecretStore`, `HttpClient`, `CancellationToken` | Injected services |
-| `LoadedRuleSet`, `SourcePositions`, `Fingerprint`, `ApplyReceipt` | Source types |
-| `RawItem`, `ImportRequest`, `ItemStream` | Import types (see 05) |
-| `PublicationDocument`, `PublishTarget`, `PublishPlan`, `PublishReceipt` | Publishing types (see 06) |
-| `protocol::*` | JSON-RPC messages and schemas of the external protocol |
-| `conformance::*` | Conformance kit |
+| Element                                                                 | Kind                                                   |
+| ----------------------------------------------------------------------- | ------------------------------------------------------ |
+| `Adapter`, `RuleSource`, `RuleImporter`, `RulePublisher`                | Role traits                                            |
+| `AdapterFamily`, `AdapterDescriptor`                                    | Factory and metadata                                   |
+| `AdapterContext`, `SecretStore`, `HttpClient`, `CancellationToken`      | Injected services                                      |
+| `LoadedRuleSet`, `SourcePositions`, `Fingerprint`, `ApplyReceipt`       | Source types                                           |
+| `RawItem`, `ImportRequest`, `ItemStream`                                | Import types (see 05)                                  |
+| `PublicationDocument`, `PublishTarget`, `PublishPlan`, `PublishReceipt` | Publishing types (see 06)                              |
+| `protocol::*`                                                           | JSON-RPC messages and schemas of the external protocol |
+| `conformance::*`                                                        | Conformance kit                                        |
 
 ## 7. Interactions
 
