@@ -1,7 +1,7 @@
 # 04 — Deterministic checks (`check`) and CI integration
 
 > The check is what keeps Rulelink from becoming "yet more documentation". It cross-references the registry and the code index, offline and without AI, and produces findings that a human, a CI pipeline or an agent can read.
-> Crates: `rulelink-check` (engine, checks, reports), `adapters/git` (changed files, via `gix`). Deliverables: pre-commit hook (V1), GitHub Action and GitLab CI component (V2).
+> Crates: `rulelink-check` (Findings and levels). `adapters/git` is not used by the MVP. Deliverables: pre-commit hook (V1), GitHub Action and GitLab CI component (V2).
 > See also: [01 Registry](01-rule-registry.md), [03 Code linking](03-code-linking.md).
 
 ## 1. Role and scope
@@ -10,7 +10,7 @@
 
 - Run the brief's checks and the source integrity checks.
 - Apply the team's severity policy (warning or error, disabled).
-- Restrict the check to a PR's changes (V1) and hide existing findings with a baseline (V1).
+- Hide existing findings with a baseline (V1).
 - Render the report in the formats expected by CI systems and agents.
 - Compute coverage indicators (share of validated rules linked to code), which feed the brief's success criteria.
 
@@ -18,7 +18,7 @@
 
 > `rulelink check` proves that **a link exists** between a rule and the code, **not that the implementation is correct**.
 
-This sentence appears in the command help, in the CI summary and in the documentation. AI-assisted correctness checking (V2) is a separate skill and is never part of `check` (07).
+This sentence appears in the command help, at the end of every report and in the documentation. AI-assisted correctness checking (V2) is a separate skill and is never part of `check` (07).
 
 ## 2. Release frame
 
@@ -30,9 +30,8 @@ This sentence appears in the command help, in the CI summary and in the document
 | `sarif`, `github` reports                                                                   |     |     |  ●  |
 | GitHub Action (annotations, SARIF, summary)                                                 |     |     |  ●  |
 | GitLab CI component (codequality report)                                                    |     |     |  ●  |
-| `rulelink status`: coverage and counters                                                    |  ●  |     |     |
+| `rulelink status`: coverage and counters                                                    |     |  ●  |     |
 | `junit`, `gitlab`, `markdown` (PR comment) reports                                          |     |  ●  |     |
-| `check --changed` (files changed since the PR base)                                         |  ●  |     |     |
 | Baseline for adoption on legacy code                                                        |     |  ●  |     |
 | Pre-commit hook (pre-commit and lefthook frameworks)                                        |     |  ●  |     |
 | Warning on a rule approved in the same commit that created it (agent self-approval control) |     |  ●  |     |
@@ -44,8 +43,8 @@ This sentence appears in the command help, in the CI summary and in the document
 - **No network call** during `check`. A remote source goes through the snapshot (02, ADR-008).
 - **Determinism**: findings sorted by (descending severity, code, rule identifier, path, line). No timestamp in the report, except with `--format json --with-timing`.
 - The exit code depends only on error-level findings after the policy and baseline are applied.
-- The engine is synchronous and stateless: `run(&RuleSet, &LinkIndex, &CheckPolicy) -> CheckReport`. The same code runs in the CLI and the LSP server.
-- `--changed` uses `gix` (pure-Rust Git) to list files changed between `HEAD` and the merge base. No `git` binary is required.
+- The engine is synchronous and stateless: `check(&RuleSet, &LinkIndex, &Levels) -> Report`. The same code runs in the CLI and the LSP server.
+- `check` always covers the whole project: there is no option that narrows it to changed files ([ADR-0001](../adr/0001-mvp-scope-cut.md)).
 
 ## 4. Check catalogue
 
@@ -62,11 +61,13 @@ This sentence appears in the command help, in the CI summary and in the document
 | `RL009`         | `retired-reference`     | The code cites a `rejected` rule, or an identifier retired without a rule in the source (an `obsolete` rule is reported by `RL002`) | Error         | MVP      |
 | `RL100`–`RL106` | source integrity        | See 01, section 5.3                                                                                                                 | As in 01      | MVP / V1 |
 
-On an empty Source (no rules yet, as right after `init`), `check` passes with exit code 0 and an info message ("no rules yet"). A missing or unreadable Source file still fails with exit code 3.
+While the Source has no Rules (as right after `init`), `check` says so and still scans the code. `RL001` is then a warning by default; a level set in `[check.levels]` applies as set. A missing or unreadable Source file still fails with exit code 3.
 
 `RL007` reflects a sentence from the brief: "a test remains the best check of a rule". Rulelink does not replace tests; it can flag rules that no test cites.
 
 ## 5. Detailed design
+
+The MVP engine is one function, `check`, that makes two passes: one over the cited Identifiers, one over the `validated` Rules. The patterns of 5.1 and 5.2 are the target for when more checks arrive (source integrity, V1 checks); none of them exists yet.
 
 ### 5.1 Checks — **Strategy** inside a **Composite**
 
@@ -143,32 +144,17 @@ classDiagram
 
 Purely source-level checks (`DuplicateId`) visit nothing and work in `finish`.
 
-### 5.3 Severity policy — **Chain of Responsibility**
+### 5.3 Severity policy
 
-The final level of a finding goes through a chain of links. Each link may change it or pass it on.
-
-```mermaid
-flowchart LR
-    F["Raw finding<br/>default level"] --> L1["Configuration<br/>[check.levels]"]
-    L1 --> L2["Per-path override<br/>[[check.overrides]]"]
-    L2 --> L3["CLI option<br/>--warnings-as-errors, --level"]
-    L3 --> L4["Baseline<br/>known finding → suppressed"]
-    L4 --> L5["--changed scope<br/>outside changed files → info"]
-    L5 --> R["Final finding"]
-```
+Each kind of Finding has a default level. In the MVP, `[check.levels]` in `rulelink.toml` is the only way to change one:
 
 ```toml
 [check.levels]
 orphan-rule = "error"          # the team tightens
-untested-rule = "warning"      # the team enables
 unvalidated-reference = "off"
-
-[[check.overrides]]
-paths = ["legacy/**"]
-levels = { orphan-rule = "off" }
 ```
 
-Levels: `error`, `warning`, `info`, `off`.
+Levels: `error`, `warning`, `off`. There is no `info` level, no per-path override and no command-line option. An unknown name or level, or any other key under `[check]`, is a configuration error.
 
 ### 5.4 Baseline (V1) — **Memento** pattern
 
@@ -218,7 +204,7 @@ classDiagram
 
 | Format     | Use                                                       | Release |
 | ---------- | --------------------------------------------------------- | ------- |
-| `human`    | Terminal, with colours and `miette` excerpts              | MVP     |
+| `human`    | Terminal: one line per finding, then totals               | MVP     |
 | `json`     | Agents, scripts. Schema `rulelink/check-report/v1`        | MVP     |
 | `sarif`    | GitHub Code Scanning, SAST tools                          | V2      |
 | `github`   | `::error file=...` commands: inline annotations on the PR | V2      |
@@ -226,83 +212,60 @@ classDiagram
 | `gitlab`   | GitLab Code Quality report                                | V1      |
 | `markdown` | Job summary, PR comment                                   | V1      |
 
-### 5.6 Command — full run
+### 5.6 Command: full run
 
 ```mermaid
 sequenceDiagram
     autonumber
     participant CLI
-    participant BUS as Bus (09)
-    participant RC as RunCheck
-    participant SRC as Read-only source
-    participant GIT as Git adapter
+    participant APP as app::checks
+    participant SRC as JSON source
     participant LNK as Scanner (03)
-    participant ENG as CheckEngine
-    participant POL as Policy chain
-    participant REP as Reporters
+    participant ENG as rulelink-check
 
-    CLI->>BUS: dispatch(RunCheck{changed: true, formats})
-    BUS->>RC: execute(ctx)
-    RC->>SRC: load()
-    RC->>GIT: changed_files(base = merge-base)
-    GIT-->>RC: 12 files
-    RC->>LNK: full scan (for orphan-rule) or cache (V1)
-    LNK-->>RC: LinkIndex
-    RC->>ENG: run(input)
-    ENG-->>RC: raw findings
-    RC->>POL: apply(findings)
-    POL-->>RC: final findings
-    RC->>REP: render for each format
-    RC-->>CLI: CheckOutcome{exit_code, summary}
+    CLI->>APP: run(root)
+    APP->>SRC: config, then read the Source
+    APP->>LNK: scan(root, scan.exclude)
+    LNK-->>APP: LinkIndex
+    APP->>ENG: check(rules, links, levels)
+    ENG-->>APP: Report (sorted findings)
+    APP-->>CLI: Report and the Source path
+    CLI-->>CLI: print, exit 0 or 1
 ```
-
-With `--changed`, the scan stays complete, because a rule can become orphaned through a deletion in another file. What is reduced is the scope of findings reported as errors. The index cache (03, V1) keeps that scan under a second.
 
 ## 6. API and entry points
 
 ### 6.1 `rulelink-check` crate
 
 ```rust
-pub struct CheckInput<'a> { pub rules: &'a RuleSet, pub index: &'a LinkIndex, pub scope: CheckScope }
-pub enum CheckScope { All, Paths(BTreeSet<RelPath>), Rules(BTreeSet<RuleId>) }
+pub fn check(rules: &RuleSet, links: &LinkIndex, levels: &Levels) -> Report;
 
-pub struct CheckPolicy { pub levels: BTreeMap<CheckKey, Level>, pub overrides: Vec<PathOverride>,
-                         pub baseline: Option<Baseline>, pub warnings_as_errors: bool }
-
-pub fn default_suite() -> CheckSuite;
-pub fn run(suite: &CheckSuite, input: &CheckInput, policy: &CheckPolicy) -> CheckReport;
-
-pub struct CheckReport { pub findings: Vec<Finding>, pub stats: CoverageStats, pub promise: &'static str }
-pub struct Finding { pub code: CheckCode, pub key: CheckKey, pub level: Level, pub rule: Option<RuleId>,
-                     pub location: Option<Location>, pub message: String, pub help: Option<String>,
-                     pub fingerprint: FindingFingerprint }
-pub struct CoverageStats { pub rules_by_status: BTreeMap<RuleStatus, usize>,
-                           pub validated_linked: usize, pub validated_tested: usize,
-                           pub references: usize, pub files_with_references: usize }
+pub struct Report { pub findings: Vec<Finding>, pub no_rules: bool }
+pub struct Finding { pub severity: Severity, pub rule: RuleId, pub problem: Problem,
+                     pub location: Option<Location> }   // None: a Rule no code cites
+pub enum Code { UnknownReference, ObsoleteReference, OrphanRule,
+                UnvalidatedReference, RetiredReference }
+pub enum Level { Error, Warning, Off }
 ```
 
 ### 6.2 CLI commands
 
-| Command                                  | Options                                                                                                                                                                      | Effect                                                               | Release                           |
-| ---------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------- | --------------------------------- |
-| `rulelink check`                         | `--format <F[=FILE]>...`, `--changed`, `--base <REF>`, `--paths <P>...`, `--rules <ID>...`, `--level <KEY>=<LEVEL>`, `--warnings-as-errors`, `--no-baseline`, `--fresh` (V2) | Runs the checks; exit code 0 or 1                                    | MVP (`--changed`, `--base` in V1) |
-| `rulelink status`                        | `--format human\|json\|markdown`                                                                                                                                             | Counters by status, coverage of validated rules by code and by tests | MVP                               |
-| `rulelink baseline create\|update\|show` | `--format`                                                                                                                                                                   | Baseline management                                                  | V1                                |
+| Command                                  | Options                           | Effect                                                               | Release |
+| ---------------------------------------- | --------------------------------- | -------------------------------------------------------------------- | ------- |
+| `rulelink check`                         | none yet (`--format json` is next) | Reports the findings of the whole project; exit code 0 or 1          | MVP     |
+| `rulelink status`                        | `--format human\|json\|markdown`   | Counters by status, coverage of validated rules by code and by tests | V1      |
+| `rulelink baseline create\|update\|show` | `--format`                        | Baseline management                                                  | V1      |
 
 Example `human` output:
 
+```text
+error RL001: RULE-099 is not a Rule of this project (src/billing/discount.rs:42)
+warning RL004: RULE-017 is validated but no code cites it (rules/rules.json)
+1 error, 1 warning
+check verifies the link between a Rule and the code, not that the code is correct.
 ```
-error[RL001] unknown reference: RULE-099
-  ┌─ src/billing/discount.rs:42:12
-42 │     // @rule RULE-099
-   │              ^^^^^^ not found in rules/rules.json
-   = help: similar rules: RULE-090, RULE-009
 
-warning[RL004] validated rule with no code: RULE-017 "Cumulative discount cap"
-
-2 findings (1 error, 1 warning) · 118 validated rules, 94 linked to code (80%)
-Rulelink verifies the link between a rule and the code, not the correctness of the implementation.
-```
+Findings are sorted by severity, code, Identifier (natural order), path and line. The report has no excerpt, colour, suggestion or coverage figure. Control characters coming from the Source or from file names are escaped, so one finding is always one line.
 
 ### 6.3 GitHub Action (V2)
 
@@ -310,7 +273,6 @@ Rulelink verifies the link between a rule and the code, not the correctness of t
 - uses: rulelink-dev/check-action@v1
   with:
     version: "0.4"            # CLI version, default: latest compatible
-    args: "--changed"
     sarif: true               # uploads the SARIF to Code Scanning
     summary: true             # writes the job's Markdown summary
 ```
@@ -322,15 +284,13 @@ Internal steps: download the binary (cached per version), run `rulelink check --
 ```yaml
 include:
   - component: gitlab.com/rulelink-dev/ci/check@1
-    inputs:
-      args: "--changed"
 ```
 
 The job produces `gl-code-quality-report.json` (`codequality` report) and `rulelink-junit.xml` (`junit` report, V1), both visible in the merge request.
 
 ### 6.5 Pre-commit hook (V1)
 
-`.pre-commit-hooks.yaml` declaration in the tool's repository: `id: rulelink-check`, `entry: rulelink check --changed --base HEAD --format human`, `pass_filenames: false`. Same entry for lefthook.
+`.pre-commit-hooks.yaml` declaration in the tool's repository: `id: rulelink-check`, `entry: rulelink check`, `pass_filenames: false`. Same entry for lefthook.
 
 ## 7. Interactions
 
@@ -339,8 +299,7 @@ flowchart LR
     CHK["04 Checks"]
     REG["01 Registry"] -->|"validators, statuses"| CHK
     LNK["03 Linking"] -->|"LinkIndex"| CHK
-    GIT["Git adapter"] -->|"changed files"| CHK
-    CHK -->|"CheckReport"| CLI["CLI / CI"]
+    CHK -->|"Report"| CLI["CLI / CI"]
     CHK -->|"per-file diagnostics"| LSP["08 LSP"]
     CHK -->|"run_check JSON"| AG["07 Skills"]
     CHK -->|"latest report: status and coverage"| PUB["06 Publishing"]
