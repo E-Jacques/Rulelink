@@ -1,5 +1,5 @@
 ---
-// Showcase chrome: header, footer and theme toggle shared by the showcase pages.
+// Showcase chrome: header, footer and theme picker shared by the showcase pages.
 import '@fontsource/ibm-plex-sans/400.css';
 import '@fontsource/ibm-plex-sans/600.css';
 import '@fontsource/ibm-plex-mono/400.css';
@@ -20,6 +20,7 @@ const { title, description, mainId = 'top' } = Astro.props;
     <link rel="icon" href={logo.src} type="image/svg+xml" />
     <script is:inline>
       (function () {
+        // Same rules as the documentation: 'light', 'dark', or anything else for Auto.
         var t = null;
         try { t = localStorage.getItem('starlight-theme'); } catch (e) {}
         if (t !== 'light' && t !== 'dark') t = matchMedia('(prefers-color-scheme: light)').matches ? 'light' : 'dark';
@@ -40,10 +41,11 @@ const { title, description, mainId = 'top' } = Astro.props;
           <a href="/#roadmap">Roadmap</a>
         </nav>
         <div class="sc-actions">
-          <button type="button" class="sc-theme" data-theme-toggle aria-label="Switch theme">
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="M20 14.5A8.5 8.5 0 0 1 9.5 4 8.5 8.5 0 1 0 20 14.5z"></path></svg>
-            <span>Theme</span>
-          </button>
+          <select class="sc-theme" data-theme-select aria-label="Select theme">
+            <option value="dark">Dark</option>
+            <option value="light">Light</option>
+            <option value="auto" selected>Auto</option>
+          </select>
           <a class="sc-ghost" href={REPO_URL}>GitHub</a>
         </div>
       </div>
@@ -71,11 +73,7 @@ const { title, description, mainId = 'top' } = Astro.props;
     </footer>
 
     <script>
-      document.querySelector('[data-theme-toggle]')?.addEventListener('click', () => {
-        const next = document.documentElement.dataset.theme === 'light' ? 'dark' : 'light';
-        document.documentElement.dataset.theme = next;
-        try { localStorage.setItem('starlight-theme', next); } catch {}
-      });
+      import './theme';
     </script>
   </body>
 </html>

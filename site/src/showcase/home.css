@@ -109,3 +109,4 @@
   .sc-section { padding-block: 40px; }
   .sc h2 { font-size: 26px; line-height: 34px; }
 }
+.sc .sc-theme option { background: var(--rl-surface-100); color: var(--rl-ink); }
