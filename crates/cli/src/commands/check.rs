@@ -1,5 +1,6 @@
 //! `check`.
 
+use std::fmt::Write as _;
 use std::path::Path;
 
 use clap::{Args, ValueEnum};
@@ -78,12 +79,8 @@ fn escape_controls_in_json(json: &str) -> String {
     for c in json.chars() {
         if c.is_control() && c != '\n' {
             // Every control character is below U+00A0: four hexadecimal digits hold it.
-            out.extend(['\\', 'u']);
-            out.extend(
-                [12, 8, 4, 0]
-                    .iter()
-                    .filter_map(|shift| char::from_digit((u32::from(c) >> shift) & 0xf, 16)),
-            );
+            // Writing to a `String` cannot fail.
+            let _ = write!(out, "\\u{:04x}", u32::from(c));
         } else {
             out.push(c);
         }
