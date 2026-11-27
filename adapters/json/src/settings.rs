@@ -8,7 +8,7 @@ use rulelink_adapter_sdk::{
 };
 
 /// The value of `source.kind` that selects this adapter.
-pub const KIND: &str = "json";
+const KIND: &str = "json";
 
 /// `source.path`: the JSON file holding the Rules, inside the project. Required.
 ///
