@@ -3,7 +3,7 @@ use std::str::FromStr;
 use rulelink_link::Location;
 use rulelink_model::RuleId;
 
-use crate::{Level, Severity, UnknownFinding};
+use crate::{Severity, UnknownFinding};
 
 /// The kinds of Finding, each with a code (`RL001`) and the name that sets its level.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord)]
@@ -50,17 +50,6 @@ impl Code {
             Self::OrphanRule => "orphan-rule",
             Self::UnvalidatedReference => "unvalidated-reference",
             Self::RetiredReference => "retired-reference",
-        }
-    }
-
-    pub(crate) fn default_level(self, no_rules: bool) -> Level {
-        match self {
-            // Annotations written before the first Rule must not fail a build.
-            Self::UnknownReference if no_rules => Level::Warning,
-            Self::UnknownReference | Self::ObsoleteReference | Self::RetiredReference => {
-                Level::Error
-            }
-            Self::OrphanRule | Self::UnvalidatedReference => Level::Warning,
         }
     }
 }

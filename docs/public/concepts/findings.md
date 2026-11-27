@@ -12,12 +12,12 @@ A Finding is one result of [`rulelink check`](../cli/check.md), about a Rule or 
 | Code    | Name                    | What it means                                                  | Default level |
 | ------- | ----------------------- | -------------------------------------------------------------- | ------------- |
 | `RL001` | `unknown-reference`     | The code cites an Identifier that no Rule has.                 | `error`       |
-| `RL002` | `obsolete-reference`    | The code cites an `obsolete` Rule.                             | `error`       |
+| `RL002` | `obsolete-reference`    | The code cites an `obsolete` Rule.                             | `warning`     |
 | `RL004` | `orphan-rule`           | A `validated` Rule is cited by no code.                        | `warning`     |
 | `RL005` | `unvalidated-reference` | The code cites a Rule that is still `proposed`.                | `warning`     |
 | `RL009` | `retired-reference`     | The code cites a `rejected` Rule, or a Retired identifier.     | `error`       |
 
-You get one Finding per line of code that cites the Identifier, and one `RL004` per Rule. When an `obsolete` Rule records its replacement, `RL002` names it.
+You get one Finding per line of code that cites the Identifier, and one `RL004` per Rule. When an `obsolete` Rule records its replacement, `RL002` names it. `RL002` is a `warning` so that you can move citations to the new Rule step by step. To make `check` fail on them, set `obsolete-reference = "error"`.
 
 An Identifier listed as retired whose Rule is no longer in the Source gives `RL009`, not `RL001`.
 

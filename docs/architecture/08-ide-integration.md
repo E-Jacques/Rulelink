@@ -110,7 +110,7 @@ sequenceDiagram
     CL-->>ED: workspace/codeLens/refresh
 ```
 
-When `rules.json` changes (on disk or in a buffer), `CachedSource` (02) reloads and notifies the same observers: a rule that becomes `obsolete` immediately shows an error on all of its open annotations.
+When `rules.json` changes (on disk or in a buffer), `CachedSource` (02) reloads and notifies the same observers: a rule that becomes `obsolete` immediately shows a warning on all of its open annotations (`RL002`, at its default level).
 
 ### 4.3 LSP features
 
@@ -231,4 +231,4 @@ flowchart LR
 
 No open points remain. One option was considered and rejected.
 
-- **Renaming a rule identifier (`textDocument/rename`)**: rejected. An identifier is immutable once committed, and a rename would break the references of other branches and of published exports. To change a rule, the IDE offers "make obsolete and replace" instead. A reference to a `rejected` or `obsolete` rule left in the code is reported as an error (`RL009` and `RL002`, see [04](04-checks.md)).
+- **Renaming a rule identifier (`textDocument/rename`)**: rejected. An identifier is immutable once committed, and a rename would break the references of other branches and of published exports. To change a rule, the IDE offers "make obsolete and replace" instead. A reference left in the code is reported: an error for a `rejected` rule (`RL009`), a warning by default for an `obsolete` one (`RL002`, see [04](04-checks.md)).

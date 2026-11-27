@@ -68,12 +68,8 @@ impl Levels {
         self.0.insert(code, level);
     }
 
-    /// The level of `code`. `no_rules` says that the Source has no Rules yet, which only
-    /// changes a default.
-    pub(crate) fn of(&self, code: Code, no_rules: bool) -> Level {
-        self.0
-            .get(&code)
-            .copied()
-            .unwrap_or_else(|| code.default_level(no_rules))
+    /// The level the team set for `code`, if any.
+    pub(crate) fn get(&self, code: Code) -> Option<Level> {
+        self.0.get(&code).copied()
     }
 }

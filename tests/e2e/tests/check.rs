@@ -88,6 +88,16 @@ fn rl002_an_obsolete_rule_names_its_replacement_if_it_has_one() {
     );
     assert_report(
         &repo.run(&["check"]),
+        0,
+        &[
+            "warning RL002: RULE-002 is obsolete, superseded by RULE-001 (src/a.rs:2)",
+            "warning RL002: RULE-003 is obsolete (src/a.rs:2)",
+            "0 errors, 2 warnings",
+        ],
+    );
+    append_config(&repo, "[check.levels]\nobsolete-reference = \"error\"");
+    assert_report(
+        &repo.run(&["check"]),
         1,
         &[
             "error RL002: RULE-002 is obsolete, superseded by RULE-001 (src/a.rs:2)",
@@ -184,10 +194,10 @@ fn a_line_break_in_the_rules_file_cannot_forge_a_report_line() {
     cite(&repo, "a.rs", "RULE-001");
     assert_report(
         &repo.run(&["check"]),
-        1,
+        0,
         &[
-            "error RL002: RULE-001 is obsolete, superseded by X\\n0 errors (a.rs:1)",
-            "1 error, 0 warnings",
+            "warning RL002: RULE-001 is obsolete, superseded by X\\n0 errors (a.rs:1)",
+            "0 errors, 1 warning",
         ],
     );
 }

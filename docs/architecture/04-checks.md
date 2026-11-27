@@ -51,7 +51,7 @@ This sentence appears in the command help, at the end of every report and in the
 | Code            | Name (config key)       | Detected case                                                                                                                       | Default level | Release  |
 | --------------- | ----------------------- | ----------------------------------------------------------------------------------------------------------------------------------- | ------------- | -------- |
 | `RL001`         | `unknown-reference`     | The code cites an identifier missing from the source                                                                                | Error         | MVP      |
-| `RL002`         | `obsolete-reference`    | The code still cites an `obsolete` rule (the message suggests `superseded_by` when present)                                         | Error         | MVP      |
+| `RL002`         | `obsolete-reference`    | The code still cites an `obsolete` rule (the message suggests `superseded_by` when present)                                         | Warning       | MVP      |
 | `RL003`         | `duplicate-id`          | Two rules share the same identifier                                                                                                 | Error         | MVP      |
 | `RL004`         | `orphan-rule`           | A `validated` rule is cited nowhere                                                                                                 | Warning       | MVP      |
 | `RL005`         | `unvalidated-reference` | The code cites a rule that is still `proposed`                                                                                      | Warning       | MVP      |

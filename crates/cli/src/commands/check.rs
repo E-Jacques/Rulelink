@@ -3,12 +3,16 @@
 use std::path::Path;
 
 use rulelink_app::runtime::Outcome;
-use rulelink_app::{Error, Finding, PROMISE, Severity};
+use rulelink_app::{Error, Finding, Severity};
 
 use super::project_root;
 
 /// Said before the Findings while the Source has no Rules.
 const NO_RULES: &str = "The rules file has no Rules yet; the code is still scanned.";
+
+/// The last line of a report: what a check does not prove.
+const PROMISE: &str =
+    "check verifies the link between a Rule and the code, not that the code is correct.";
 
 /// Prints the report; the outcome fails if it holds an error.
 pub(super) fn run() -> Result<Outcome, Error> {

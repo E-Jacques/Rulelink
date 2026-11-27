@@ -14,10 +14,6 @@ pub use error::{UnknownFinding, UnknownLevel};
 pub use finding::{Code, Finding, Problem};
 pub use level::{Level, Levels, Severity};
 
-/// What a report says about the limits of a check.
-pub const PROMISE: &str =
-    "check verifies the link between a Rule and the code, not that the code is correct.";
-
 /// The result of [`check`].
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct Report {
@@ -62,7 +58,11 @@ pub fn check(rules: &RuleSet, links: &LinkIndex, levels: &Levels) -> Report {
     let mut findings: Vec<Finding> = citations(rules, links)
         .chain(orphans(rules, links))
         .filter_map(|(rule, problem, location)| {
-            let severity = levels.of(problem.code(), no_rules).severity()?;
+            let code = problem.code();
+            let level = levels
+                .get(code)
+                .unwrap_or_else(|| default_level(code, no_rules));
+            let severity = level.severity()?;
             Some(Finding {
                 severity,
                 rule,
@@ -81,6 +81,17 @@ pub fn check(rules: &RuleSet, links: &LinkIndex, levels: &Levels) -> Report {
             .then_with(|| a.location.cmp(&b.location))
     });
     Report { findings, no_rules }
+}
+
+/// The level of a Finding the team has not set. `no_rules`: the Source has no Rules yet.
+fn default_level(code: Code, no_rules: bool) -> Level {
+    match code {
+        // Annotations written before the first Rule must not fail a build.
+        Code::UnknownReference if no_rules => Level::Warning,
+        Code::UnknownReference | Code::RetiredReference => Level::Error,
+        // Citations of a replaced Rule are moved step by step.
+        Code::ObsoleteReference | Code::OrphanRule | Code::UnvalidatedReference => Level::Warning,
+    }
 }
 
 /// A Finding before the team's levels apply.

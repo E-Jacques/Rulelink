@@ -54,6 +54,6 @@ Put the annotation directly above the code that implements or tests the rule (a 
 ## Rules to follow
 
 - Only cite rules that exist in the source. Never invent an identifier.
-- Do not cite a `rejected` or `obsolete` rule: `rulelink check` reports an error. See `statuses.md`.
+- Do not cite a `rejected` or `obsolete` rule: `rulelink check` reports it. See `statuses.md`.
 - Never rename an identifier. It is immutable.
 - Run `rulelink check` after annotating.

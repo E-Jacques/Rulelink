@@ -18,9 +18,9 @@ Prints one line per Finding with its level, code, message and location, then the
 
 ```text
 error RL001: RULE-099 is not a Rule of this project (src/billing.rs:42)
-error RL002: RULE-003 is obsolete, superseded by RULE-007 (src/vat.rs:3)
+warning RL002: RULE-003 is obsolete, superseded by RULE-007 (src/vat.rs:3)
 warning RL004: RULE-005 is validated but no code cites it (rules/rules.json)
-2 errors, 1 warning
+1 error, 2 warnings
 check verifies the link between a Rule and the code, not that the code is correct.
 ```
 
