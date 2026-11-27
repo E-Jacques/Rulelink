@@ -34,7 +34,83 @@ The rules file has no Rules yet; the code is still scanned.
 check verifies the link between a Rule and the code, not that the code is correct.
 ```
 
+## JSON report
+
+Scripts and agents read the Findings as JSON:
+
+```bash
+rulelink check --format json
+```
+
+For the project of the first example, it prints:
+
+```json
+{
+  "schema": "rulelink/check-report/v1",
+  "findings": [
+    {
+      "code": "RL001",
+      "name": "unknown-reference",
+      "severity": "error",
+      "message": "RULE-099 is not a Rule of this project",
+      "rule": "RULE-099",
+      "file": "src/billing.rs",
+      "line": 42
+    },
+    {
+      "code": "RL002",
+      "name": "obsolete-reference",
+      "severity": "warning",
+      "message": "RULE-003 is obsolete, superseded by RULE-007",
+      "rule": "RULE-003",
+      "file": "src/vat.rs",
+      "line": 3
+    },
+    {
+      "code": "RL004",
+      "name": "orphan-rule",
+      "severity": "warning",
+      "message": "RULE-005 is validated but no code cites it",
+      "rule": "RULE-005",
+      "file": "rules/rules.json"
+    }
+  ],
+  "totals": {
+    "errors": 1,
+    "warnings": 2
+  }
+}
+```
+
+| field                  | value                                                                                  |
+| ---------------------- | -------------------------------------------------------------------------------------- |
+| `schema`               | The version of the report: `rulelink/check-report/v1`.                                 |
+| `findings`             | The Findings, in the same order as the human report. Empty when there are none.         |
+| `findings[].code`      | The code of the Finding, such as `RL001`.                                              |
+| `findings[].name`      | Its name, as used to [change its level](../concepts/findings.md#change-a-level).       |
+| `findings[].severity`  | `error` or `warning`. No other value is added within `v1`.                             |
+| `findings[].message`   | One sentence saying what is wrong.                                                     |
+| `findings[].rule`      | The Identifier the Finding is about. Optional: left out if there is none.              |
+| `findings[].file`      | The file of the Annotation, or the rules file for a Rule that no code cites. Optional. |
+| `findings[].line`      | The line of the Annotation, from 1. Optional: left out when no line is at fault.       |
+| `totals.errors`        | How many Findings are errors.                                                          |
+| `totals.warnings`      | How many Findings are warnings.                                                        |
+
+A field that does not apply is left out, never `null`. Paths start at the project root and use `/` on every system. A Finding turned `off` is neither listed nor counted. Today every Finding has a `rule` and a `file`, but both are optional so that later Findings can do without.
+
+The report is described by a [JSON Schema](https://github.com/E-Jacques/Rulelink/blob/main/schemas/check-report.schema.json). Later versions of Rulelink may add Finding codes and fields without changing `v1`: ignore the fields you do not know, and rely on `severity` and `message` for a code you do not know. Removing, renaming or changing the type of a field gives a new version.
+
+Warnings about `rulelink.toml` are not Findings: they stay on the error output. When no report can be made (exit codes `2`, `3` and `10`), nothing is printed on the standard output, and the reason is on the error output.
+
+## Options
+
+| name       | description                                                              | example         |
+| ---------- | ------------------------------------------------------------------------ | --------------- |
+| `--format` | The report to print, `human` or `json`. Defaults to `human`, even piped. | `--format json` |
+
 ## Exit codes
+
+Both formats give the same exit codes.
 
 | code | meaning                                                  |
 | ---- | -------------------------------------------------------- |
