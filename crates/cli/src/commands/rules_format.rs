@@ -10,7 +10,7 @@ pub(super) fn run(out: &mut Presenter<'_>) -> Result<(), Error> {
     let Formatted { path, rewrite } = rulelink_app::rules::format(&open(out)?)?;
     let path = path.display();
     match rewrite {
-        Rewrite::Rewritten => out.line(format_args!("Rewrote {path} into Canonical form")),
-        Rewrite::Unchanged => out.line(format_args!("{path} is already in Canonical form")),
+        Rewrite::Rewritten => out.log(format_args!("Rewrote {path} into Canonical form")),
+        Rewrite::Unchanged => out.log(format_args!("{path} is already in Canonical form")),
     }
 }

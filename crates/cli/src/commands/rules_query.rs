@@ -48,7 +48,7 @@ fn print_selection(
     out: &mut Presenter<'_>,
 ) -> Result<(), Error> {
     for rule in rulelink_app::rules::select(&open(out)?, text, status)? {
-        out.line(line(&rule))?;
+        out.log(line(&rule))?;
     }
     Ok(())
 }

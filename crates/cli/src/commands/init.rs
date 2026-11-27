@@ -16,5 +16,5 @@ pub struct InitArgs {
 pub(super) fn run(args: &InitArgs, out: &mut Presenter<'_>) -> Result<(), Error> {
     let root = super::project_root()?;
     rulelink_app::init::init(&root, &args.id_prefix)?;
-    out.line("Initialised Rulelink: wrote rulelink.toml and rules/rules.json")
+    out.log("Initialised Rulelink: wrote rulelink.toml and rules/rules.json")
 }

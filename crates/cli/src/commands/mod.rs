@@ -121,8 +121,7 @@ impl Entrypoint for CliEntrypoint {
     }
 
     fn report_failure(&self, failure: &dyn std::fmt::Display) {
-        Presenter::new(&mut std::io::stdout(), &mut std::io::stderr())
-            .failure(self.name(), failure);
+        Presenter::new(&mut std::io::stdout(), &mut std::io::stderr()).error(self.name(), failure);
     }
 
     async fn shutdown(&self, _ctx: &AppContext, _reason: ShutdownReason) {}
@@ -138,7 +137,7 @@ fn project_root() -> Result<std::path::PathBuf, Error> {
 fn open(out: &mut Presenter<'_>) -> Result<Workspace, Error> {
     let opened = Workspace::open(&project_root()?)?;
     for warning in &opened.warnings {
-        out.configuration_warning(warning)?;
+        out.warn(warning)?;
     }
     Ok(opened.configuration)
 }
@@ -147,7 +146,10 @@ fn open(out: &mut Presenter<'_>) -> Result<Workspace, Error> {
 fn dispatch(args: CliArgs, out: &mut Presenter<'_>) -> Result<Outcome, Error> {
     let succeeded = |()| Outcome::Success;
     match args {
-        CliArgs::Display(text) => out.text(&text).map(succeeded),
+        // `clap` ends its text with the line break that `log` adds.
+        CliArgs::Display(text) => out
+            .log(text.strip_suffix('\n').unwrap_or(&text))
+            .map(succeeded),
         CliArgs::Run(Command::Check) => check::run(out),
         CliArgs::Run(Command::Init(args)) => init::run(&args, out).map(succeeded),
         CliArgs::Run(Command::Where(args)) => where_cmd::run(&args, out).map(succeeded),
@@ -259,6 +261,14 @@ mod tests {
     fn rules_add_requires_title_and_statement() {
         assert!(parse(args(&["rules", "add", "--title", "T"])).is_err());
         assert!(parse(args(&["rules", "add", "--statement", "S"])).is_err());
+    }
+
+    #[test]
+    fn a_displayed_text_ends_with_a_single_line_break() {
+        let (mut out, mut err) = (Vec::new(), Vec::new());
+        let text = CliArgs::Display("usage\n\nmore\n".to_owned());
+        dispatch(text, &mut Presenter::new(&mut out, &mut err)).unwrap_or_else(|e| panic!("{e}"));
+        assert_eq!(String::from_utf8_lossy(&out), "usage\n\nmore\n");
     }
 
     #[test]

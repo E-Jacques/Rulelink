@@ -49,5 +49,5 @@ pub(super) fn run(args: &RulesAddArgs, out: &mut Presenter<'_>) -> Result<(), Er
         &related,
     )?;
     let id = rulelink_app::rules::add(&open(out)?, draft)?;
-    out.line(format_args!("Created {} (proposed)", id.0))
+    out.log(format_args!("Created {} (proposed)", id.0))
 }

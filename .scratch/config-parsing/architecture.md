@@ -234,13 +234,13 @@ sequenceDiagram
     CFG-->>WS: ParseResult of ConfigMap
     alt configuration refused
         WS-->>CLI: Err with problems
-        CLI->>OUT: failure(error)
+        CLI->>OUT: error(failure)
     else configuration accepted
         WS-->>CLI: Parsed Workspace with warnings
-        CLI->>OUT: warnings(list)
+        CLI->>OUT: warn(each warning)
         CLI->>WS: run the use case on the Workspace
         WS-->>CLI: typed result or app Error
-        CLI->>OUT: result or failure
+        CLI->>OUT: log(result) or error(failure)
     end
 ```
 
@@ -262,7 +262,7 @@ flowchart LR
 
 - **User-facing output is returned data.** The app has no `Printer` or `Logger` trait: the surfaces differ in what they do with the data, so returning it is enough.
 - **Debug logs use `tracing`**, as already documented (00 §9.4). They never carry something the user must see.
-- **CLI `Presenter`** receives its two writers (`impl Write`), so tests read what it wrote without starting a process.
+- **CLI `Presenter`** offers `log`, `warn` and `error`, so a command says what kind of message it has and only the presenter knows where it goes. It receives its two writers (`impl Write`), so tests read what it wrote without starting a process.
 - **`Bootstrap`** stops printing: `Entrypoint` gains a `report_failure(error)` hook that each surface implements.
 
 ## Behaviour changes to expect

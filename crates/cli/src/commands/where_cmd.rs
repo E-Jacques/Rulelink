@@ -18,15 +18,15 @@ pub(super) fn run(args: &WhereArgs, out: &mut Presenter<'_>) -> Result<(), Error
     let id = RuleId::parse(&args.id, "the Rule Identifier")?;
     let found = rulelink_app::links::locate(&open(out)?, &id)?;
     if matches!(found.status, RuleStatus::Obsolete | RuleStatus::Rejected) {
-        out.line(format_args!(
+        out.log(format_args!(
             "{id} is {}: its Identifier is retired",
             found.status
         ))?;
     } else if found.locations.is_empty() {
-        out.line(format_args!("{id} is not cited by any code"))?;
+        out.log(format_args!("{id} is not cited by any code"))?;
     }
     for location in &found.locations {
-        out.line(format_args!("{}:{}", location.path, location.line))?;
+        out.log(format_args!("{}:{}", location.path, location.line))?;
     }
     Ok(())
 }

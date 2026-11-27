@@ -20,21 +20,21 @@ pub(super) fn run(out: &mut Presenter<'_>) -> Result<Outcome, Error> {
     let checked = rulelink_app::checks::run(&open(out)?)?;
     let report = &checked.report;
     if report.no_rules {
-        out.line(NO_RULES)?;
+        out.log(NO_RULES)?;
     }
     for finding in &report.findings {
-        out.line(line(finding, &checked.source_path))?;
+        out.log(line(finding, &checked.source_path))?;
     }
     let (errors, warnings) = (
         report.count(Severity::Error),
         report.count(Severity::Warning),
     );
-    out.line(format_args!(
+    out.log(format_args!(
         "{}, {}",
         counted(errors, "error"),
         counted(warnings, "warning")
     ))?;
-    out.line(PROMISE)?;
+    out.log(PROMISE)?;
     Ok(if errors > 0 {
         Outcome::ChecksFailed
     } else {
