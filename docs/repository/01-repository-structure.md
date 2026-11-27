@@ -286,6 +286,7 @@ Each member manifest inherits with `version.workspace = true`, `edition.workspac
 | `rulelink-cli`         | `lsp`                                                                                   | Compiles the server subcommand in; enabled by default                 | V1      |
 | `rulelink-adapter-sdk` | `conformance`                                                                           | Exposes the conformance kit to adapter test suites                    | V1      |
 | `rulelink-model`       | `schema`                                                                                | Derives `schemars::JsonSchema`; off for lightweight consumers         | MVP     |
+| `rulelink-check`       | `schema`                                                                                | Derives `schemars::JsonSchema` on the published report types          | MVP     |
 
 `cargo hack check --each-feature` (V1) guarantees that every feature compiles on its own.
 

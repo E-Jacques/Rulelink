@@ -6,6 +6,7 @@
 mod error;
 mod finding;
 mod level;
+mod report;
 
 use rulelink_link::{LinkIndex, Location};
 use rulelink_model::{Rule, RuleId, RuleSet, RuleStatus};
@@ -13,6 +14,7 @@ use rulelink_model::{Rule, RuleId, RuleSet, RuleStatus};
 pub use error::{UnknownFinding, UnknownLevel};
 pub use finding::{Code, Finding, Problem};
 pub use level::{Level, Levels, Severity};
+pub use report::CheckReportV1;
 
 /// The result of [`check`].
 #[derive(Debug, Clone, PartialEq, Eq)]

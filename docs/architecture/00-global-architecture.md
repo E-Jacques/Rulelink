@@ -412,7 +412,7 @@ Common global options: `-C, --directory <DIR>`, `--config <FILE>`, `--format <hu
 
 ### 9.3 Outputs
 
-- `human` by default in a terminal, `json` for agents and scripts. Every JSON output follows a published, versioned schema (`rulelink schema <name>`).
+- `human` by default, piped or not; agents and scripts pass `--format json`. Every JSON output follows a published, versioned schema, committed under `schemas/` (`rulelink schema <name>` is not built yet). What a version may change: [ADR-0006](../adr/0006-json-reports-open-within-a-version.md).
 - All lists are **sorted** (identifier in natural order, then path, then line). Two runs on the same state produce byte-identical output.
 - Human diagnostics use `miette`: code excerpt, underline, suggestion.
 

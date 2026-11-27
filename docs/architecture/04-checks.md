@@ -18,7 +18,7 @@
 
 > `rulelink check` proves that **a link exists** between a rule and the code, **not that the implementation is correct**.
 
-This sentence appears in the command help, at the end of every report and in the documentation. AI-assisted correctness checking (V2) is a separate skill and is never part of `check` (07).
+This sentence appears in the command help, at the end of every text report and in the documentation. AI-assisted correctness checking (V2) is a separate skill and is never part of `check` (07).
 
 ## 2. Release frame
 
@@ -252,7 +252,7 @@ pub enum Level { Error, Warning, Off }
 
 | Command                                  | Options                           | Effect                                                               | Release |
 | ---------------------------------------- | --------------------------------- | -------------------------------------------------------------------- | ------- |
-| `rulelink check`                         | none yet (`--format json` is next) | Reports the findings of the whole project; exit code 0 or 1          | MVP     |
+| `rulelink check`                         | `--format human\|json`           | Reports the findings of the whole project; exit code 0 or 1          | MVP     |
 | `rulelink status`                        | `--format human\|json\|markdown`   | Counters by status, coverage of validated rules by code and by tests | V1      |
 | `rulelink baseline create\|update\|show` | `--format`                        | Baseline management                                                  | V1      |
 

@@ -1,0 +1,109 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "CheckReport",
+  "description": "The Findings printed by `rulelink check --format json`. It shows that links exist between Rules and code, not that the code is correct. Later releases may add fields and Finding codes: ignore what you do not know.",
+  "type": "object",
+  "properties": {
+    "findings": {
+      "description": "Errors first, then by code, Identifier, file and line.",
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/Finding"
+      }
+    },
+    "schema": {
+      "description": "The version of this report.",
+      "type": "string",
+      "const": "rulelink/check-report/v1"
+    },
+    "totals": {
+      "description": "How many Findings are reported.",
+      "$ref": "#/$defs/Totals"
+    }
+  },
+  "required": [
+    "schema",
+    "findings",
+    "totals"
+  ],
+  "$defs": {
+    "Finding": {
+      "description": "One Finding. A field that does not apply is left out.",
+      "type": "object",
+      "properties": {
+        "code": {
+          "description": "The code, such as `RL001`. Rely on `severity` and `message` for an unknown one.",
+          "type": "string",
+          "pattern": "^RL[0-9]{3}$"
+        },
+        "file": {
+          "description": "The file at fault, from the project root and `/`-separated.",
+          "type": "string"
+        },
+        "line": {
+          "description": "The line at fault in `file`, from 1.",
+          "type": "integer",
+          "minimum": 1
+        },
+        "message": {
+          "description": "One sentence saying what is wrong.",
+          "type": "string"
+        },
+        "name": {
+          "description": "The name that sets the level of the Finding, such as `unknown-reference`.",
+          "type": "string",
+          "pattern": "^[a-z0-9]+(-[a-z0-9]+)*$"
+        },
+        "rule": {
+          "description": "The Identifier the Finding is about.",
+          "type": "string"
+        },
+        "severity": {
+          "description": "An error makes the check fail.",
+          "$ref": "#/$defs/Severity"
+        }
+      },
+      "required": [
+        "code",
+        "name",
+        "severity",
+        "message"
+      ]
+    },
+    "Severity": {
+      "description": "How much a Finding weighs.",
+      "oneOf": [
+        {
+          "description": "Fails `check`. Sorts before warnings.",
+          "type": "string",
+          "const": "error"
+        },
+        {
+          "description": "Reported only.",
+          "type": "string",
+          "const": "warning"
+        }
+      ]
+    },
+    "Totals": {
+      "description": "How many Findings are reported, by severity.",
+      "type": "object",
+      "properties": {
+        "errors": {
+          "description": "The number of errors.",
+          "type": "integer",
+          "minimum": 0
+        },
+        "warnings": {
+          "description": "The number of warnings.",
+          "type": "integer",
+          "minimum": 0
+        }
+      },
+      "required": [
+        "errors",
+        "warnings"
+      ]
+    }
+  }
+}

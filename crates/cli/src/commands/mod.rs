@@ -17,6 +17,7 @@ mod rules_query;
 mod where_cmd;
 
 use crate::presenter::Presenter;
+use check::CheckArgs;
 use init::InitArgs;
 use rulelink_app::runtime::{
     AppContext, CancellationToken, Entrypoint, Outcome, ShutdownReason, TelemetryConfig, UsageError,
@@ -43,7 +44,7 @@ pub enum Command {
     /// Report the Findings about the links between Rules and code.
     ///
     /// Verifies the link between a Rule and the code, not that the code is correct.
-    Check,
+    Check(CheckArgs),
     /// List the code locations that cite a Rule.
     Where(WhereArgs),
     /// Create, inspect and change Rules.
@@ -150,7 +151,7 @@ fn dispatch(args: CliArgs, out: &mut Presenter<'_>) -> Result<Outcome, Error> {
         CliArgs::Display(text) => out
             .log(text.strip_suffix('\n').unwrap_or(&text))
             .map(succeeded),
-        CliArgs::Run(Command::Check) => check::run(out),
+        CliArgs::Run(Command::Check(args)) => check::run(&args, out),
         CliArgs::Run(Command::Init(args)) => init::run(&args, out).map(succeeded),
         CliArgs::Run(Command::Where(args)) => where_cmd::run(&args, out).map(succeeded),
         CliArgs::Run(Command::Rules { action }) => rules(action, out).map(succeeded),

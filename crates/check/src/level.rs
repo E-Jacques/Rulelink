@@ -4,7 +4,9 @@ use std::str::FromStr;
 use crate::{Code, UnknownLevel};
 
 /// How much a Finding weighs.
-#[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, serde::Serialize)]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "lowercase")]
 pub enum Severity {
     /// Fails `check`. Sorts before warnings.
     Error,

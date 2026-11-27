@@ -2,7 +2,7 @@
 
 use std::path::PathBuf;
 
-use rulelink_check::Report;
+use rulelink_check::{CheckReportV1, Report};
 
 use crate::{Error, Workspace};
 
@@ -13,6 +13,14 @@ pub struct Checked {
     pub source_path: PathBuf,
     /// The Findings.
     pub report: Report,
+}
+
+impl Checked {
+    /// The report in the form published for programs to read.
+    #[must_use]
+    pub fn report_v1(&self) -> CheckReportV1 {
+        CheckReportV1::new(&self.report, &self.source_path)
+    }
 }
 
 /// Reports the Findings of the project. Reads only.

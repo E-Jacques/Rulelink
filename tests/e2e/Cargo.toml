@@ -11,3 +11,7 @@ workspace = true
 
 [dependencies]
 tempfile.workspace = true
+
+[dev-dependencies]
+serde_json.workspace = true
+jsonschema.workspace = true
