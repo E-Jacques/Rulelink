@@ -55,7 +55,7 @@ The one new input is `--format`.
 | Errors | usage error, exit 2, names the option and the accepted values |
 | Tests | `tests/e2e/tests/check_json.rs` |
 
-Output is a boundary too: Rule text is not in the report, and paths and Identifiers are escaped by the JSON serialiser.
+Output is a boundary too: Rule text is not in the report. The JSON serialiser escapes paths and Identifiers below U+0020 only; the CLI also escapes DEL and U+0080 to U+009F (added after review). #20 prints Rule text as JSON and needs the same escaping.
 
 ## Reuse
 

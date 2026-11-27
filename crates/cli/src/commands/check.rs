@@ -67,7 +67,28 @@ fn print_human(checked: &Checked, out: &mut Presenter<'_>) -> Result<(), Error> 
 fn print_json(checked: &Checked, out: &mut Presenter<'_>) -> Result<(), Error> {
     let json = serde_json::to_string_pretty(&checked.report_v1())
         .map_err(|e| Error::Internal(format!("cannot write the report: {e}")))?;
-    out.log(json)
+    out.log(escape_controls_in_json(&json))
+}
+
+/// Writes as `\u` escapes the control characters that JSON lets a string hold raw (DEL and
+/// U+0080 to U+009F): a file name must not be able to drive the terminal. The parsed values
+/// do not change. The only other raw control characters of `json` are its line breaks.
+fn escape_controls_in_json(json: &str) -> String {
+    let mut out = String::with_capacity(json.len());
+    for c in json.chars() {
+        if c.is_control() && c != '\n' {
+            // Every control character is below U+00A0: four hexadecimal digits hold it.
+            out.extend(['\\', 'u']);
+            out.extend(
+                [12, 8, 4, 0]
+                    .iter()
+                    .filter_map(|shift| char::from_digit((u32::from(c) >> shift) & 0xf, 16)),
+            );
+        } else {
+            out.push(c);
+        }
+    }
+    out
 }
 
 /// `error RL001: message (file:line)`. A Finding with no Annotation points at the rules file.

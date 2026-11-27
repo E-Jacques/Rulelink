@@ -100,7 +100,7 @@ A field that does not apply is left out, never `null`. Paths start at the projec
 
 The report is described by a [JSON Schema](https://github.com/E-Jacques/Rulelink/blob/main/schemas/check-report.schema.json). Later versions of Rulelink may add Finding codes and fields without changing `v1`: ignore the fields you do not know, and rely on `severity` and `message` for a code you do not know. Removing, renaming or changing the type of a field gives a new version.
 
-Warnings about `rulelink.toml` are not Findings: they stay on the error output. When no report can be made (exit codes `2`, `3` and `10`), nothing is printed on the standard output, and the reason is on the error output.
+Warnings about `rulelink.toml` are not Findings: they stay on the error output. When no report can be made (exit codes `2` and `3`), nothing is printed on the standard output, and the reason is on the error output. After an unexpected error (exit code `10`), such as a full disk while the report is written, do not use what the standard output holds: it may be incomplete.
 
 ## Options
 

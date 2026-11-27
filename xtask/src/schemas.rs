@@ -5,6 +5,7 @@ use std::path::Path;
 
 use schemars::JsonSchema;
 use schemars::generate::SchemaSettings;
+use schemars::transform::RecursiveTransform;
 
 pub fn run(check: bool) -> Result<(), String> {
     let dir = Path::new("schemas");
@@ -44,6 +45,11 @@ pub fn run(check: bool) -> Result<(), String> {
 fn written<T: JsonSchema>() -> schemars::Schema {
     SchemaSettings::default()
         .for_serialize()
+        // `schemars` names Rust integer types (`uint32`) as formats: not JSON Schema ones, and
+        // strict validators refuse a format they do not know. `minimum` keeps the bound.
+        .with_transform(RecursiveTransform(|schema: &mut schemars::Schema| {
+            schema.remove("format");
+        }))
         .into_generator()
         .into_root_schema_for::<T>()
 }

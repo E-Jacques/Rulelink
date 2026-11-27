@@ -43,7 +43,6 @@
         "line": {
           "description": "The line at fault in `file`, from 1.",
           "type": "integer",
-          "format": "uint32",
           "minimum": 1
         },
         "message": {
@@ -93,13 +92,11 @@
         "errors": {
           "description": "The number of errors.",
           "type": "integer",
-          "format": "uint",
           "minimum": 0
         },
         "warnings": {
           "description": "The number of warnings.",
           "type": "integer",
-          "format": "uint",
           "minimum": 0
         }
       },

@@ -269,3 +269,23 @@ fn the_schema_lets_a_later_version_add_codes_and_fields_only() {
         );
     }
 }
+
+#[test]
+fn the_schema_uses_no_format_a_strict_validator_may_not_know() {
+    assert!(!SCHEMA.contains("\"format\""), "{SCHEMA}");
+}
+
+#[test]
+fn control_characters_never_reach_the_terminal_raw() {
+    let repo = project(&[], &[]);
+    let file = "src/a\u{7f}\u{9b}b.rs";
+    // Windows and Unix both accept DEL and C1 characters in file names.
+    cite_at(&repo, file, 1, "RULE-099");
+    let run = check_json(&repo);
+    assert!(
+        !run.stdout.chars().any(|c| c.is_control() && c != '\n'),
+        "{:?}",
+        run.stdout
+    );
+    assert_eq!(report(&run)["findings"][0]["file"], file);
+}

@@ -58,6 +58,8 @@ pub struct CheckReportV1 {
 impl CheckReportV1 {
     /// The published form of `report`. `source_path` is the rules file, relative to the
     /// project root: it is the file of a Finding that no line of code is at fault for.
+    /// It is not checked here: pass a path without a root or `..`, as the configuration
+    /// guarantees.
     #[must_use]
     pub fn new(report: &Report, source_path: &Path) -> Self {
         let source_file = slashed(source_path);
