@@ -265,13 +265,13 @@ classDiagram
 
 Invariants, whatever the strategy:
 
-1. The identifier matches `rules.id_pattern` (default: `RULE-[A-Z0-9_]+`).
+1. The identifier follows the grammar in `GLOSSARY.md`, whatever the prefix. There is no `id_pattern` setting.
 2. It belongs neither to `rules[*].id` nor to `retired`.
 3. For a sequential prefix, `sequences[prefix]` never decreases.
 
 ### 5.3 Rule set validation — **Composite** pattern
 
-Leaf validators and groups share the same interface. The check engine (04) reuses this composite as its "source integrity" family.
+Leaf validators and groups share the same interface. The composite below is a target: in the MVP the checks on the Source are plain functions of `rulelink-check` (04, section 5).
 
 ```mermaid
 classDiagram
@@ -306,7 +306,7 @@ classDiagram
 | -------------------------- | ---------------------------------------------------------------------------- | ------------- | ------- |
 | `SchemaValidator`          | `RL100` invalid schema                                                       | Error         | MVP     |
 | `DuplicateIdValidator`     | `RL003` duplicate identifier (brief)                                         | Error         | MVP     |
-| `IdPatternValidator`       | `RL101` identifier outside the pattern                                       | Error         | MVP     |
+| `IdPatternValidator`       | `RL101` identifier outside the grammar                                       | Error         | MVP     |
 | `RetiredReuseValidator`    | `RL102` retired identifier reused                                            | Error         | MVP     |
 | `UnknownRelatedValidator`  | `RL103` unknown related rule                                                 | Warning       | MVP     |
 | `SupersessionValidator`    | `RL104` supersession to an unknown or obsolete rule, or in a cycle           | Warning       | V1      |
@@ -430,10 +430,9 @@ The `plan_*` methods change nothing: they return a `ChangeSet`. Application-laye
 | `rulelink rules edit <ID>`               | same fields as `add`, `--keep-validated`, `--dry-run`                                                                                                                                            | Edits; may revert to `proposed` (V1)                                                                                                              | MVP                               |
 | `rulelink rules approve <ID>...`         | `--all-proposed`, `--dry-run`                                                                                                                                                                    | `proposed` → `validated`                                                                                                                          | MVP                               |
 | `rulelink rules obsolete <ID>`           | `--superseded-by <ID>`, `--dry-run`                                                                                                                                                              | `validated` → `obsolete`                                                                                                                          | MVP                               |
-| `rulelink rules format`                  | `--check`                                                                                                                                                                                        | Rewrites the source in canonical form; with `--check`, exits 1 if it is not canonical                                                             | MVP                               |
+| `rulelink rules format`                  | —                                                                                                                                                                                                | Rewrites the source in canonical form; `check` reports one that is not (`RL106`)                                                           | MVP                               |
 | `rulelink rules reject <ID>...`          | `--reason <TXT>`, `--dry-run`                                                                                                                                                                    | `proposed` → `rejected`: the rule stays in the source, its ID is retired, a later import of the same candidate is reported as previously rejected | MVP                               |
 | `rulelink rules next-id`                 | `--count <N>`, `--hint <CODE>`                                                                                                                                                                   | Shows the next IDs, without reserving them                                                                                                        | MVP                               |
-| `rulelink rules lint`                    | `--format`                                                                                                                                                                                       | Runs only the validators from section 5.3                                                                                                         | MVP                               |
 | `rulelink labels list`                   | `--format`                                                                                                                                                                                       | Labels in use, with their rule count                                                                                                              | V1                                |
 | `rulelink labels add <ID> <LABEL>...`    | `--dry-run`                                                                                                                                                                                      | Adds labels                                                                                                                                       | V1                                |
 | `rulelink labels remove <ID> <LABEL>...` | `--dry-run`                                                                                                                                                                                      | Removes labels                                                                                                                                    | V1                                |
@@ -473,7 +472,7 @@ flowchart LR
     REG -->|"ChangeSet"| SRC
     IMP["05 Import"] -->|"plan_add, reconciliation"| REG
     CHK["04 Checks"] -->|"validate, statuses"| REG
-    LNK["03 Linking"] -->|"id_pattern"| REG
+    LNK["03 Linking"] -->|"Identifier grammar"| REG
     PUB["06 Publishing"] -->|"query, grouping"| REG
     AG["07 Agents / context"] -->|"query"| REG
     LSP["08 LSP"] -->|"get, query"| REG

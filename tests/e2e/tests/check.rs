@@ -23,6 +23,8 @@ fn project(rules: &[String], retired: &[&str]) -> Repo {
             rules.join(",")
         ),
     );
+    // Otherwise every report would also hold RL106.
+    assert_eq!(repo.run(&["rules", "format"]).code, 0);
     repo
 }
 
@@ -194,10 +196,11 @@ fn a_line_break_in_the_rules_file_cannot_forge_a_report_line() {
     cite(&repo, "a.rs", "RULE-001");
     assert_report(
         &repo.run(&["check"]),
-        0,
+        1,
         &[
-            "warning RL002: RULE-001 is obsolete, superseded by X\\n0 errors (a.rs:1)",
-            "0 errors, 1 warning",
+            "The code is not checked until the errors in the rules file are fixed.",
+            "error RL101: `X\\n0 errors`, in `superseded_by` of RULE-001, is not a valid Identifier (rules/rules.json)",
+            "1 error, 0 warnings",
         ],
     );
 }

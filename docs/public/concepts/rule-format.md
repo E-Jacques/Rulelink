@@ -34,4 +34,6 @@ A Rule is `proposed` until a human reviews it, then `validated`, or `rejected`. 
 
 ## Source file
 
-Rules live in one JSON file, the Source, always written in a canonical, line-oriented layout so that independent edits touch different lines. `rulelink rules format` restores that layout, for instance after a Git merge conflict.
+Rules live in one JSON file, the Source, always written in a canonical, line-oriented layout so that independent edits touch different lines. `rulelink rules format` restores that layout, for instance after a Git merge conflict. In that layout, lines end with LF and the file ends with a newline.
+
+[`rulelink check`](../cli/check.md) reports a file that is not in this layout, and one that is malformed or inconsistent: see [Findings about the rules file](findings.md#findings-about-the-rules-file).

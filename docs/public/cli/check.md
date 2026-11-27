@@ -1,12 +1,12 @@
 ---
 title: rulelink check
-description: Report the Findings about the links between your Rules and your code.
+description: Report the Findings about your rules file and the links between your Rules and your code.
 since: 0.1.0
 ---
 
 # rulelink check
 
-Compares your Rules with the Annotations of the whole project and reports Findings. Run it from the project root, on your machine or in CI. It verifies the link between a Rule and the code, not that the code is correct. What each Finding means, and how to change its level, is described in [Findings](../concepts/findings.md).
+Checks that the rules file is well formed and consistent, then compares your Rules with the Annotations of the whole project, and reports Findings. Run it from the project root, on your machine or in CI. It verifies the link between a Rule and the code, not that the code is correct. What each Finding means, and how to change its level, is described in [Findings](../concepts/findings.md).
 
 ## Example
 
@@ -24,13 +24,25 @@ warning RL004: RULE-005 is validated but no code cites it (rules/rules.json)
 check verifies the link between a Rule and the code, not that the code is correct.
 ```
 
-Errors come first, then Findings are ordered by code, Identifier, file and line. The location is the `file:line` of the Annotation. A Finding about a Rule that no code cites names the rules file.
+Errors come first, then Findings are ordered by code, Identifier, file and line, those with no Identifier first. The location is the `file:line` of the Annotation. A Finding about a Rule that no code cites, or about the rules file, names the rules file, with a line when one is known.
 
 While the rules file has no Rules, the first line says so and the code is still scanned. An Annotation citing an unknown Identifier (`RL001`) is then a warning by default:
 
 ```text
 The rules file has no Rules yet; the code is still scanned.
 0 errors, 0 warnings
+check verifies the link between a Rule and the code, not that the code is correct.
+```
+
+## Errors in the rules file
+
+Some [errors in the rules file](../concepts/findings.md#errors-in-the-rules-file-stop-the-code-checks), such as two Rules with the same Identifier after a bad merge, stop the code checks. The first line then says so, and only the Findings about the rules file follow:
+
+```text
+The code is not checked until the errors in the rules file are fixed.
+error RL003: RULE-004 is the Identifier of 2 Rules (rules/rules.json)
+warning RL106: the rules file is not in Canonical form: run `rulelink rules format` (rules/rules.json)
+1 error, 1 warning
 check verifies the link between a Rule and the code, not that the code is correct.
 ```
 
@@ -91,12 +103,12 @@ For the project of the first example, it prints:
 | `findings[].severity`  | `error` or `warning`. No other value is added within `v1`.                             |
 | `findings[].message`   | One sentence saying what is wrong.                                                     |
 | `findings[].rule`      | The Identifier the Finding is about. Optional: left out if there is none.              |
-| `findings[].file`      | The file of the Annotation, or the rules file for a Rule that no code cites. Optional. |
-| `findings[].line`      | The line of the Annotation, from 1. Optional: left out when no line is at fault.       |
+| `findings[].file`      | The file of the Annotation, otherwise the rules file. Optional.                        |
+| `findings[].line`      | The line at fault in `file`, from 1. Optional: left out when no line is known.         |
 | `totals.errors`        | How many Findings are errors.                                                          |
 | `totals.warnings`      | How many Findings are warnings.                                                        |
 
-A field that does not apply is left out, never `null`. Paths start at the project root and use `/` on every system. A Finding turned `off` is neither listed nor counted. Today every Finding has a `rule` and a `file`, but both are optional so that later Findings can do without.
+A field that does not apply is left out, never `null`. Paths start at the project root and use `/` on every system. A Finding turned `off` is neither listed nor counted. Some Findings about the rules file have no `rule`, such as `RL100` and `RL106`. Today every Finding has a `file`.
 
 The report is described by a [JSON Schema](https://github.com/E-Jacques/Rulelink/blob/main/schemas/check-report.schema.json). Later versions of Rulelink may add Finding codes and fields without changing `v1`: ignore the fields you do not know, and rely on `severity` and `message` for a code you do not know. Removing, renaming or changing the type of a field gives a new version.
 
@@ -112,13 +124,13 @@ Warnings about `rulelink.toml` are not Findings: they stay on the error output. 
 
 Both formats give the same exit codes.
 
-| code | meaning                                                  |
-| ---- | -------------------------------------------------------- |
-| `0`  | No error Finding. There may be warnings.                 |
-| `1`  | At least one error Finding.                              |
-| `2`  | A value or the configuration is invalid. Nothing ran.    |
-| `3`  | The rules file is missing, unreadable or invalid.        |
-| `10` | Unexpected internal error.                               |
+| code | meaning                                                                                   |
+| ---- | ----------------------------------------------------------------------------------------- |
+| `0`  | No error Finding. There may be warnings.                                                  |
+| `1`  | At least one error Finding, in the code or in the rules file.                             |
+| `2`  | A value or the configuration is invalid. Nothing ran.                                     |
+| `3`  | The rules file is missing or unreadable, is not valid JSON or has an unsupported `format`. |
+| `10` | Unexpected internal error.                                                                |
 
 ## See also
 

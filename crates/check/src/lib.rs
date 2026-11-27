@@ -1,28 +1,62 @@
-//! Checks: the Findings about the links between Rules and code.
+//! Checks: the Findings about the Source, and about the links between Rules and code.
 //!
-//! Pure: [`check`] reads a [`RuleSet`] and a [`LinkIndex`] and does no I/O. It verifies that a
+//! Pure: [`check`] reads a [`Source`] and a [`LinkIndex`] and does no I/O. It verifies that a
 //! link exists, not that the code is correct.
 
 mod error;
 mod finding;
 mod level;
+mod links;
 mod report;
+mod source;
 
-use rulelink_link::{LinkIndex, Location};
-use rulelink_model::{Rule, RuleId, RuleSet, RuleStatus};
+use std::cmp::Ordering;
 
-pub use error::{UnknownFinding, UnknownLevel};
-pub use finding::{Code, Finding, Problem};
+use rulelink_link::LinkIndex;
+use rulelink_model::{RuleId, RuleSet};
+
+pub use error::{FixedLevel, UnknownFinding, UnknownLevel};
+pub use finding::{Code, Finding, IdentifierAt, Place, Problem};
 pub use level::{Level, Levels, Severity};
 pub use report::CheckReportV1;
+
+/// The Source as it was read.
+#[derive(Debug, Clone, Copy)]
+pub enum Source<'a> {
+    /// A Source that could be read.
+    Rules {
+        /// Its content.
+        rules: &'a RuleSet,
+        /// The file `rules` was read from, as written.
+        text: &'a str,
+    },
+    /// A file that is JSON, but not of the shape of a Source.
+    WrongShape {
+        /// What does not fit.
+        detail: &'a str,
+        /// The line at fault, from 1, when it is known.
+        line: Option<u32>,
+    },
+}
+
+/// How far [`check`] could compare the Rules with the code.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum CodeCheck {
+    /// The code was checked.
+    Run,
+    /// The code was checked, but the Source has no Rules yet.
+    RunWithoutRules,
+    /// The code was not checked: the Source has errors.
+    Stopped,
+}
 
 /// The result of [`check`].
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct Report {
     /// Errors first, then by code, Identifier, path and line.
     pub findings: Vec<Finding>,
-    /// Whether the Source has no Rules yet.
-    pub no_rules: bool,
+    /// Whether the code was compared with the Rules.
+    pub code_check: CodeCheck,
 }
 
 impl Report {
@@ -36,107 +70,136 @@ impl Report {
     }
 }
 
-/// Compares every Rule of `rules` with every Annotation of `links`.
+/// Checks the Source, then compares every Rule with every Annotation of `links`.
 ///
-/// There is one Finding per location that cites an Identifier wrongly, and one per
-/// `validated` Rule that nothing cites.
+/// An error in the Source stops there: Rules that cannot be trusted are not compared with the
+/// code. Otherwise there is one Finding per location that cites an Identifier wrongly, and
+/// one per `validated` Rule that nothing cites.
 ///
 /// ```
-/// use rulelink_check::{Code, Levels, check};
+/// use rulelink_check::{Code, Levels, Source, check};
 /// use rulelink_link::LinkIndex;
 /// use rulelink_model::RuleSet;
 ///
+/// let rules = RuleSet::empty();
+/// let text = rules.to_canonical();
 /// let mut links = LinkIndex::new();
 /// links.add_file("src/billing.rs", "// @rule RULE-099\n");
 ///
-/// let report = check(&RuleSet::empty(), &links, &Levels::default());
+/// let source = Source::Rules { rules: &rules, text: &text };
+/// let report = check(source, &links, &Levels::default());
 ///
 /// assert_eq!(report.findings[0].problem.code(), Code::UnknownReference);
 /// assert_eq!(report.findings[0].message(), "RULE-099 is not a Rule of this project");
 /// ```
 #[must_use]
-pub fn check(rules: &RuleSet, links: &LinkIndex, levels: &Levels) -> Report {
-    let no_rules = rules.rules.is_empty();
-    let mut findings: Vec<Finding> = citations(rules, links)
-        .chain(orphans(rules, links))
-        .filter_map(|(rule, problem, location)| {
-            let code = problem.code();
+pub fn check(source: Source<'_>, links: &LinkIndex, levels: &Levels) -> Report {
+    let (mut raw, rules) = match source {
+        Source::Rules { rules, text } => (source::findings(rules, text), Some(rules)),
+        Source::WrongShape { detail, line } => (vec![Raw::wrong_shape(detail, line)], None),
+    };
+    let trusted = rules.filter(|_| !raw.iter().any(|r| r.problem.code().stops_code_check()));
+    let code_check = match trusted {
+        None => CodeCheck::Stopped,
+        Some(rules) if rules.rules.is_empty() => CodeCheck::RunWithoutRules,
+        Some(_) => CodeCheck::Run,
+    };
+    if let Some(rules) = trusted {
+        raw.extend(links::findings(rules, links));
+    }
+    Report {
+        findings: weighed(raw, levels, code_check),
+        code_check,
+    }
+}
+
+/// The Findings to report, each with its severity, in report order and without repeats.
+fn weighed(raw: Vec<Raw>, levels: &Levels, code_check: CodeCheck) -> Vec<Finding> {
+    let mut findings: Vec<Finding> = raw
+        .into_iter()
+        .filter_map(|raw| {
+            let code = raw.problem.code();
             let level = levels
                 .get(code)
-                .unwrap_or_else(|| default_level(code, no_rules));
-            let severity = level.severity()?;
+                .unwrap_or_else(|| default_level(code, code_check));
             Some(Finding {
-                severity,
-                rule,
-                problem,
-                location,
+                severity: level.severity()?,
+                rule: raw.rule,
+                problem: raw.problem,
+                place: raw.place,
             })
         })
         .collect();
-    findings.sort_by(|a, b| {
-        (a.severity, a.problem.code())
-            .cmp(&(b.severity, b.problem.code()))
-            .then_with(|| a.rule.natural_cmp(&b.rule))
-            // `RULE-5` and `RULE-05` are equal above: without this, their order would follow
-            // the index's hash map and change from run to run.
-            .then_with(|| a.rule.0.cmp(&b.rule.0))
-            .then_with(|| a.location.cmp(&b.location))
-    });
-    Report { findings, no_rules }
+    // Stable: Findings that are equal here keep the order of the Source.
+    findings.sort_by(report_order);
+    findings
 }
 
-/// The level of a Finding the team has not set. `no_rules`: the Source has no Rules yet.
-fn default_level(code: Code, no_rules: bool) -> Level {
+fn report_order(a: &Finding, b: &Finding) -> Ordering {
+    (a.severity, a.problem.code())
+        .cmp(&(b.severity, b.problem.code()))
+        .then_with(|| identifier_order(a.rule.as_ref(), b.rule.as_ref()))
+        .then_with(|| a.place.cmp(&b.place))
+}
+
+/// Findings that name no Identifier come first.
+fn identifier_order(a: Option<&RuleId>, b: Option<&RuleId>) -> Ordering {
+    match (a, b) {
+        (Some(a), Some(b)) => a
+            .natural_cmp(b)
+            // `RULE-5` and `RULE-05` are equal above: without this, their order would follow
+            // the index's hash map and change from run to run.
+            .then_with(|| a.0.cmp(&b.0)),
+        _ => a.is_some().cmp(&b.is_some()),
+    }
+}
+
+/// The level of a Finding the team has not set.
+fn default_level(code: Code, code_check: CodeCheck) -> Level {
     match code {
         // Annotations written before the first Rule must not fail a build.
-        Code::UnknownReference if no_rules => Level::Warning,
-        Code::UnknownReference | Code::RetiredReference => Level::Error,
+        Code::UnknownReference if code_check == CodeCheck::RunWithoutRules => Level::Warning,
+        Code::UnknownReference
+        | Code::RetiredReference
+        | Code::DuplicateId
+        | Code::InvalidShape
+        | Code::InvalidIdentifier
+        | Code::ReusedRetiredId
+        | Code::EmptyField => Level::Error,
         // Citations of a replaced Rule are moved step by step.
-        Code::ObsoleteReference | Code::OrphanRule | Code::UnvalidatedReference => Level::Warning,
+        Code::ObsoleteReference
+        | Code::OrphanRule
+        | Code::UnvalidatedReference
+        // Neither changes which Rule a citation means.
+        | Code::UnknownRelated
+        | Code::NotCanonical => Level::Warning,
     }
 }
 
 /// A Finding before the team's levels apply.
-type Raw = (RuleId, Problem, Option<Location>);
-
-/// What is wrong at each location that cites an Identifier.
-fn citations<'a>(rules: &'a RuleSet, links: &'a LinkIndex) -> impl Iterator<Item = Raw> + 'a {
-    links.cited().flat_map(move |id| {
-        let problem = problem_of_citing(rules, id);
-        links
-            .locations(id)
-            .into_iter()
-            .filter_map(move |at| Some((id.clone(), problem.clone()?, Some(at))))
-    })
+struct Raw {
+    rule: Option<RuleId>,
+    problem: Problem,
+    place: Place,
 }
 
-/// What is wrong with citing `id`, if anything. A Rule in the Source decides by its status;
-/// `retired` only speaks for an Identifier that has no Rule.
-fn problem_of_citing(rules: &RuleSet, id: &RuleId) -> Option<Problem> {
-    let Some(rule) = rules.find(id) else {
-        return Some(if rules.retired.contains(id) {
-            Problem::Retired
-        } else {
-            Problem::Unknown
-        });
-    };
-    match rule.status {
-        RuleStatus::Validated => None,
-        RuleStatus::Proposed => Some(Problem::Unvalidated),
-        RuleStatus::Rejected => Some(Problem::Rejected),
-        RuleStatus::Obsolete => Some(Problem::Obsolete {
-            superseded_by: rule.superseded_by.clone(),
-        }),
+impl Raw {
+    fn in_rules_file(rule: Option<RuleId>, problem: Problem) -> Self {
+        Self {
+            rule,
+            problem,
+            place: Place::RulesFile { line: None },
+        }
     }
-}
 
-/// The `validated` Rules that nothing cites.
-fn orphans<'a>(rules: &'a RuleSet, links: &'a LinkIndex) -> impl Iterator<Item = Raw> + 'a {
-    let uncited =
-        |rule: &&Rule| rule.status == RuleStatus::Validated && links.locations(&rule.id).is_empty();
-    rules
-        .rules
-        .iter()
-        .filter(uncited)
-        .map(|rule| (rule.id.clone(), Problem::Orphan, None))
+    fn wrong_shape(detail: &str, line: Option<u32>) -> Self {
+        let problem = Problem::WrongShape {
+            detail: detail.to_owned(),
+        };
+        Self {
+            rule: None,
+            problem,
+            place: Place::RulesFile { line },
+        }
+    }
 }

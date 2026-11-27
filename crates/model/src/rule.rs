@@ -2,6 +2,14 @@ use std::cmp::Ordering;
 
 use serde::{Deserialize, Serialize};
 
+/// Separates the prefix of an Identifier from its suffix.
+const IDENTIFIER_HYPHEN: char = '-';
+
+/// What an Identifier is made of, after the first letter of its prefix and around its hyphen.
+pub(crate) fn is_identifier_char(c: char) -> bool {
+    c.is_ascii_uppercase() || c.is_ascii_digit() || c == '_'
+}
+
 /// Permanent identifier of a rule (e.g. `RULE-042`).
 #[derive(Debug, Clone, PartialEq, Eq, Hash, Serialize, Deserialize)]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
@@ -20,6 +28,27 @@ impl RuleId {
         } else {
             Ok(Self(trimmed.to_owned()))
         }
+    }
+
+    /// Whether this follows the grammar of an Identifier, whatever prefix a project
+    /// configures: a prefix as [`IdPrefix`](crate::IdPrefix) accepts it, one hyphen, then
+    /// upper-case letters, digits or `_`.
+    ///
+    /// ```
+    /// use rulelink_model::RuleId;
+    ///
+    /// let id = |raw: &str| RuleId(raw.to_owned());
+    /// assert!(id("PRICING_V2-A1").is_well_formed());
+    /// assert!(!id("rule-042").is_well_formed());
+    /// ```
+    #[must_use]
+    pub fn is_well_formed(&self) -> bool {
+        let Some((prefix, suffix)) = self.0.split_once(IDENTIFIER_HYPHEN) else {
+            return false;
+        };
+        crate::IdPrefix::parse(prefix).is_ok()
+            && !suffix.is_empty()
+            && suffix.chars().all(is_identifier_char)
     }
 
     /// The order Identifiers are listed in: digit runs compare by value, so `RULE-2` comes
@@ -192,6 +221,20 @@ fn take_digits(it: &mut std::iter::Peekable<std::str::Chars<'_>>) -> String {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn the_grammar_of_an_identifier() {
+        let well_formed = |raw: &str| RuleId(raw.to_owned()).is_well_formed();
+        for raw in ["RULE-042", "BR-7", "PRICING_V2-A1", "R-_"] {
+            assert!(well_formed(raw), "{raw}");
+        }
+        for raw in [
+            "", "rule-042", "RULE042", "RULE-", "-1", "1RULE-1", "_A-1", "RULE-04a", "A-B-1",
+            " RULE-1", "RULE-1\n", "RÉGLE-1",
+        ] {
+            assert!(!well_formed(raw), "{raw:?}");
+        }
+    }
 
     #[test]
     fn a_status_reads_back_what_it_displays() {

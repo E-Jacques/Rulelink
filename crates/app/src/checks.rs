@@ -2,7 +2,8 @@
 
 use std::path::PathBuf;
 
-use rulelink_check::{CheckReportV1, Report};
+use rulelink_adapter_json::{Inspected, WrongShape};
+use rulelink_check::{CheckReportV1, Report, Source};
 
 use crate::{Error, Workspace};
 
@@ -25,16 +26,26 @@ impl Checked {
 
 /// Reports the Findings of the project. Reads only.
 ///
+/// A Source of the wrong shape is a Finding, not an error.
+///
 /// # Errors
 /// [`Error::Config`] if the exclusion patterns cannot be combined, [`Error::Source`] for a
-/// missing, invalid or unsupported Source, [`Error::Internal`] if a file cannot be read.
+/// Source that is missing, unreadable, not JSON or of an unsupported format,
+/// [`Error::Internal`] if a file cannot be read.
 pub fn run(project: &Workspace) -> Result<Checked, Error> {
-    let (_, rule_set) = crate::rules::read_source(project)?;
     let source_path = project.source_path()?;
+    let inspected = rulelink_adapter_json::inspect_source(&project.root().join(source_path))?;
     let links =
         rulelink_adapter_scan_fs::scan(project.root(), project.scan_exclude()?, source_path)?;
+    let source = match &inspected {
+        Inspected::Rules { rules, text } => Source::Rules { rules, text },
+        Inspected::WrongShape(WrongShape { detail, line }) => Source::WrongShape {
+            detail,
+            line: *line,
+        },
+    };
     Ok(Checked {
-        report: rulelink_check::check(&rule_set, &links, project.check_levels()?),
+        report: rulelink_check::check(source, &links, project.check_levels()?),
         source_path: source_path.to_path_buf(),
     })
 }

@@ -9,7 +9,7 @@ pub enum Error {
     /// The Source file does not exist.
     #[error("source file {} not found", .0.display())]
     NotFound(PathBuf),
-    /// The Source file is not valid JSON of the expected shape.
+    /// The Source file is not JSON text.
     #[error("source file {} is invalid: {message}", .path.display())]
     Invalid {
         /// The Source file.
@@ -17,13 +17,21 @@ pub enum Error {
         /// Parser message, with line and column when known.
         message: String,
     },
+    /// The Source file is JSON, but not of the shape of a Source.
+    #[error("source file {} is invalid: {}", .path.display(), .shape.detail)]
+    WrongShape {
+        /// The Source file.
+        path: PathBuf,
+        /// What does not fit.
+        shape: crate::WrongShape,
+    },
     /// The Source file uses a `format` this version cannot handle.
     #[error("source file {} has unsupported format {found}, expected {expected}", .path.display())]
     UnsupportedFormat {
         /// The Source file.
         path: PathBuf,
         /// The `format` found in the file.
-        found: u32,
+        found: u64,
         /// The `format` this version handles.
         expected: u32,
     },

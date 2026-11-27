@@ -2,15 +2,17 @@
 
 mod error;
 mod settings;
+mod shape;
 
 use std::fs::{self, OpenOptions};
 use std::io::Write;
 use std::path::{Path, PathBuf};
 
-use rulelink_model::{FORMAT_VERSION, RuleSet};
+use rulelink_model::RuleSet;
 
 pub use error::Error;
 pub use settings::{JsonConfig, SourcePath};
+pub use shape::WrongShape;
 
 /// Creates a Source file holding `rules` in Canonical form.
 ///
@@ -37,21 +39,42 @@ pub fn create_source(path: &Path, rules: &RuleSet) -> Result<(), Error> {
 /// Reads a Source file.
 ///
 /// # Errors
-/// [`Error::NotFound`], [`Error::Invalid`] for malformed content, [`Error::UnsupportedFormat`],
-/// [`Error::Io`] for other I/O failures.
+/// [`Error::NotFound`], [`Error::Invalid`] if it is not JSON, [`Error::WrongShape`] if it is
+/// JSON but not a Source, [`Error::UnsupportedFormat`], [`Error::Unreadable`].
 pub fn read_source(path: &Path) -> Result<RuleSet, Error> {
     let text = read_text(path)?;
-    parse_source(path, &text)
+    shape::parse(path, &text)
+}
+
+/// What a Source file holds, for a caller that reports a wrong shape instead of failing.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub enum Inspected {
+    /// A Source.
+    Rules {
+        /// Its content.
+        rules: RuleSet,
+        /// The file as written.
+        text: String,
+    },
+    /// JSON that is not a Source.
+    WrongShape(WrongShape),
+}
+
+/// Reads a Source file, keeping its text and accepting a wrong shape as a result.
+///
+/// # Errors
+/// As [`read_source`], except [`Error::WrongShape`].
+pub fn inspect_source(path: &Path) -> Result<Inspected, Error> {
+    let text = read_text(path)?;
+    match shape::parse(path, &text) {
+        Ok(rules) => Ok(Inspected::Rules { rules, text }),
+        Err(Error::WrongShape { shape, .. }) => Ok(Inspected::WrongShape(shape)),
+        Err(other) => Err(other),
+    }
 }
 
 fn read_text(path: &Path) -> Result<String, Error> {
     fs::read_to_string(path).map_err(|e| Error::from_read(path, &e))
-}
-
-/// Parses the content of the Source file at `path`; `path` only names the file in errors.
-fn parse_source(path: &Path, text: &str) -> Result<RuleSet, Error> {
-    check_format(path, text)?;
-    serde_json::from_str(text).map_err(|e| Error::invalid(path, e))
 }
 
 /// What [`rewrite_source`] did to the file.
@@ -71,31 +94,12 @@ pub enum Rewrite {
 /// As [`read_source`], and [`Error::Io`] if the file cannot be replaced.
 pub fn rewrite_source(path: &Path) -> Result<Rewrite, Error> {
     let text = read_text(path)?;
-    let rules = parse_source(path, &text)?;
+    let rules = shape::parse(path, &text)?;
     if rules.is_canonical(&text) {
         return Ok(Rewrite::Unchanged);
     }
     write_source(path, &rules)?;
     Ok(Rewrite::Rewritten)
-}
-
-/// Reads `format` alone first, so a file of another format is reported as such rather than as
-/// a shape error.
-fn check_format(path: &Path, text: &str) -> Result<(), Error> {
-    #[derive(serde::Deserialize)]
-    struct Probe {
-        format: u32,
-    }
-    let probe: Probe = serde_json::from_str(text).map_err(|e| Error::invalid(path, e))?;
-    if probe.format == FORMAT_VERSION {
-        Ok(())
-    } else {
-        Err(Error::UnsupportedFormat {
-            path: path.to_owned(),
-            found: probe.format,
-            expected: FORMAT_VERSION,
-        })
-    }
 }
 
 /// Replaces the Source file with `rules` in Canonical form.
@@ -218,7 +222,21 @@ mod tests {
         fs::write(path(&dir), "{\"format\": 1, \"mine\": true}").unwrap_or_else(|e| panic!("{e}"));
         assert!(matches!(
             read_source(&path(&dir)),
-            Err(Error::Invalid { .. })
+            Err(Error::WrongShape { .. })
+        ));
+        assert!(matches!(
+            inspect_source(&path(&dir)),
+            Ok(Inspected::WrongShape(WrongShape { line: Some(1), .. }))
+        ));
+    }
+
+    #[test]
+    fn a_format_too_large_for_this_tool_is_unsupported_not_misshapen() {
+        let dir = tempfile::tempdir().unwrap_or_else(|e| panic!("{e}"));
+        fs::write(path(&dir), "{\"format\": 4294967297}").unwrap_or_else(|e| panic!("{e}"));
+        assert!(matches!(
+            inspect_source(&path(&dir)),
+            Err(Error::UnsupportedFormat { .. })
         ));
     }
 

@@ -5,9 +5,9 @@ description: Learn what each Finding of rulelink check means and how to change i
 
 # Findings
 
-A Finding is one result of [`rulelink check`](../cli/check.md), about a Rule or an Annotation. Each Finding has a code, a name and a level. An `error` makes `check` fail. A `warning` is reported and nothing more.
+A Finding is one result of [`rulelink check`](../cli/check.md), about a Rule, an Annotation or the rules file. Each Finding has a code, a name and a level. An `error` makes `check` fail. A `warning` is reported and nothing more.
 
-## The Findings
+## Findings about your code
 
 | Code    | Name                    | What it means                                                  | Default level |
 | ------- | ----------------------- | -------------------------------------------------------------- | ------------- |
@@ -20,6 +20,35 @@ A Finding is one result of [`rulelink check`](../cli/check.md), about a Rule or 
 You get one Finding per line of code that cites the Identifier, and one `RL004` per Rule. When an `obsolete` Rule records its replacement, `RL002` names it. `RL002` is a `warning` so that you can move citations to the new Rule step by step. To make `check` fail on them, set `obsolete-reference = "error"`.
 
 An Identifier listed as retired whose Rule is no longer in the Source gives `RL009`, not `RL001`.
+
+## Findings about the rules file
+
+`check` reads the rules file before it looks at your code. A merge or an edit by hand can leave it malformed or inconsistent:
+
+| Code    | Name                 | What it means                                                           | Default level | How to fix it                                          |
+| ------- | -------------------- | ----------------------------------------------------------------------- | ------------- | ------------------------------------------------------ |
+| `RL003` | `duplicate-id`       | Two or more Rules share an Identifier.                                  | `error`       | Give the newer Rule a new one, and fix its citations.  |
+| `RL100` | `invalid-shape`      | The file is valid JSON of the wrong shape.                              | `error`       | Fix the key or value the message names.                |
+| `RL101` | `invalid-identifier` | An Identifier does not follow [the grammar](rule-format.md#identifier). | `error`       | Correct the Identifier.                                |
+| `RL102` | `reused-retired-id`  | A `proposed` or `validated` Rule has an Identifier listed as retired.   | `error`       | Give the Rule an Identifier never used before.         |
+| `RL103` | `unknown-related`    | `related` names a Rule that is not in the file.                         | `warning`     | Correct the entry or remove it.                        |
+| `RL105` | `empty-field`        | A required field is empty or holds only spaces.                         | `error`       | Fill the field in.                                     |
+| `RL106` | `not-canonical`      | The file is not in [Canonical form](rule-format.md#source-file).        | `warning`     | Run [`rulelink rules format`](../cli/rules-format.md). |
+
+- **Wrong shape** means an unknown or repeated key (including a prefix given twice in `sequences`), a missing field, a value of the wrong type or an unknown status. `check` reports one such problem, with its line when it is known, and no other Finding. Fix it and run `check` again to see the rest.
+- **Required fields** are `id`, `title`, `statement` and, when a Rule has an `origin`, `origin.kind`.
+- **Identifiers** are checked wherever the file holds one: `id`, `retired`, `related` and `superseded_by`. The grammar applies whatever [prefix you configured](configuration.md). A mistyped `related` entry gives both `RL101` and `RL103`; a blank one gives only `RL101`. In JSON, the `rule` of an `RL101` is the Rule that holds the Identifier, and an entry of `retired` has none.
+- You get one `RL003` per duplicated Identifier. An entry written twice in `retired`, or in the `related` of one Rule, is reported once.
+
+`check` cannot tell that you deleted a Rule and wrote a new one by hand under the same Identifier, unless the Identifier is listed as retired.
+
+### Errors in the rules file stop the code checks
+
+While the rules file has an `RL003`, `RL100`, `RL101`, `RL102` or `RL105`, `check` reports only the Findings about the rules file: it cannot trust the Rules it would compare with your code. `RL103` and `RL106` do not stop the code checks, even if you raise them to `error`.
+
+### A file that cannot be read
+
+A rules file that is missing or cannot be read, that is not valid JSON (for instance while Git conflict markers are still in it) or that has an unsupported `format` is not a Finding. No report is printed and `check` exits with code `3`.
 
 ## While you have no Rules
 
@@ -35,6 +64,6 @@ orphan-rule = "error"
 unvalidated-reference = "off"
 ```
 
-A level is `error`, `warning` or `off`. `off` hides the Finding. A name or a level that is not listed here is a configuration error. So is an [unknown section or key](configuration.md#unknown-sections-and-keys), such as another key under `[check]` or a misspelled `[check]` itself. There is no other way to set a level: not per folder, and not on the command line.
+A level is `error`, `warning` or `off`. `off` hides the Finding. `duplicate-id`, `invalid-shape`, `invalid-identifier`, `reused-retired-id` and `empty-field` are always errors: setting one to `warning` or `off` is a configuration error. You can raise `unknown-related` and `not-canonical` to `error`, or turn them `off`. A name or a level that is not listed here is a configuration error. So is an [unknown section or key](configuration.md#unknown-sections-and-keys), such as another key under `[check]` or a misspelled `[check]` itself. There is no other way to set a level: not per folder, and not on the command line.
 
 To keep some files out of the check, for example documentation that shows Annotations, see [which files are scanned](specify-rules-in-code.md#which-files-are-scanned).

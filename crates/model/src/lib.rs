@@ -7,6 +7,7 @@ mod lifecycle;
 mod rule;
 mod ruleset;
 mod search;
+mod sequences;
 
 pub use draft::{RuleDraft, TITLE_MAX_CHARS};
 pub use error::{

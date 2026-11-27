@@ -43,7 +43,7 @@ This sentence appears in the command help, at the end of every text report and i
 - **No network call** during `check`. A remote source goes through the snapshot (02, ADR-008).
 - **Determinism**: findings sorted by (descending severity, code, rule identifier, path, line). No timestamp in the report, except with `--format json --with-timing`.
 - The exit code depends only on error-level findings after the policy and baseline are applied.
-- The engine is synchronous and stateless: `check(&RuleSet, &LinkIndex, &Levels) -> Report`. The same code runs in the CLI and the LSP server.
+- The engine is synchronous and stateless: `check(Source, &LinkIndex, &Levels) -> Report`. The same code runs in the CLI and the LSP server.
 - `check` always covers the whole project: there is no option that narrows it to changed files ([ADR-0001](../adr/0001-mvp-scope-cut.md)).
 
 ## 4. Check catalogue
@@ -59,15 +59,25 @@ This sentence appears in the command help, at the end of every text report and i
 | `RL007`         | `untested-rule`         | `validated` rule cited in the implementation but in no test                                                                         | Off           | V1       |
 | `RL008`         | `wrong-application`     | Rule cited in a path mapped to an application not listed in the rule's `applications`                                               | Off           | V1       |
 | `RL009`         | `retired-reference`     | The code cites a `rejected` rule, or an identifier retired without a rule in the source (an `obsolete` rule is reported by `RL002`) | Error         | MVP      |
-| `RL100`–`RL106` | source integrity        | See 01, section 5.3                                                                                                                 | As in 01      | MVP / V1 |
+| `RL100`         | `invalid-shape`         | The Source is JSON of the wrong shape (unknown key, missing field, wrong type, unknown status)                                      | Error         | MVP      |
+| `RL101`         | `invalid-identifier`    | An `id`, `retired`, `related` or `superseded_by` entry does not follow the Identifier grammar, whatever the configured prefix       | Error         | MVP      |
+| `RL102`         | `reused-retired-id`     | A `proposed` or `validated` rule has an identifier listed in `retired`                                                              | Error         | MVP      |
+| `RL103`         | `unknown-related`       | `related` names an unknown rule                                                                                                     | Warning       | MVP      |
+| `RL104`         |                         | Supersession to an unknown or obsolete rule, or in a cycle                                                                          | Warning       | V1       |
+| `RL105`         | `empty-field`           | A required field (`id`, `title`, `statement`, `origin.kind`) is empty                                                               | Error         | MVP      |
+| `RL106`         | `not-canonical`         | The Source is not in Canonical form                                                                                                 | Warning       | MVP      |
 
-While the Source has no Rules (as right after `init`), `check` says so and still scans the code. `RL001` is then a warning by default; a level set in `[check.levels]` applies as set. A missing or unreadable Source file still fails with exit code 3.
+Known limits: `RL100` reports one problem only, and has no line when an array or a map stands where an object or a status belongs. A rule deleted and added again by hand under the same identifier, not listed in `retired`, is not detected.
+
+`RL003`, `RL100`, `RL101`, `RL102` and `RL105` are errors in the Source: their level cannot be lowered or turned off, and while one stands `check` does not compare the Rules with the code. `RL103` and `RL106` can be raised or turned off, and never stop the code checks.
+
+While the Source has no Rules (as right after `init`), `check` says so and still scans the code. `RL001` is then a warning by default; a level set in `[check.levels]` applies as set. A Source that is missing, unreadable, not JSON or of an unsupported `format` is not a Finding: `check` fails with exit code 3.
 
 `RL007` reflects a sentence from the brief: "a test remains the best check of a rule". Rulelink does not replace tests; it can flag rules that no test cites.
 
 ## 5. Detailed design
 
-The MVP engine is one function, `check`, that makes two passes: one over the cited Identifiers, one over the `validated` Rules. The patterns of 5.1 and 5.2 are the target for when more checks arrive (source integrity, V1 checks); none of them exists yet.
+The MVP engine is one function, `check`. It first runs the checks on the Source (one function per check, in `rulelink-check`), then, unless one of its errors stands, two passes over the links: one over the cited Identifiers, one over the `validated` Rules. The patterns of 5.1 and 5.2 are the target for when the V1 checks arrive; none of them exists yet.
 
 ### 5.1 Checks — **Strategy** inside a **Composite**
 
@@ -154,7 +164,7 @@ orphan-rule = "error"          # the team tightens
 unvalidated-reference = "off"
 ```
 
-Levels: `error`, `warning`, `off`. There is no `info` level, no per-path override and no command-line option. An unknown name or level, or any other key under `[check]`, is a configuration error.
+Levels: `error`, `warning`, `off`. There is no `info` level, no per-path override and no command-line option. An unknown name or level, any other key under `[check]`, or lowering an error in the Source (section 4) is a configuration error.
 
 ### 5.4 Baseline (V1) — **Memento** pattern
 
@@ -224,10 +234,10 @@ sequenceDiagram
     participant ENG as rulelink-check
 
     CLI->>APP: run(root)
-    APP->>SRC: config, then read the Source
+    APP->>SRC: config, then inspect the Source (Rules and text, or a wrong shape)
     APP->>LNK: scan(root, scan.exclude)
     LNK-->>APP: LinkIndex
-    APP->>ENG: check(rules, links, levels)
+    APP->>ENG: check(source, links, levels)
     ENG-->>APP: Report (sorted findings)
     APP-->>CLI: Report and the Source path
     CLI-->>CLI: print, exit 0 or 1
@@ -238,14 +248,20 @@ sequenceDiagram
 ### 6.1 `rulelink-check` crate
 
 ```rust
-pub fn check(rules: &RuleSet, links: &LinkIndex, levels: &Levels) -> Report;
+pub fn check(source: Source<'_>, links: &LinkIndex, levels: &Levels) -> Report;
 
-pub struct Report { pub findings: Vec<Finding>, pub no_rules: bool }
-pub struct Finding { pub severity: Severity, pub rule: RuleId, pub problem: Problem,
-                     pub location: Option<Location> }   // None: a Rule no code cites
-pub enum Code { UnknownReference, ObsoleteReference, OrphanRule,
-                UnvalidatedReference, RetiredReference }
+pub enum Source<'a> { Rules { rules: &'a RuleSet, text: &'a str },
+                      WrongShape { detail: &'a str, line: Option<u32> } }
+pub struct Report { pub findings: Vec<Finding>, pub code_check: CodeCheck }
+pub enum CodeCheck { Run, RunWithoutRules, Stopped }
+pub struct Finding { pub severity: Severity, pub rule: Option<RuleId>, pub problem: Problem,
+                     pub place: Place }
+pub enum Place { Code(Location), RulesFile { line: Option<u32> } }
+pub enum Code { UnknownReference, ObsoleteReference, DuplicateId, OrphanRule,
+                UnvalidatedReference, RetiredReference, InvalidShape, InvalidIdentifier,
+                ReusedRetiredId, UnknownRelated, EmptyField, NotCanonical }
 pub enum Level { Error, Warning, Off }
+impl Levels { pub fn set(&mut self, code: Code, level: Level) -> Result<(), FixedLevel>; }
 ```
 
 ### 6.2 CLI commands

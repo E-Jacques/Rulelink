@@ -41,7 +41,7 @@ struct Cli {
 pub enum Command {
     /// Create `rulelink.toml` and an empty rules file in the current directory.
     Init(InitArgs),
-    /// Report the Findings about the links between Rules and code.
+    /// Report the Findings about the rules file and the links between Rules and code.
     ///
     /// Verifies the link between a Rule and the code, not that the code is correct.
     Check(CheckArgs),

@@ -104,13 +104,10 @@ impl Property for CheckLevels {
             None => {}
             Some(RawValue::Table(entries)) => {
                 for (name, value) in entries.iter().filter(|(name, _)| !is_extension(name)) {
-                    match level(name, value) {
-                        Ok((code, level)) => levels.set(code, level),
-                        Err(why) => {
-                            let key = format!("{}.{}", Self::KEY, name.escape_debug());
-                            let message = format!("`{key}`: {why}");
-                            problems.push(Problem::new(key, message));
-                        }
+                    if let Err(why) = set_level(&mut levels, name, value) {
+                        let key = format!("{}.{}", Self::KEY, name.escape_debug());
+                        let message = format!("`{key}`: {why}");
+                        problems.push(Problem::new(key, message));
                     }
                 }
             }
@@ -130,8 +127,8 @@ impl Property for CheckLevels {
     }
 }
 
-/// One line of `[check.levels]`, or why it is refused.
-fn level(name: &str, value: &RawValue) -> Result<(Code, Level), String> {
+/// Applies one line of `[check.levels]` to `levels`, or says why it is refused.
+fn set_level(levels: &mut Levels, name: &str, value: &RawValue) -> Result<(), String> {
     let code: Code = name
         .parse()
         .map_err(|e: rulelink_check::UnknownFinding| e.to_string())?;
@@ -144,7 +141,9 @@ fn level(name: &str, value: &RawValue) -> Result<(Code, Level), String> {
     let level: Level = text
         .parse()
         .map_err(|e: rulelink_check::UnknownLevel| e.to_string())?;
-    Ok((code, level))
+    levels
+        .set(code, level)
+        .map_err(|e: rulelink_check::FixedLevel| e.to_string())
 }
 
 fn refused(key: &str, message: String) -> ParseError {

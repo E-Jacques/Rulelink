@@ -16,6 +16,8 @@ fn project(rules: &[Value], retired: &[&str]) -> Repo {
     assert_eq!(repo.run(&["init"]).code, 0);
     let source = json!({"format": 1, "retired": retired, "rules": rules});
     repo.write("rules/rules.json", &source.to_string());
+    // Otherwise every report would also hold RL106.
+    assert_eq!(repo.run(&["rules", "format"]).code, 0);
     repo
 }
 

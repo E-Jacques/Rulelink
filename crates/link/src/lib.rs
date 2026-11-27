@@ -27,9 +27,6 @@ const IDENTIFIER_SEPARATOR: char = ',';
 /// Punctuation that may follow an Identifier in prose and is not part of it.
 const TRAILING_PUNCTUATION: [char; 7] = ['.', ':', ';', ')', ']', '"', '\''];
 
-/// Separates the prefix of an Identifier from its suffix.
-const IDENTIFIER_HYPHEN: char = '-';
-
 /// One place that cites a Rule.
 #[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord)]
 pub struct Location {
@@ -84,21 +81,7 @@ fn identifier_list(text: &str) -> impl Iterator<Item = RuleId> + '_ {
     text.split(|c: char| c.is_whitespace() || c == IDENTIFIER_SEPARATOR)
         .filter(|token| !token.is_empty())
         .map(|token| token.trim_end_matches(TRAILING_PUNCTUATION))
-        .map_while(|token| is_identifier(token).then(|| RuleId(token.to_owned())))
-}
-
-/// `PREFIX-SUFFIX`: an upper-case prefix like the ones `init` accepts, one hyphen, then
-/// upper-case letters, digits or `_`.
-fn is_identifier(token: &str) -> bool {
-    let Some((prefix, suffix)) = token.split_once(IDENTIFIER_HYPHEN) else {
-        return false;
-    };
-    let mut chars = prefix.chars();
-    let word = |c: char| c.is_ascii_uppercase() || c.is_ascii_digit() || c == '_';
-    chars.next().is_some_and(|c| c.is_ascii_uppercase())
-        && chars.all(word)
-        && !suffix.is_empty()
-        && suffix.chars().all(word)
+        .map_while(|token| Some(RuleId(token.to_owned())).filter(RuleId::is_well_formed))
 }
 
 /// Where each Rule is cited, built file by file.

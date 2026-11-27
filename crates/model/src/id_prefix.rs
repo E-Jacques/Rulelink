@@ -15,7 +15,7 @@ impl IdPrefix {
     pub fn parse(raw: &str) -> Result<Self, InvalidIdPrefix> {
         let mut chars = raw.chars();
         let valid = chars.next().is_some_and(|c| c.is_ascii_uppercase())
-            && chars.all(|c| c.is_ascii_uppercase() || c.is_ascii_digit() || c == '_');
+            && chars.all(crate::rule::is_identifier_char);
         if valid {
             Ok(Self(raw.to_owned()))
         } else {

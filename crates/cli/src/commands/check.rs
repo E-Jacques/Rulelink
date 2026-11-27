@@ -6,13 +6,16 @@ use std::path::Path;
 use clap::{Args, ValueEnum};
 use rulelink_app::checks::Checked;
 use rulelink_app::runtime::Outcome;
-use rulelink_app::{Error, Finding, Severity};
+use rulelink_app::{CodeCheck, Error, Finding, Place, Severity};
 
 use super::open;
 use crate::presenter::Presenter;
 
 /// Said before the Findings while the Source has no Rules.
 const NO_RULES: &str = "The rules file has no Rules yet; the code is still scanned.";
+
+/// Said before the Findings when errors in the rules file stop the code checks.
+const NOT_CHECKED: &str = "The code is not checked until the errors in the rules file are fixed.";
 
 /// The last line of a report: what a check does not prove.
 const PROMISE: &str =
@@ -50,8 +53,10 @@ pub(super) fn run(args: &CheckArgs, out: &mut Presenter<'_>) -> Result<Outcome, 
 /// One line per Finding, the totals and what a check does not prove.
 fn print_human(checked: &Checked, out: &mut Presenter<'_>) -> Result<(), Error> {
     let report = &checked.report;
-    if report.no_rules {
-        out.log(NO_RULES)?;
+    match report.code_check {
+        CodeCheck::Run => {}
+        CodeCheck::RunWithoutRules => out.log(NO_RULES)?,
+        CodeCheck::Stopped => out.log(NOT_CHECKED)?,
     }
     for finding in &report.findings {
         out.log(line(finding, &checked.source_path))?;
@@ -90,10 +95,11 @@ fn escape_controls_in_json(json: &str) -> String {
 
 /// `error RL001: message (file:line)`. A Finding with no Annotation points at the rules file.
 fn line(finding: &Finding, source_path: &Path) -> String {
-    let location = finding.location.as_ref().map_or_else(
-        || source_path.display().to_string(),
-        |at| format!("{}:{}", at.path, at.line),
-    );
+    let location = match &finding.place {
+        Place::Code(at) => format!("{}:{}", at.path, at.line),
+        Place::RulesFile { line: Some(line) } => format!("{}:{line}", source_path.display()),
+        Place::RulesFile { line: None } => source_path.display().to_string(),
+    };
     on_one_line(&format!(
         "{} {}: {} ({location})",
         finding.severity,

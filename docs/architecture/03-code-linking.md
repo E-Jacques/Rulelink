@@ -53,7 +53,7 @@
 annotation := TAG WS id_list ( WS "--" WS note )?
 id_list    := ID ( ( "," WS? | WS ) ID )*
 TAG        := value of scan.tag, default "@rule"
-ID         := matches rules.id_pattern, default "RULE-[A-Z0-9_]+"
+ID         := an Identifier, as defined in GLOSSARY.md, whatever the configured prefix
 note       := rest of the line, free text ignored by check
 ```
 
@@ -112,7 +112,6 @@ The grammar is small but public. It is therefore modelled as a testable interpre
 classDiagram
     class AnnotationParser {
         -tag: String
-        -id_pattern: Regex
         +parse(comment_text, base_pos) Vec~ParseResult~
     }
     class ParseResult {
@@ -341,7 +340,7 @@ Placement rules:
 ### 6.1 `rulelink-link` crate
 
 ```rust
-pub struct ScanConfig { pub root: PathBuf, pub tag: String, pub id_pattern: Regex,
+pub struct ScanConfig { pub root: PathBuf, pub tag: String,
                         pub include: GlobSet, pub exclude: GlobSet, pub kinds: KindMatcher,
                         pub max_file_size: u64, pub languages: LanguageOverrides,
                         pub applications: ApplicationMatcher }
@@ -404,7 +403,7 @@ The `vimgrep` format (`path:line:column:text`) opens results in Vim, Emacs or th
 flowchart LR
     LNK["03 Linking"]
     CFG["09 Config"] -->|"ScanConfig"| LNK
-    REG["01 Registry"] -->|"id_pattern, titles for explain"| LNK
+    REG["01 Registry"] -->|"Identifier grammar, titles for explain"| LNK
     LNK -->|"LinkIndex"| CHK["04 Checks"]
     LNK -->|"locations"| PUB["06 Publishing"]
     LNK -->|"explain, where, annotate"| AG["07 Agents"]
