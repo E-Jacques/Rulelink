@@ -61,7 +61,7 @@ fn invalid_identifiers(rules: &RuleSet) -> impl Iterator<Item = Raw> + '_ {
 /// The Identifiers one Rule holds, with where it holds them.
 fn identifiers_of(rule: &Rule) -> impl Iterator<Item = (&RuleId, IdentifierAt)> {
     let holder = named(&rule.id);
-    let own = named(&rule.id).map(|_| (&rule.id, IdentifierAt::Id));
+    let own = holder.is_some().then_some((&rule.id, IdentifierAt::Id));
     let related = rule.related.iter().map({
         let holder = holder.clone();
         move |id| (id, IdentifierAt::Related(holder.clone()))
@@ -90,19 +90,17 @@ fn reused_retired(rules: &RuleSet) -> impl Iterator<Item = Raw> + '_ {
 /// The `related` entries that no Rule has. A blank one is reported as malformed only.
 fn unknown_related(rules: &RuleSet) -> impl Iterator<Item = Raw> + '_ {
     let known: HashSet<&RuleId> = rules.rules.iter().map(|r| &r.id).collect();
-    rules.rules.iter().flat_map(move |rule| {
-        let unknown: Vec<&RuleId> = rule
-            .related
-            .iter()
-            .filter(|id| !is_blank(&id.0) && !known.contains(id))
-            .collect();
-        unknown.into_iter().map(|related| {
+    rules
+        .rules
+        .iter()
+        .flat_map(|rule| rule.related.iter().map(move |related| (rule, related)))
+        .filter(move |(_, related)| !is_blank(&related.0) && !known.contains(related))
+        .map(|(rule, related)| {
             let problem = Problem::UnknownRelated {
                 related: related.clone(),
             };
             Raw::in_rules_file(named(&rule.id), problem)
         })
-    })
 }
 
 /// The required fields that hold nothing.
