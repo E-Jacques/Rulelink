@@ -48,7 +48,7 @@ The MVP is done when: at least 50% of retro-documented Rules are accepted withou
 20. As a developer, I want `check` to warn (`RL106`) when the Source is not canonical, so that format drift is visible.
 21. As a developer, I want source-integrity findings (`RL100`–`RL106`) for malformed or inconsistent Source files, so that a broken Source is detected before the code is checked.
 22. As a developer, I want `check` to raise an error (`RL001`) when code cites an Identifier absent from the Source, so that typos and phantom Rules are caught.
-23. As a developer, I want an error (`RL002`) when code cites an `obsolete` Rule, with `superseded_by` suggested, so that I migrate to the replacement.
+23. As a developer, I want a warning (`RL002`) when code cites an `obsolete` Rule, with `superseded_by` suggested, so that I can migrate to the replacement step by step. A team can raise it to an error.
 24. As a developer, I want an error (`RL003`) when two Rules share an Identifier, so that merges cannot corrupt the Source.
 25. As a developer, I want a warning (`RL004`) for each `validated` Rule cited nowhere, so that I see which Rules have no code.
 26. As a developer, I want a warning (`RL005`) when code cites a `proposed` Rule, so that unreviewed Rules do not go unnoticed.

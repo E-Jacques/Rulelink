@@ -11,6 +11,7 @@ use serde::Deserialize;
 
 pub use error::Error;
 pub use rulelink_model::{DEFAULT_ID_PREFIX, IdPrefix};
+pub use unknown::UnknownKey;
 
 /// Name of the configuration file at the project root.
 pub const CONFIG_FILE: &str = "rulelink.toml";
@@ -44,11 +45,17 @@ pub struct Config {
     pub scan_exclude: Vec<String>,
     /// The levels of the Findings that `[check.levels]` sets.
     pub check_levels: Levels,
-    /// Names that have no effect, probably misspelled, in alphabetical order. A key of
-    /// `[rules]` or `[scan]` is written `section.key`. `x-` names and `adapters` are not
-    /// listed, and `[source]` is not looked into.
-    pub unknown_keys: Vec<String>,
+    /// Names that have no effect, probably misspelled: top-level ones, then the keys of
+    /// `[rules]` and `[scan]`, each group in alphabetical order. `x-` names and `adapters`
+    /// are not listed, and `[source]` is not looked into.
+    pub unknown_keys: Vec<UnknownKey>,
 }
+
+// Each list of keys below repeats the fields of the struct under it: change them together,
+// or a setting that is read is also reported as ignored.
+
+/// The top-level names that are read.
+const KNOWN_KEYS: [&str; 5] = ["version", "source", "rules", "scan", "check"];
 
 #[derive(Deserialize)]
 struct RawConfig {
@@ -66,6 +73,9 @@ struct RawCheck {
     levels: Option<BTreeMap<String, toml::Value>>,
 }
 
+/// The keys read in `[scan]`.
+const SCAN_KEYS: [&str; 1] = ["exclude"];
+
 #[derive(Deserialize)]
 struct RawScan {
     exclude: Option<Vec<String>>,
@@ -76,6 +86,9 @@ struct RawSource {
     kind: Option<String>,
     path: Option<String>,
 }
+
+/// The keys read in `[rules]`.
+const RULES_KEYS: [&str; 1] = ["prefix"];
 
 #[derive(Deserialize)]
 struct RawRules {

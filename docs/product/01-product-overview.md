@@ -78,7 +78,7 @@ The technical format and its JSON keys are specified in [architecture/01](../arc
 | Check                  | Case detected                                        | Default level |
 | ---------------------- | ---------------------------------------------------- | ------------- |
 | Unknown reference      | The code cites an identifier missing from the source | Error         |
-| Obsolete rule cited    | The code still cites an abandoned rule               | Error         |
+| Obsolete rule cited    | The code still cites an abandoned rule               | Warning       |
 | Duplicate identifier   | Two rules share the same identifier                  | Error         |
 | Rule without code      | A validated rule is cited nowhere                    | Warning       |
 | Unvalidated rule cited | The code cites a rule that is still proposed         | Warning       |

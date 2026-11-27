@@ -44,6 +44,8 @@ The same applies to an unknown key inside `[rules]` or `[scan]`. If you write `e
 rulelink: warning: rulelink.toml: unknown section or key `scan.excludes` is ignored; check its spelling
 ```
 
+A top-level name that itself contains a dot is shown in double quotes, so that you can tell it from a key of a section.
+
 The warning goes to the error output, so it does not mix with the result of the command. It is not a Finding: it is not counted in the totals of `check`.
 
 Names that start with `x-`, and the `[adapters]` section, give no warning. Use an `x-` name for your own notes or for other tools.

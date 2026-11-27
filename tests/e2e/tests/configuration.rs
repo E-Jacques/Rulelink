@@ -93,6 +93,40 @@ fn unknown_keys_in_rules_and_scan_warn_but_extensions_do_not() {
     assert_eq!((run.code, run.stderr), (0, expected));
 }
 
+#[test]
+fn a_quoted_top_level_name_is_told_apart_from_a_key_of_a_section() {
+    let repo = Repo::new();
+    assert_eq!(repo.run(&["init"]).code, 0);
+    let config = repo.read("rulelink.toml").expect("config");
+    repo.write(
+        "rulelink.toml",
+        &format!(
+            "\"rules.prefx\" = 1\n{}",
+            config.replace("[rules]", "[rules]\nprefx = 2")
+        ),
+    );
+    let run = repo.run(&["check"]);
+    let expected = [warning("\"rules.prefx\""), warning("rules.prefx")].concat();
+    assert_eq!((run.code, run.stderr), (0, expected));
+}
+
+/// TOML lists where a section is expected were accepted before keys were checked: looking
+/// for unknown keys must not refuse a configuration that the commands can read.
+#[test]
+fn a_section_written_as_a_list_is_still_accepted() {
+    let source = "[source]\nkind = \"json\"\npath = \"rules/rules.json\"\n";
+    for config in [
+        format!("version = 1\nrules = [\"RULE\"]\n{source}"),
+        format!("version = 1\nscan = [[\"vendor/\"]]\n{source}[rules]\nprefix = \"RULE\"\n"),
+    ] {
+        let repo = Repo::new();
+        assert_eq!(repo.run(&["init"]).code, 0);
+        repo.write("rulelink.toml", &config);
+        let run = repo.run(&["check"]);
+        assert_eq!((run.code, run.stderr.as_str()), (0, ""), "{config}");
+    }
+}
+
 /// Which keys of `[source]` belong to the adapter is not decided yet.
 #[test]
 fn an_unknown_key_in_source_does_not_warn() {

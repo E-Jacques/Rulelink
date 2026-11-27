@@ -13,7 +13,6 @@ pub enum Code { UnknownReference, ObsoleteReference, OrphanRule, UnvalidatedRefe
                 RetiredReference }                                     // id() "RL001", name(), FromStr(name)
 pub enum Level { Error, Warning, Off }                                 // FromStr
 pub struct Levels(..)                                                  // set(code, level); only explicit ones
-pub const PROMISE: &str;
 
 // rulelink-app
 pub fn checks::run(root: &Path) -> Result<Checked { report, source_path }, Error>;
@@ -72,6 +71,8 @@ Reused: `read_source`, `scan`, `LinkIndex`, `Location`, `RuleSet::find`, `natura
 The scan skips the rules file, for `check` and `where`: Rule text quoting `@rule` hid RL004. Identifiers of equal numeric value (`RULE-5`, `RULE-05`) are ordered by their text. `Code::name` is not exported until #16 calls it.
 
 A misspelled top-level section or key of `rulelink.toml`, or an unknown key in `[rules]` or `[scan]`, now warns (maintainer's choice over an error). `[source]` is not looked into until its adapter keys are decided. `Config` lists the names, `app::configuration::warnings` words them, and the CLI prints them on stderr before every command but `init`. Exit codes and the totals of `check` do not change. The maintainer also confirmed that the scan skips the rules file.
+
+In the maintainer's review, RL002 became a warning by default. Default levels sit beside `check()`, and the closing sentence of the report is a constant of the CLI, its only user: `rulelink-check` no longer exports `PROMISE`.
 
 ## Left to dependent tickets
 

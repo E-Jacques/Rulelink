@@ -2,7 +2,7 @@
 
 use std::path::Path;
 
-use rulelink_config::{CONFIG_FILE, Config};
+use rulelink_config::{CONFIG_FILE, Config, UnknownKey};
 
 /// One sentence for each name of `rulelink.toml` that has no effect.
 ///
@@ -13,12 +13,22 @@ pub fn warnings(root: &Path) -> Vec<String> {
     unknown
         .unwrap_or_default()
         .iter()
-        // A quoted TOML name may hold a line break: it must not add lines to the output.
-        .map(|name| {
+        .map(|key| {
             format!(
                 "{CONFIG_FILE}: unknown section or key `{}` is ignored; check its spelling",
-                name.escape_debug()
+                written(key)
             )
         })
         .collect()
+}
+
+/// `section.key`, or a top-level name, quoted if its dot could pass for a section.
+fn written(key: &UnknownKey) -> String {
+    // A quoted TOML name may hold a line break: it must not add lines to the output.
+    let name = key.name.escape_debug();
+    match key.section {
+        Some(section) => format!("{section}.{name}"),
+        None if key.name.contains('.') => format!("\"{name}\""),
+        None => name.to_string(),
+    }
 }
