@@ -32,6 +32,7 @@ schemars = "1"
 thiserror = "2"
 toml = { version = "0.9", default-features = false, features = ["parse", "serde"] }
 tempfile = "3"
+jsonschema = { version = "0.63", default-features = false }
 tokio = { version = "1", default-features = false }
 unicode-normalization = "0.1"
 ignore = "0.4"

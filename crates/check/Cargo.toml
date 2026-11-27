@@ -8,6 +8,10 @@ license.workspace = true
 repository.workspace = true
 readme = "README.md"
 
+[features]
+default = []
+schema = ["dep:schemars"]
+
 [lints]
 workspace = true
 
@@ -15,3 +19,8 @@ workspace = true
 thiserror.workspace = true
 rulelink-model.workspace = true
 rulelink-link.workspace = true
+serde.workspace = true
+schemars = { workspace = true, optional = true }
+
+[dev-dependencies]
+serde_json.workspace = true
