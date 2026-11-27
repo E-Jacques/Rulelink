@@ -57,4 +57,4 @@ rulelink: configuration error: invalid rulelink.toml:
   - unknown section or key `rules.prefx`; did you mean `rules.prefix`?
 ```
 
-Two mistakes hide the others until you fix them: a file that is not valid TOML, and a missing or unsupported `version`. If `source.kind` is wrong, the other keys of `[source]` are not checked.
+Two mistakes hide the others until you fix them: a file that is not valid TOML, and a missing or unsupported `version`. If `source.kind` is wrong, the other keys of `[source]` are not checked. When `version` or `source.kind` is missing because it is misspelled, the message names the misspelled key too.

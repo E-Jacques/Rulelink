@@ -173,7 +173,8 @@ flowchart BT
     publish --> registry & link & sdk
     sdk --> model
     ajson & ascan & ajira & aext --> sdk
-    app --> check & import & publish & config
+    config --> sdk
+    app --> check & import & publish & config & sdk
     app --> ajson & ascan & ajira & aext
     cli & lsp --> app
     vscode -.->|"spawns rulelink lsp"| cli

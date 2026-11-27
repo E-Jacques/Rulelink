@@ -1,6 +1,11 @@
 # Configuration parsing and output: target architecture
 
-Design only, nothing is implemented. Signatures are proposals. **D1** to **D6** are decided, and the diagrams show them. Checked against `main` at `3519619`.
+**D1** to **D6** are decided, and the diagrams show them. Designed against `main` at `3519619`, and implemented as described, with these differences from the signatures below:
+
+- `TableParser` also has `section` and `reserved`; `combine` joins two parses.
+- `Problem::verbatim` keeps the lines of the TOML parser's report. Every other problem and warning escapes control characters.
+- A typo of a missing `version` or `source.kind` is reported with it.
+- `property` stops a debug build if the key names another section.
 
 ## Goals
 

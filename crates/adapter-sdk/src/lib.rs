@@ -16,7 +16,7 @@ pub use map::{ConfigMap, Property, UndeclaredProperty};
 pub use path::{OutsideProject, ProjectPath};
 pub use report::{ParseError, ParseResult, Parsed, Problem, Warning};
 pub use table::{TableParser, combine};
-pub use value::{RawTable, RawValue, required_text};
+pub use value::{RawTable, RawValue, is_extension, required_text};
 
 /// The settings of one adapter.
 ///

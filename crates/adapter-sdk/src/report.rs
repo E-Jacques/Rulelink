@@ -46,14 +46,27 @@ pub struct Warning {
 }
 
 impl Warning {
-    /// A warning about `key`.
+    /// A warning about `key`. Control characters of `message` are escaped: text taken from
+    /// the file cannot add lines to the output.
     #[must_use]
     pub fn new(key: impl Into<String>, message: impl Into<String>) -> Self {
         Self {
             key: key.into(),
-            message: message.into(),
+            message: on_one_line(&message.into()),
         }
     }
+}
+
+fn on_one_line(text: &str) -> String {
+    let mut line = String::with_capacity(text.len());
+    for c in text.chars() {
+        if c.is_control() {
+            line.extend(c.escape_default());
+        } else {
+            line.push(c);
+        }
+    }
+    line
 }
 
 /// One reason to refuse the settings.
@@ -74,11 +87,22 @@ pub struct Problem {
 }
 
 impl Problem {
-    /// A problem with `key`.
+    /// A problem with `key`. Control characters of `message` are escaped: text taken from
+    /// the file cannot add lines to the output.
     #[must_use]
     pub fn new(key: impl Into<String>, message: impl Into<String>) -> Self {
         Self {
             key: key.into(),
+            message: on_one_line(&message.into()),
+        }
+    }
+
+    /// A problem with the whole file, whose `message` keeps its lines. Only for a parser's
+    /// own report, which quotes the line at fault and marks it.
+    #[must_use]
+    pub fn verbatim(message: impl Into<String>) -> Self {
+        Self {
+            key: String::new(),
             message: message.into(),
         }
     }
@@ -124,6 +148,13 @@ impl ParseError {
     /// The problems, in the order they were found.
     pub fn problems(&self) -> impl Iterator<Item = &Problem> {
         std::iter::once(&self.first).chain(&self.rest)
+    }
+
+    /// This error, followed by `problem` if there is one.
+    #[must_use]
+    pub fn with(mut self, problem: Option<Problem>) -> Self {
+        self.rest.extend(problem);
+        self
     }
 
     /// Adds the problems of `other` after these.

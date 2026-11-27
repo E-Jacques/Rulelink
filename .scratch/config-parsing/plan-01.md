@@ -57,3 +57,13 @@ No issue, so no GitHub dependency list. Tickets that read the configuration:
 - Failure: parsing happens before any write.
 - Errors: all are configuration errors (exit 2), name the key, and escape names taken from the file so they cannot add lines.
 - Arithmetic: none. An integer too large for `i64` is kept as "too large", and fails only where a property reads it.
+
+## Quality rubric, after review
+
+| Group | Score | Evidence, and what is partial |
+| --- | --- | --- |
+| Interface design | yes | `Workspace::open` is the one way in; use cases take it; typed properties |
+| Boundaries | partly | unknown keys and kinds refused, `scan.exclude` trimmed; `ProjectPath` still accepts blank and control characters (report, finding 10) |
+| Errors | partly | classes and exit codes unchanged; one unreachable internal case is classed as configuration (finding 7) |
+| Readability | yes | domain literals named; clippy and its 40-line limit pass |
+| Hygiene | yes | `arch` passes; unit and end-to-end tests; architecture documents updated; no glossary term changed; deferred findings name tickets |

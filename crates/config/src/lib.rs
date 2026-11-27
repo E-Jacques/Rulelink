@@ -72,11 +72,10 @@ pub fn load(root: &Path, catalog: AdapterCatalog<'_>) -> Result<Parsed<ConfigMap
 }
 
 fn parse(text: &str, catalog: AdapterCatalog<'_>) -> ParseResult<ConfigMap> {
-    let mut root = raw::root(text).map_err(|e| ParseError::new(Problem::new("", e.to_string())))?;
+    let mut root =
+        raw::root(text).map_err(|e| ParseError::new(Problem::verbatim(e.to_string())))?;
     // Nothing else can be trusted in a file of another version.
-    let version = TableParser::new(root.split_off(Version::KEY))
-        .property::<Version>()
-        .finish()?;
+    let version = parse_first::<Version>(&mut root, "version")?;
     let rest = TableParser::new(root)
         .section("source", |table| parse_source(table, catalog))
         .section("rules", |table| {
@@ -91,12 +90,20 @@ fn parse(text: &str, catalog: AdapterCatalog<'_>) -> ParseResult<ConfigMap> {
     combine(Ok(version), rest)
 }
 
+/// Parses `P`, named `name` in `table`, before the rest of the table. If it is refused, the
+/// error also names a misspelling of it, as the other names will not be checked.
+fn parse_first<P: Property>(table: &mut RawTable, name: &'static str) -> ParseResult<ConfigMap> {
+    let apart = table.split_off(name);
+    TableParser::new(apart)
+        .property::<P>()
+        .finish()
+        .map_err(|error| error.with(table.misspelling_of(name)))
+}
+
 /// `[source]`: `kind` first, as it chooses who parses the other keys. If it is refused, they
 /// are left unchecked.
 fn parse_source(mut table: RawTable, catalog: AdapterCatalog<'_>) -> ParseResult<ConfigMap> {
-    let kind = TableParser::new(table.split_off("kind"))
-        .property::<SourceKind>()
-        .finish()?;
+    let kind = parse_first::<SourceKind>(&mut table, "kind")?;
     let adapter = selected(&kind.configuration, catalog)?;
     combine(Ok(kind), adapter.parse(table))
 }

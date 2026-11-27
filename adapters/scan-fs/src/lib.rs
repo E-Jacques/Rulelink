@@ -6,7 +6,7 @@ mod settings;
 use std::path::Path;
 
 use ignore::WalkBuilder;
-use ignore::overrides::OverrideBuilder;
+use ignore::overrides::{Override, OverrideBuilder};
 use rulelink_link::LinkIndex;
 
 pub use error::Error;
@@ -50,25 +50,36 @@ pub fn scan(root: &Path, exclude: &ScanExclude, rules_file: &Path) -> Result<Lin
 
 /// The walk over `root`: ignore files and `exclude` patterns applied, nothing read yet.
 fn files_to_walk(root: &Path, exclude: &[String]) -> Result<ignore::Walk, Error> {
-    let invalid = |pattern: String, e: ignore::Error| Error::InvalidExclude {
-        pattern,
-        message: e.to_string(),
-    };
-    let mut overrides = OverrideBuilder::new(root);
-    for pattern in exclude {
-        // In an override, a leading `!` means "ignore".
-        overrides
-            .add(&format!("!{pattern}"))
-            .map_err(|e| invalid(pattern.clone(), e))?;
-    }
-    let overrides = overrides
-        .build()
-        .map_err(|e| invalid(exclude.join(", "), e))?;
+    let overrides = overrides(root, exclude)
+        .map_err(|(pattern, message)| Error::InvalidExclude { pattern, message })?;
     Ok(WalkBuilder::new(root)
         .require_git(false)
         .add_custom_ignore_filename(IGNORE_FILE)
         .overrides(overrides)
         .build())
+}
+
+/// Compiles `exclude`, as the walk applies it; parsing the settings does the same, so that
+/// what it accepts can be scanned with.
+///
+/// On failure, returns the pattern at fault (all of them if they only fail together) and why.
+fn overrides(root: &Path, exclude: &[String]) -> Result<Override, (String, String)> {
+    let mut builder = OverrideBuilder::new(root);
+    for pattern in exclude {
+        // In an override, a leading `!` means "ignore".
+        builder
+            .add(&format!("!{pattern}"))
+            .map_err(|e| (pattern.clone(), cause(&e)))?;
+    }
+    builder.build().map_err(|e| (exclude.join(", "), cause(&e)))
+}
+
+/// Why a pattern is refused, without the pattern as rewritten for the override.
+fn cause(error: &ignore::Error) -> String {
+    match error {
+        ignore::Error::Glob { err, .. } => err.clone(),
+        other => other.to_string(),
+    }
 }
 
 /// Adds the Annotations of one walk entry to `index`, skipping what is not hand-written text.

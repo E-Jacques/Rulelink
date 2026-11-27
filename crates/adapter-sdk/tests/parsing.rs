@@ -161,6 +161,13 @@ fn text_of_another_type_says_what_was_found() {
 }
 
 #[test]
+#[cfg(debug_assertions)]
+#[should_panic(expected = "wrong section")]
+fn a_property_declared_in_another_section_is_caught() {
+    let _ = TableParser::new(RawTable::new("other", BTreeMap::new())).property::<Name>();
+}
+
+#[test]
 fn a_project_path_cannot_leave_the_project() {
     for raw in ["../x.json", "a/../../x.json", "/etc/x.json", ""] {
         assert!(ProjectPath::parse(raw).is_err(), "{raw}");

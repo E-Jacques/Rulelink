@@ -1,8 +1,6 @@
-use crate::suggest::closest;
-use crate::{ConfigMap, ParseError, ParseResult, Parsed, Problem, Property, RawTable, RawValue};
-
-/// Starts a name reserved for a team's own notes and other tools.
-const EXTENSION_PREFIX: &str = "x-";
+use crate::{
+    ConfigMap, ParseError, ParseResult, Parsed, Problem, Property, RawTable, RawValue, is_extension,
+};
 
 /// Joins two parses: every problem of both, or one map holding the settings of both.
 ///
@@ -66,15 +64,25 @@ impl TableParser {
     /// A parser for `table`.
     pub fn new(table: RawTable) -> Self {
         Self {
+            known: table.split.clone(),
             table,
-            known: Vec::new(),
             result: Ok(Parsed::new(ConfigMap::new())),
         }
     }
 
-    /// Declares the property `P`, named by the last part of its key.
+    /// Declares the property `P`, named by the last part of its key. The rest of the key
+    /// must name this section.
+    ///
+    /// # Panics
+    /// In a debug build, if `P::KEY` belongs to another section: it would silently read a
+    /// setting its messages do not name. A test that parses the section catches it.
     pub fn property<P: Property>(mut self) -> Self {
         let name = P::KEY.rsplit('.').next().unwrap_or(P::KEY);
+        debug_assert_eq!(
+            P::KEY,
+            self.table.written(name),
+            "the property is declared in the wrong section"
+        );
         let raw = self.claim(name);
         let parsed = P::parse(raw.as_ref()).map(|parsed| {
             let mut map = ConfigMap::new();
@@ -108,7 +116,7 @@ impl TableParser {
 
     /// Accepts `name` and whatever it holds, without reading it.
     pub fn reserved(mut self, name: &'static str) -> Self {
-        self.table.entries.remove(name);
+        self.claim(name);
         self
     }
 
@@ -121,8 +129,8 @@ impl TableParser {
             .table
             .entries
             .keys()
-            .filter(|name| !name.starts_with(EXTENSION_PREFIX))
-            .map(|name| self.unknown(name))
+            .filter(|name| !is_extension(name))
+            .map(|name| self.table.unknown(name, &self.known))
             .collect();
         for problem in unknown {
             self = self.add(Err(ParseError::new(problem)));
@@ -138,15 +146,5 @@ impl TableParser {
     fn add(mut self, parsed: ParseResult<ConfigMap>) -> Self {
         self.result = combine(self.result, parsed);
         self
-    }
-
-    fn unknown(&self, name: &str) -> Problem {
-        let key = self.table.written(name);
-        let advice = closest(name, &self.known).map_or_else(
-            || format!("remove it, or start its name with `{EXTENSION_PREFIX}` to keep it"),
-            |known| format!("did you mean `{}`?", self.table.written(known)),
-        );
-        let message = format!("unknown section or key `{key}`; {advice}");
-        Problem::new(key, message)
     }
 }

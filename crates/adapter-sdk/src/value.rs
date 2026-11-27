@@ -1,6 +1,23 @@
 use std::collections::BTreeMap;
 
+use crate::suggest::closest;
 use crate::{ParseError, Problem};
+
+/// Starts a name reserved for a team's own notes and other tools.
+const EXTENSION_PREFIX: &str = "x-";
+
+/// Whether `name` is reserved for notes and other tools, and so never read nor refused.
+///
+/// ```
+/// use rulelink_adapter_sdk::is_extension;
+///
+/// assert!(is_extension("x-owner"));
+/// assert!(!is_extension("owner"));
+/// ```
+#[must_use]
+pub fn is_extension(name: &str) -> bool {
+    name.starts_with(EXTENSION_PREFIX)
+}
 
 /// A setting as written, before any property has read it.
 ///
@@ -91,6 +108,8 @@ pub struct RawTable {
     /// The dotted name of the section; empty for the top of the file.
     pub(crate) path: String,
     pub(crate) entries: BTreeMap<String, RawValue>,
+    /// The names split off to be parsed apart: still known when suggesting a spelling.
+    pub(crate) split: Vec<&'static str>,
 }
 
 impl RawTable {
@@ -100,15 +119,39 @@ impl RawTable {
         Self {
             path: path.into(),
             entries,
+            split: Vec::new(),
         }
     }
 
     /// Moves the setting `name`, if present, into its own table of the same section, so that
     /// it can be parsed before the rest.
     #[must_use = "the setting is no longer in the original table"]
-    pub fn split_off(&mut self, name: &str) -> Self {
+    pub fn split_off(&mut self, name: &'static str) -> Self {
+        self.split.push(name);
         let entries = self.entries.remove_entry(name).into_iter().collect();
         Self::new(self.path.clone(), entries)
+    }
+
+    /// The problem with the first name that looks like a misspelling of `meant`, to show with
+    /// "missing" when `meant` is required before the other names are checked.
+    #[must_use]
+    pub fn misspelling_of(&self, meant: &'static str) -> Option<Problem> {
+        self.entries
+            .keys()
+            .filter(|name| name.as_str() != meant && !is_extension(name))
+            .find(|name| closest(name, &[meant]).is_some())
+            .map(|name| self.unknown(name, &[meant]))
+    }
+
+    /// Why `name`, which nothing reads, is refused, suggesting the closest of `known`.
+    pub(crate) fn unknown(&self, name: &str, known: &[&'static str]) -> Problem {
+        let key = self.written(name);
+        let advice = closest(name, known).map_or_else(
+            || format!("remove it, or start its name with `{EXTENSION_PREFIX}` to keep it"),
+            |known| format!("did you mean `{}`?", self.written(known)),
+        );
+        let message = format!("unknown section or key `{key}`; {advice}");
+        Problem::new(key, message)
     }
 
     /// `name` as a user would write it from the top of the file. The name is escaped, so that

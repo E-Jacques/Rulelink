@@ -1,6 +1,7 @@
 //! The settings of the code scan: `[scan]`.
 
-use ignore::overrides::OverrideBuilder;
+use std::path::Path;
+
 use rulelink_adapter_sdk::{
     AdapterConfig, ConfigMap, ParseError, ParseResult, Parsed, Problem, Property, RawTable,
     RawValue, TableParser,
@@ -53,10 +54,16 @@ impl Property for ScanExclude {
         for item in items {
             match pattern(item) {
                 Ok(pattern) => patterns.push(pattern),
-                Err(message) => errors.push(message),
+                Err(message) if !errors.contains(&message) => errors.push(message),
+                Err(_) => {}
             }
         }
-        errors.dedup();
+        // Patterns that are valid one by one must also compile together.
+        if errors.is_empty()
+            && let Err((_, why)) = crate::overrides(Path::new("."), &patterns)
+        {
+            errors.push(format!("`{}` cannot be used: {why}", Self::KEY));
+        }
         match ParseError::from_problems(errors.into_iter().map(problem)) {
             Some(error) => Err(error),
             None => Ok(Parsed::new(Self(patterns))),
@@ -82,9 +89,9 @@ fn pattern(item: &RawValue) -> Result<String, String> {
             "`{key}` pattern \"{shown}\" starts with `{NEGATION}`: list only what to skip"
         ))
     } else {
-        match OverrideBuilder::new(".").add(&format!("{NEGATION}{pattern}")) {
+        match crate::overrides(Path::new("."), &[pattern.to_owned()]) {
             Ok(_) => Ok(pattern.to_owned()),
-            Err(e) => Err(format!("`{key}` pattern \"{shown}\" is invalid: {e}")),
+            Err((_, why)) => Err(format!("`{key}` pattern \"{shown}\" is invalid: {why}")),
         }
     }
 }
@@ -158,6 +165,21 @@ mod tests {
     fn a_pattern_cannot_add_lines_to_a_message() {
         let found = problems(&list(&["!a\nb"]));
         assert!(found[0].contains("a\\nb"), "{found:?}");
+    }
+
+    #[test]
+    fn a_pattern_refused_twice_is_reported_once() {
+        let found = problems(&list(&["", "!a", ""]));
+        assert_eq!(found.len(), 2, "{found:?}");
+    }
+
+    #[test]
+    fn an_invalid_glob_is_quoted_as_written() {
+        let found = problems(&list(&["["]));
+        assert!(
+            !found[0].contains("![") && !found[0].contains("'!"),
+            "{found:?}"
+        );
     }
 
     #[test]

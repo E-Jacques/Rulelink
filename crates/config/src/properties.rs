@@ -1,7 +1,7 @@
 //! The settings that do not belong to an adapter.
 
 use rulelink_adapter_sdk::{
-    ParseError, ParseResult, Parsed, Problem, Property, RawValue, required_text,
+    ParseError, ParseResult, Parsed, Problem, Property, RawValue, is_extension, required_text,
 };
 use rulelink_check::{Code, Level, Levels};
 use rulelink_model::IdPrefix;
@@ -103,7 +103,7 @@ impl Property for CheckLevels {
         match raw {
             None => {}
             Some(RawValue::Table(entries)) => {
-                for (name, value) in entries {
+                for (name, value) in entries.iter().filter(|(name, _)| !is_extension(name)) {
                     match level(name, value) {
                         Ok((code, level)) => levels.set(code, level),
                         Err(why) => {

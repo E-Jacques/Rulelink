@@ -142,6 +142,59 @@ fn one_problem_stays_on_the_line_and_several_are_listed_below() {
 }
 
 #[test]
+fn text_of_the_file_cannot_add_lines_to_a_message() {
+    for text in [
+        format!("{VALID}[check.levels]\n\"a\\nb\" = \"off\"\n"),
+        format!("{VALID}[check.levels]\norphan-rule = \"x\\ny\"\n"),
+        VALID.replace("\"BR\"", "\"a\\nb\""),
+        VALID.replace("\"json\"", "\"c\\nsv\""),
+    ] {
+        for message in problems(&text) {
+            assert!(!message.contains('\n'), "{text}: {message}");
+        }
+    }
+}
+
+#[test]
+fn a_typo_of_version_or_kind_is_named_with_the_missing_key() {
+    assert_eq!(
+        problems(&VALID.replace("version", "verion")),
+        [
+            "missing `version`",
+            "unknown section or key `verion`; did you mean `version`?"
+        ]
+    );
+    assert_eq!(
+        problems(&VALID.replace("kind", "knd")),
+        [
+            "missing `source.kind`",
+            "unknown section or key `source.knd`; did you mean `source.kind`?"
+        ]
+    );
+}
+
+#[test]
+fn a_key_close_to_one_parsed_early_or_reserved_gets_a_suggestion() {
+    for (text, meant) in [
+        (format!("versions = 1\n{VALID}"), "`version`?"),
+        (
+            VALID.replace("[source]", "[source]\nkinds = 1"),
+            "`source.kind`?",
+        ),
+        (format!("{VALID}[adapter.x]\n"), "`adapters`?"),
+    ] {
+        let found = problems(&text);
+        assert!(found[0].ends_with(meant), "{text}: {found:?}");
+    }
+}
+
+#[test]
+fn an_extension_name_is_accepted_among_the_levels() {
+    let text = format!("{VALID}[check.levels]\nx-note = \"why\"\n");
+    assert!(parse(&text, CATALOG).is_ok());
+}
+
+#[test]
 fn missing_file_points_to_init() {
     let dir = std::env::temp_dir().join("rulelink-config-missing-test");
     let err = load(&dir, CATALOG)
