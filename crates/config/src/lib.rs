@@ -1,13 +1,13 @@
 //! Project discovery and configuration (rulelink.toml).
 
 mod error;
+mod unknown;
 
 use std::collections::BTreeMap;
 use std::path::{Component, Path, PathBuf};
 
 use rulelink_check::{Code, Level, Levels};
 use serde::Deserialize;
-use serde::de::IgnoredAny;
 
 pub use error::Error;
 pub use rulelink_model::{DEFAULT_ID_PREFIX, IdPrefix};
@@ -22,12 +22,6 @@ const SUPPORTED_VERSION: u32 = 1;
 const SOURCE_KIND_JSON: &str = "json";
 /// Starts a negated `.gitignore` pattern, which `scan.exclude` refuses.
 const NEGATION: char = '!';
-/// The top-level names of `rulelink.toml` this tool reads.
-const KNOWN_KEYS: [&str; 5] = ["version", "source", "rules", "scan", "check"];
-/// Set aside for external adapters: not read yet, and not a mistake.
-const ADAPTERS_KEY: &str = "adapters";
-/// Starts a name reserved for a team's own notes and other tools.
-const EXTENSION_PREFIX: &str = "x-";
 /// Template of the `rulelink.toml` written by `init`, embedded at compile time.
 const INITIAL_TEMPLATE: &str = include_str!("../templates/rulelink.toml");
 
@@ -50,8 +44,9 @@ pub struct Config {
     pub scan_exclude: Vec<String>,
     /// The levels of the Findings that `[check.levels]` sets.
     pub check_levels: Levels,
-    /// Top-level names that have no effect, probably misspelled, in alphabetical order.
-    /// `x-` names and `adapters` are not listed.
+    /// Names that have no effect, probably misspelled, in alphabetical order. A key of
+    /// `[rules]` or `[scan]` is written `section.key`. `x-` names and `adapters` are not
+    /// listed, and `[source]` is not looked into.
     pub unknown_keys: Vec<String>,
 }
 
@@ -122,25 +117,9 @@ impl Config {
             source_path,
             scan_exclude: parse_scan_exclude(raw.scan)?,
             check_levels: parse_check_levels(raw.check)?,
-            unknown_keys: unknown_keys(text)?,
+            unknown_keys: unknown::unknown_keys(text)?,
         })
     }
-}
-
-/// The top-level names of `text` that nothing reads. Parsed apart from [`RawConfig`], as
-/// collecting them there (`serde(flatten)`) would lose the line numbers of its errors.
-fn unknown_keys(text: &str) -> Result<Vec<String>, Error> {
-    // Only the names: reading the values would refuse some that nothing uses, such as an
-    // oversized integer under `x-`.
-    #[allow(clippy::zero_sized_map_values)] // a table is read as a map, not as a set
-    let table: BTreeMap<String, IgnoredAny> =
-        toml::from_str(text).map_err(|e| invalid(&e.to_string()))?;
-    let unknown = |key: &String| {
-        !KNOWN_KEYS.contains(&key.as_str())
-            && key != ADAPTERS_KEY
-            && !key.starts_with(EXTENSION_PREFIX)
-    };
-    Ok(table.keys().filter(|k| unknown(k)).cloned().collect())
 }
 
 fn check_version(version: Option<u32>) -> Result<(), Error> {

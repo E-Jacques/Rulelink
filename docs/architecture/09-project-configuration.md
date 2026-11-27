@@ -39,7 +39,7 @@
 
 - TOML format (`toml_edit` for writes: comments and ordering are preserved when `config set` changes the file).
 - The configuration is described by Rust types, from which a JSON Schema is generated (`rulelink schema config`), usable in editors through Taplo or `#:schema`.
-- Unknown keys are errors (with a suggestion of the closest key), except under `[adapters.*]` and `x-*`. In the MVP this holds only under `[check]`: an unknown top-level section or key gives a warning and is ignored, with no suggestion, and unknown keys in the other sections are ignored silently.
+- Unknown keys are errors (with a suggestion of the closest key), except under `[adapters.*]` and `x-*`. In the MVP this holds only under `[check]`: an unknown top-level section or key, or an unknown key in `[rules]` or `[scan]`, gives a warning and is ignored, with no suggestion. Unknown keys in `[source]` are ignored silently, until it is decided which of its keys belong to the adapter.
 - No plain-text secret is accepted: a `token`, `password` or `secret` key whose value is not a reference (`${env:...}`, `${keyring:...}`) makes loading fail.
 - The CLI detects CI (`CI=true` and provider-specific variables): no interactive prompts, no colour by default, and `github` format added automatically under GitHub Actions if no format is requested.
 

@@ -60,6 +60,53 @@ fn each_unknown_name_has_its_own_line_and_cannot_add_lines() {
     assert_eq!((run.code, run.stderr), (0, expected));
 }
 
+/// The second example of the page: the misspelled key excludes nothing, and says so.
+#[test]
+fn a_misspelled_key_in_scan_warns() {
+    let repo = project("", "[scan]\nexcludes = [\"vendor/\"]");
+    repo.write("vendor/a.rs", "// @rule RULE-001\n");
+    let run = repo.run(&["check"]);
+    assert_eq!((run.code, run.stderr), (0, warning("scan.excludes")));
+    assert!(run.stdout.contains("vendor/a.rs:1"), "{}", run.stdout);
+    let page = include_str!("../../../docs/public/concepts/configuration.md");
+    assert!(
+        page.contains(warning("scan.excludes").trim_end()),
+        "the page shows the warning"
+    );
+}
+
+/// Dotted keys at the top of the file, so that `[rules]` is not declared twice.
+#[test]
+fn unknown_keys_in_rules_and_scan_warn_but_extensions_do_not() {
+    let repo = Repo::new();
+    assert_eq!(repo.run(&["init"]).code, 0);
+    let config = repo.read("rulelink.toml").expect("config");
+    repo.write(
+        "rulelink.toml",
+        &format!(
+            "{}\n[scan]\n\"a\\nb\" = 1\nx-note = 99999999999999999999\n",
+            config.replace("[rules]", "[rules]\nid_width = 4\nx-owner = \"a\"")
+        ),
+    );
+    let run = repo.run(&["check"]);
+    let expected = [warning("rules.id_width"), warning("scan.a\\nb")].concat();
+    assert_eq!((run.code, run.stderr), (0, expected));
+}
+
+/// Which keys of `[source]` belong to the adapter is not decided yet.
+#[test]
+fn an_unknown_key_in_source_does_not_warn() {
+    let repo = Repo::new();
+    assert_eq!(repo.run(&["init"]).code, 0);
+    let config = repo.read("rulelink.toml").expect("config");
+    repo.write(
+        "rulelink.toml",
+        &config.replace("[source]", "[source]\nbranch = \"main\""),
+    );
+    let run = repo.run(&["check"]);
+    assert_eq!((run.code, run.stderr.as_str()), (0, ""));
+}
+
 #[test]
 fn known_extension_and_adapter_names_do_not_warn() {
     let all = "[scan]\nexclude = [\"vendor/\"]\n[check.levels]\norphan-rule = \"off\"\n[x-team]\nowner = \"a\"\n[adapters.notion]\ndb = \"d\"";
