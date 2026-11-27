@@ -21,6 +21,12 @@ const SUPPORTED_VERSION: u32 = 1;
 const SOURCE_KIND_JSON: &str = "json";
 /// Starts a negated `.gitignore` pattern, which `scan.exclude` refuses.
 const NEGATION: char = '!';
+/// The top-level names of `rulelink.toml` this tool reads.
+const KNOWN_KEYS: [&str; 5] = ["version", "source", "rules", "scan", "check"];
+/// Set aside for external adapters: not read yet, and not a mistake.
+const ADAPTERS_KEY: &str = "adapters";
+/// Starts a name reserved for a team's own notes and other tools.
+const EXTENSION_PREFIX: &str = "x-";
 /// Template of the `rulelink.toml` written by `init`, embedded at compile time.
 const INITIAL_TEMPLATE: &str = include_str!("../templates/rulelink.toml");
 
@@ -43,6 +49,9 @@ pub struct Config {
     pub scan_exclude: Vec<String>,
     /// The levels of the Findings that `[check.levels]` sets.
     pub check_levels: Levels,
+    /// Top-level names that have no effect, probably misspelled, in alphabetical order.
+    /// `x-` names and `adapters` are not listed.
+    pub unknown_keys: Vec<String>,
 }
 
 #[derive(Deserialize)]
@@ -112,8 +121,21 @@ impl Config {
             source_path,
             scan_exclude: parse_scan_exclude(raw.scan)?,
             check_levels: parse_check_levels(raw.check)?,
+            unknown_keys: unknown_keys(text)?,
         })
     }
+}
+
+/// The top-level names of `text` that nothing reads. Parsed apart from [`RawConfig`], as
+/// collecting them there (`serde(flatten)`) would lose the line numbers of its errors.
+fn unknown_keys(text: &str) -> Result<Vec<String>, Error> {
+    let table: toml::Table = toml::from_str(text).map_err(|e| invalid(&e.to_string()))?;
+    let unknown = |key: &String| {
+        !KNOWN_KEYS.contains(&key.as_str())
+            && key != ADAPTERS_KEY
+            && !key.starts_with(EXTENSION_PREFIX)
+    };
+    Ok(table.keys().filter(|k| unknown(k)).cloned().collect())
 }
 
 fn check_version(version: Option<u32>) -> Result<(), Error> {

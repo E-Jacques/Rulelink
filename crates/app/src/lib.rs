@@ -1,6 +1,7 @@
 //! Application layer: use cases, wiring and process runtime skeleton.
 
 pub mod checks;
+pub mod configuration;
 mod error;
 pub mod init;
 pub mod links;

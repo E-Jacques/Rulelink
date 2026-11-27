@@ -71,6 +71,8 @@ Reused: `read_source`, `scan`, `LinkIndex`, `Location`, `RuleSet::find`, `natura
 
 The scan skips the rules file, for `check` and `where`: Rule text quoting `@rule` hid RL004. Identifiers of equal numeric value (`RULE-5`, `RULE-05`) are ordered by their text. `Code::name` is not exported until #16 calls it.
 
+A misspelled top-level section or key of `rulelink.toml` now warns (maintainer's choice over an error). `Config` lists the names, `app::configuration::warnings` words them, and the CLI prints them on stderr before every command but `init`. Exit codes and the totals of `check` do not change. The maintainer also confirmed that the scan skips the rules file.
+
 ## Left to dependent tickets
 
 - #15 and #16: `Finding::rule` is required. A Source Finding (RL100, RL106) may have no Rule, so #15 reshapes `Finding`; do it before #16 fixes the JSON schema.

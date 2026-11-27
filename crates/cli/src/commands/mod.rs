@@ -124,8 +124,20 @@ fn project_root() -> Result<std::path::PathBuf, Error> {
     std::env::current_dir().map_err(|e| Error::Internal(e.to_string()))
 }
 
+/// Prints, on stderr, what `rulelink.toml` holds that has no effect.
+fn warn_about_configuration() -> Result<(), Error> {
+    for warning in rulelink_app::configuration::warnings(&project_root()?) {
+        eprintln!("rulelink: warning: {warning}");
+    }
+    Ok(())
+}
+
 /// Runs the command line. Only `check` can run to the end and still fail the run.
 fn dispatch(args: CliArgs) -> Result<Outcome, Error> {
+    // `init` is the one command that does not read an existing configuration.
+    if !matches!(args, CliArgs::Display(_) | CliArgs::Run(Command::Init(_))) {
+        warn_about_configuration()?;
+    }
     let succeeded = |()| Outcome::Success;
     match args {
         CliArgs::Display(text) => {

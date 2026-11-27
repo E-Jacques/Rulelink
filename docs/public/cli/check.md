@@ -47,6 +47,7 @@ check verifies the link between a Rule and the code, not that the code is correc
 ## See also
 
 - [Findings](../concepts/findings.md)
+- [Configuration](../concepts/configuration.md)
 - [Specify Rules in code](../concepts/specify-rules-in-code.md)
 - [`rulelink where`](where.md)
 - [Run Rulelink in CI](../guides/run-rulelink-in-ci.md)
