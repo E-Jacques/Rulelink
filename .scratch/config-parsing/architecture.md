@@ -1,6 +1,6 @@
 # Configuration parsing and output: target architecture
 
-Design only, nothing is implemented. Signatures are proposals. **D1** to **D6** are decided and the diagrams show them, but **D3 must be confirmed again**: it was chosen from an outdated description of the code. Checked against `main` at `3519619`.
+Design only, nothing is implemented. Signatures are proposals. **D1** to **D6** are decided, and the diagrams show them. Checked against `main` at `3519619`.
 
 ## Goals
 
@@ -17,7 +17,7 @@ Design only, nothing is implemented. Signatures are proposals. **D1** to **D6** 
 | `rulelink-config` validates `source.path` | The JSON adapter validates it |
 | `scan.exclude` is checked in `config`, then its glob syntax at scan time in `scan-fs` | `scan-fs` checks all of it at load time |
 | The first problem stops parsing | Independent problems are all collected |
-| Unknown keys give a warning (top level, `[rules]`, `[scan]`), an error (`[check]`) or nothing (`[source]`) | Unknown keys are errors everywhere (D3, to confirm) |
+| Unknown keys give a warning (top level, `[rules]`, `[scan]`), an error (`[check]`) or nothing (`[source]`) | Unknown keys are errors everywhere (D3) |
 | `app::configuration::warnings` loads the configuration a second time and returns sentences | Warnings come as data from the one parse |
 | `Bootstrap`, in the `app` library, calls `eprintln!` | Only a surface (CLI, later LSP) writes output |
 
@@ -264,8 +264,8 @@ flowchart LR
 
 - Every command that opens a Workspace now refuses an invalid `scan.exclude` glob. Today only a scanning command does. The class stays configuration error, exit code 2.
 - One run can report several configuration problems.
-- If D3 is confirmed, a file with an unknown key that only warns today, or is ignored under `[source]`, is refused (configuration error, exit code 2).
-- In that case no property produces a warning yet. `Parsed.warnings` is there for the first one, such as a deprecated key.
+- A file with an unknown key that only warns today, or is ignored under `[source]`, is refused (configuration error, exit code 2).
+- No property produces a warning yet. `Parsed.warnings` is there for the first one, such as a deprecated key.
 - `rulelink init` keeps its template. The test that loads it back moves to `app`, where the adapters are known.
 
 ## Not in this design
@@ -296,25 +296,21 @@ Rejected: a text map (`map["source.path"]`), where every reader converts the val
 
 Accepted cost: a warning that would explain a problem appears only once the problem is fixed.
 
-### D3. What does an unknown key do? Chosen: an error. To confirm
+### D3. What does an unknown key do? Decided: it is an error, everywhere
 
-**The choice was made from wrong information.** The description given was that 09 §3 requires an error and the code ignores unknown keys. That was read on an outdated branch. On `main`, since #62:
+`x-*` names and the content of `[adapters.*]` stay accepted without a message. As 09 §3 targets, the error suggests the closest known key, which is new work.
+
+This reverses part of what #62 shipped. It was confirmed with today's behaviour in view:
 
 | Where | Today |
 | --- | --- |
 | Top level, `[rules]`, `[scan]` | warning, the key is ignored |
 | `[check]` | configuration error |
-| `[source]` | ignored without a warning, until its keys have an owner |
-| `x-*` names, `[adapters]` | accepted without a message |
+| `[source]` | ignored without a warning |
 
-09 §3 states that this is the MVP behaviour, without a suggestion of the closest key, and the public page `docs/public/concepts/configuration.md` promises it. That page also says no warning is printed when the configuration is invalid, which already matches D2.
+To change with the implementation: the note in 09 §3 about the MVP behaviour, the public page `docs/public/concepts/configuration.md`, and `crates/config/src/unknown.rs` with its tests.
 
-| Option | Consequence |
-| --- | --- |
-| **A. Keep today's levels, and warn in `[source]`** | No shipped warning becomes an error. This design settles who owns the `[source]` keys, so they can be checked too. `TableParser` needs to know whether an unknown key in a table warns or fails. 09 §3 and the public page change only for `[source]` |
-| B. Error everywhere (current choice) | One behaviour, and no typo is ignored. It reverses what #62 shipped. 09 §3 and the public page must change, and a suggestion of the closest key is new work |
-
-If B stays, the diagrams stand. If A is chosen, the `TableParser` bullet, section 3 and the behaviour changes must be updated.
+Rejected: keeping today's levels and adding a warning in `[source]`.
 
 ### D4. How does an adapter describe its settings? Decided: its `parse` is the validation
 
