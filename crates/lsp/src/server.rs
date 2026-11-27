@@ -36,5 +36,10 @@ impl Entrypoint for LspEntrypoint {
         ))
     }
 
+    /// On the error output: standard output carries protocol messages only.
+    fn report_failure(&self, failure: &dyn std::fmt::Display) {
+        eprintln!("{}: {failure}", self.name());
+    }
+
     async fn shutdown(&self, _ctx: &AppContext, _reason: ShutdownReason) {}
 }

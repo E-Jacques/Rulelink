@@ -110,6 +110,17 @@ impl ParseError {
         }
     }
 
+    /// An error for all of `problems`, or `None` if there are none.
+    #[must_use]
+    pub fn from_problems(problems: impl IntoIterator<Item = Problem>) -> Option<Self> {
+        let mut problems = problems.into_iter();
+        let first = problems.next()?;
+        Some(Self {
+            first,
+            rest: problems.collect(),
+        })
+    }
+
     /// The problems, in the order they were found.
     pub fn problems(&self) -> impl Iterator<Item = &Problem> {
         std::iter::once(&self.first).chain(&self.rest)

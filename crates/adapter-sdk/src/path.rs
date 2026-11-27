@@ -28,7 +28,11 @@ impl ProjectPath {
             && path
                 .components()
                 .all(|c| matches!(c, Component::Normal(_) | Component::CurDir));
-        if plain { Ok(Self(path)) } else { Err(OutsideProject) }
+        if plain {
+            Ok(Self(path))
+        } else {
+            Err(OutsideProject)
+        }
     }
 
     /// The path, relative to the project root.

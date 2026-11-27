@@ -11,8 +11,10 @@ fn one(problem: &str) -> String {
 
 /// What a command prints when the configuration has several problems.
 fn several(problems: &[&str]) -> String {
-    let list: String = problems.iter().map(|p| format!("\n  - {p}")).collect();
-    format!("rulelink: configuration error: invalid rulelink.toml:{list}\n")
+    format!(
+        "rulelink: configuration error: invalid rulelink.toml:\n  - {}\n",
+        problems.join("\n  - ")
+    )
 }
 
 fn initialised() -> Repo {
@@ -84,7 +86,11 @@ fn every_command_that_reads_the_configuration_refuses_it_and_changes_nothing() {
     for command in commands {
         let run = repo.run(command);
         assert_eq!(run.code, 2, "{command:?}: {}", run.stderr);
-        assert!(run.stderr.contains("`scan.exclude` pattern \"[\""), "{}", run.stderr);
+        assert!(
+            run.stderr.contains("`scan.exclude` pattern \"[\""),
+            "{}",
+            run.stderr
+        );
         assert_eq!(run.stdout, "", "{command:?}");
     }
     assert_eq!(repo.read("rules/rules.json"), source);
@@ -110,9 +116,8 @@ fn an_unknown_key_is_refused_in_every_section() {
 #[test]
 fn a_name_with_no_close_known_key_says_how_to_keep_it() {
     let repo = project("lvls = 1", "");
-    let expected = one(
-        "unknown section or key `lvls`; remove it, or start its name with `x-` to keep it",
-    );
+    let expected =
+        one("unknown section or key `lvls`; remove it, or start its name with `x-` to keep it");
     assert_eq!(check(&repo), (2, expected));
 }
 

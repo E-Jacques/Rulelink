@@ -143,9 +143,7 @@ impl TableParser {
     fn unknown(&self, name: &str) -> Problem {
         let key = self.table.written(name);
         let advice = closest(name, &self.known).map_or_else(
-            || {
-                format!("remove it, or start its name with `{EXTENSION_PREFIX}` to keep it")
-            },
+            || format!("remove it, or start its name with `{EXTENSION_PREFIX}` to keep it"),
             |known| format!("did you mean `{}`?", self.table.written(known)),
         );
         let message = format!("unknown section or key `{key}`; {advice}");

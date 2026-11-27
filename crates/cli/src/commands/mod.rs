@@ -3,6 +3,7 @@
 //! Adding a command: add a variant to [`Command`] with its own `clap::Args` struct, a handler
 //! function returning `Result<(), Error>`, and one line in [`dispatch`]. A command that can run
 //! to the end and still fail the run, like `check`, returns `Result<Outcome, Error>` instead.
+//! A handler writes only through its [`Presenter`], and gets the project from [`open`].
 
 use clap::error::ErrorKind;
 use clap::{Parser, Subcommand};
@@ -15,11 +16,12 @@ mod rules_lifecycle;
 mod rules_query;
 mod where_cmd;
 
+use crate::presenter::Presenter;
 use init::InitArgs;
-use rulelink_app::Error;
 use rulelink_app::runtime::{
     AppContext, CancellationToken, Entrypoint, Outcome, ShutdownReason, TelemetryConfig, UsageError,
 };
+use rulelink_app::{Error, Workspace};
 use rules_add::RulesAddArgs;
 use rules_lifecycle::{RuleRefArgs, RulesObsoleteArgs};
 use rules_query::{RulesListArgs, RulesSearchArgs};
@@ -109,11 +111,18 @@ impl Entrypoint for CliEntrypoint {
 
     async fn run(&self, _ctx: &AppContext) -> Outcome {
         // `Bootstrap` already validated the command line; parsing again is side-effect free.
+        let (mut out, mut err) = (std::io::stdout(), std::io::stderr());
+        let mut presenter = Presenter::new(&mut out, &mut err);
         let result = match self.parse_args() {
-            Ok(args) => dispatch(args),
+            Ok(args) => dispatch(args, &mut presenter),
             Err(err) => Err(Error::Internal(err.to_string())),
         };
         result.unwrap_or_else(Outcome::Failed)
+    }
+
+    fn report_failure(&self, failure: &dyn std::fmt::Display) {
+        Presenter::new(&mut std::io::stdout(), &mut std::io::stderr())
+            .failure(self.name(), failure);
     }
 
     async fn shutdown(&self, _ctx: &AppContext, _reason: ShutdownReason) {}
@@ -124,43 +133,38 @@ fn project_root() -> Result<std::path::PathBuf, Error> {
     std::env::current_dir().map_err(|e| Error::Internal(e.to_string()))
 }
 
-/// Prints, on stderr, what `rulelink.toml` holds that has no effect.
-fn warn_about_configuration() -> Result<(), Error> {
-    for warning in rulelink_app::configuration::warnings(&project_root()?) {
-        eprintln!("rulelink: warning: {warning}");
+/// Opens the project in the current directory, and shows what its configuration warns about
+/// before the command does anything.
+fn open(out: &mut Presenter<'_>) -> Result<Workspace, Error> {
+    let opened = Workspace::open(&project_root()?)?;
+    for warning in &opened.warnings {
+        out.configuration_warning(warning)?;
     }
-    Ok(())
+    Ok(opened.configuration)
 }
 
 /// Runs the command line. Only `check` can run to the end and still fail the run.
-fn dispatch(args: CliArgs) -> Result<Outcome, Error> {
-    // `init` is the one command that does not read an existing configuration.
-    if !matches!(args, CliArgs::Display(_) | CliArgs::Run(Command::Init(_))) {
-        warn_about_configuration()?;
-    }
+fn dispatch(args: CliArgs, out: &mut Presenter<'_>) -> Result<Outcome, Error> {
     let succeeded = |()| Outcome::Success;
     match args {
-        CliArgs::Display(text) => {
-            print!("{text}");
-            Ok(Outcome::Success)
-        }
-        CliArgs::Run(Command::Check) => check::run(),
-        CliArgs::Run(Command::Init(args)) => init::run(&args).map(succeeded),
-        CliArgs::Run(Command::Where(args)) => where_cmd::run(&args).map(succeeded),
-        CliArgs::Run(Command::Rules { action }) => rules(action).map(succeeded),
+        CliArgs::Display(text) => out.text(&text).map(succeeded),
+        CliArgs::Run(Command::Check) => check::run(out),
+        CliArgs::Run(Command::Init(args)) => init::run(&args, out).map(succeeded),
+        CliArgs::Run(Command::Where(args)) => where_cmd::run(&args, out).map(succeeded),
+        CliArgs::Run(Command::Rules { action }) => rules(action, out).map(succeeded),
     }
 }
 
 /// One line per `rules` command: the handlers hold the logic.
-fn rules(action: RulesAction) -> Result<(), Error> {
+fn rules(action: RulesAction, out: &mut Presenter<'_>) -> Result<(), Error> {
     match action {
-        RulesAction::Add(args) => rules_add::run(&args),
-        RulesAction::Approve(args) => rules_lifecycle::approve(&args),
-        RulesAction::Reject(args) => rules_lifecycle::reject(&args),
-        RulesAction::Obsolete(args) => rules_lifecycle::obsolete(&args),
-        RulesAction::Format => rules_format::run(),
-        RulesAction::List(args) => rules_query::list(&args),
-        RulesAction::Search(args) => rules_query::search(&args),
+        RulesAction::Add(args) => rules_add::run(&args, out),
+        RulesAction::Approve(args) => rules_lifecycle::approve(&args, out),
+        RulesAction::Reject(args) => rules_lifecycle::reject(&args, out),
+        RulesAction::Obsolete(args) => rules_lifecycle::obsolete(&args, out),
+        RulesAction::Format => rules_format::run(out),
+        RulesAction::List(args) => rules_query::list(&args, out),
+        RulesAction::Search(args) => rules_query::search(&args, out),
     }
 }
 

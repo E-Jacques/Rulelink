@@ -1,10 +1,10 @@
 //! Check use case: the Findings of a project.
 
-use std::path::{Path, PathBuf};
+use std::path::PathBuf;
 
 use rulelink_check::Report;
 
-use crate::Error;
+use crate::{Error, Workspace};
 
 /// Result of [`run`].
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -15,17 +15,18 @@ pub struct Checked {
     pub report: Report,
 }
 
-/// Reports the Findings of the project at `root`. Reads only.
+/// Reports the Findings of the project. Reads only.
 ///
 /// # Errors
-/// [`Error::Config`] for a missing or invalid `rulelink.toml` or an invalid `scan.exclude`
-/// pattern, [`Error::Source`] for a missing, invalid or unsupported Source,
-/// [`Error::Internal`] if a file cannot be read.
-pub fn run(root: &Path) -> Result<Checked, Error> {
-    let (config, _, rule_set) = crate::rules::read_source(root)?;
-    let links = rulelink_adapter_scan_fs::scan(root, &config.scan_exclude, &config.source_path)?;
+/// [`Error::Config`] if the exclusion patterns cannot be combined, [`Error::Source`] for a
+/// missing, invalid or unsupported Source, [`Error::Internal`] if a file cannot be read.
+pub fn run(project: &Workspace) -> Result<Checked, Error> {
+    let (_, rule_set) = crate::rules::read_source(project)?;
+    let source_path = project.source_path()?;
+    let links =
+        rulelink_adapter_scan_fs::scan(project.root(), project.scan_exclude()?, source_path)?;
     Ok(Checked {
-        report: rulelink_check::check(&rule_set, &links, &config.check_levels),
-        source_path: config.source_path,
+        report: rulelink_check::check(&rule_set, &links, project.check_levels()?),
+        source_path: source_path.to_path_buf(),
     })
 }

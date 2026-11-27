@@ -1,6 +1,7 @@
 //! Filesystem code scanning adapter: walks the project and indexes its Annotations.
 
 mod error;
+mod settings;
 
 use std::path::Path;
 
@@ -9,6 +10,7 @@ use ignore::overrides::OverrideBuilder;
 use rulelink_link::LinkIndex;
 
 pub use error::Error;
+pub use settings::{ScanExclude, ScanFsConfig};
 
 /// Name of the Rulelink-specific ignore file, in `.gitignore` syntax.
 const IGNORE_FILE: &str = ".rulelinkignore";
@@ -27,12 +29,12 @@ const MAX_FILE_BYTES: u64 = 2 * 1024 * 1024;
 /// quoted in it cites nothing.
 ///
 /// # Errors
-/// [`Error::InvalidExclude`] for a pattern that is not a valid glob, [`Error::Unreadable`] for
-/// a directory or file that cannot be read.
-pub fn scan(root: &Path, exclude: &[String], rules_file: &Path) -> Result<LinkIndex, Error> {
+/// [`Error::InvalidExclude`] if the patterns cannot be combined (each one was checked when
+/// parsed), [`Error::Unreadable`] for a directory or file that cannot be read.
+pub fn scan(root: &Path, exclude: &ScanExclude, rules_file: &Path) -> Result<LinkIndex, Error> {
     // `Path` equality compares components, so `./rules.json` matches the walked `rules.json`.
     let rules_file = root.join(rules_file);
-    let walk = files_to_walk(root, exclude)?;
+    let walk = files_to_walk(root, exclude.patterns())?;
     let mut index = LinkIndex::new();
     for entry in walk {
         let entry = entry.map_err(|e| Error::Unreadable {
@@ -111,9 +113,19 @@ mod tests {
     use super::*;
     use rulelink_model::RuleId;
 
+    fn exclusions(patterns: &[&str]) -> ScanExclude {
+        use rulelink_adapter_sdk::{Property, RawValue};
+        let raw = patterns
+            .iter()
+            .map(|p| RawValue::String((*p).to_owned()))
+            .collect();
+        ScanExclude::parse(Some(&RawValue::Array(raw)))
+            .unwrap_or_else(|e| panic!("{e}"))
+            .configuration
+    }
+
     fn cited(dir: &tempfile::TempDir, exclude: &[&str]) -> Vec<String> {
-        let exclude: Vec<String> = exclude.iter().map(|s| (*s).to_owned()).collect();
-        scan(dir.path(), &exclude, Path::new("rules.json"))
+        scan(dir.path(), &exclusions(exclude), Path::new("rules.json"))
             .unwrap_or_else(|e| panic!("{e}"))
             .locations(&RuleId("RULE-1".to_owned()))
             .into_iter()
@@ -145,13 +157,5 @@ mod tests {
         write(&dir, "a/b/c.rs", b"// @rule RULE-1\n");
         write(&dir, "gen/x.rs", b"// @rule RULE-1\n");
         assert_eq!(cited(&dir, &["gen/"]), ["a/b/c.rs:1"]);
-    }
-
-    #[test]
-    fn an_invalid_exclusion_names_the_pattern() {
-        let dir = tempfile::tempdir().expect("dir");
-        let err =
-            scan(dir.path(), &["[".to_owned()], Path::new("rules.json")).expect_err("refused");
-        assert!(matches!(err, Error::InvalidExclude { ref pattern, .. } if pattern == "["));
     }
 }

@@ -4,7 +4,8 @@ use clap::Args;
 use rulelink_app::Error;
 use rulelink_app::{RuleDraft, RuleId};
 
-use super::project_root;
+use super::open;
+use crate::presenter::Presenter;
 
 /// Arguments of `rules add`.
 #[derive(Debug, Args)]
@@ -32,7 +33,7 @@ pub struct RulesAddArgs {
     pub(super) related: Vec<String>,
 }
 
-pub(super) fn run(args: &RulesAddArgs) -> Result<(), Error> {
+pub(super) fn run(args: &RulesAddArgs, out: &mut Presenter<'_>) -> Result<(), Error> {
     let related = args
         .related
         .iter()
@@ -47,7 +48,6 @@ pub(super) fn run(args: &RulesAddArgs) -> Result<(), Error> {
         &args.excluded,
         &related,
     )?;
-    let id = rulelink_app::rules::add(&project_root()?, draft)?;
-    println!("Created {} (proposed)", id.0);
-    Ok(())
+    let id = rulelink_app::rules::add(&open(out)?, draft)?;
+    out.line(format_args!("Created {} (proposed)", id.0))
 }

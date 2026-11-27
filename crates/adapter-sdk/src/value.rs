@@ -105,6 +105,7 @@ impl RawTable {
 
     /// Moves the setting `name`, if present, into its own table of the same section, so that
     /// it can be parsed before the rest.
+    #[must_use = "the setting is no longer in the original table"]
     pub fn split_off(&mut self, name: &str) -> Self {
         let entries = self.entries.remove_entry(name).into_iter().collect();
         Self::new(self.path.clone(), entries)

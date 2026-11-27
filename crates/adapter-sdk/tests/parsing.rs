@@ -73,12 +73,15 @@ fn messages(error: &ParseError) -> Vec<&str> {
 #[test]
 fn a_parsed_map_holds_every_declared_property_with_its_default() {
     let parsed = demo(&[("name", "a")]).expect("valid");
-    assert_eq!(parsed.configuration.get::<Name>(), Ok(&Name("a".to_owned())));
+    assert_eq!(
+        parsed.configuration.get::<Name>(),
+        Ok(&Name("a".to_owned()))
+    );
     assert_eq!(
         parsed.configuration.get::<Mode>(),
         Ok(&Mode("plain".to_owned()))
     );
-    assert!(parsed.warnings.is_empty());
+    assert_eq!(parsed.warnings.len(), 0);
 }
 
 #[test]
