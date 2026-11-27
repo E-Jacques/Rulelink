@@ -2,6 +2,14 @@ use std::cmp::Ordering;
 
 use serde::{Deserialize, Serialize};
 
+/// Separates the prefix of an Identifier from its suffix.
+const IDENTIFIER_HYPHEN: char = '-';
+
+/// What an Identifier is made of, after the first letter of its prefix and around its hyphen.
+pub(crate) fn is_identifier_char(c: char) -> bool {
+    c.is_ascii_uppercase() || c.is_ascii_digit() || c == '_'
+}
+
 /// Permanent identifier of a rule (e.g. `RULE-042`).
 #[derive(Debug, Clone, PartialEq, Eq, Hash, Serialize, Deserialize)]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
@@ -20,6 +28,27 @@ impl RuleId {
         } else {
             Ok(Self(trimmed.to_owned()))
         }
+    }
+
+    /// Whether this follows the grammar of an Identifier, whatever prefix a project
+    /// configures: a prefix as [`IdPrefix`](crate::IdPrefix) accepts it, one hyphen, then
+    /// upper-case letters, digits or `_`.
+    ///
+    /// ```
+    /// use rulelink_model::RuleId;
+    ///
+    /// let id = |raw: &str| RuleId(raw.to_owned());
+    /// assert!(id("PRICING_V2-A1").is_well_formed());
+    /// assert!(!id("rule-042").is_well_formed());
+    /// ```
+    #[must_use]
+    pub fn is_well_formed(&self) -> bool {
+        let Some((prefix, suffix)) = self.0.split_once(IDENTIFIER_HYPHEN) else {
+            return false;
+        };
+        crate::IdPrefix::parse(prefix).is_ok()
+            && !suffix.is_empty()
+            && suffix.chars().all(is_identifier_char)
     }
 
     /// The order Identifiers are listed in: digit runs compare by value, so `RULE-2` comes

@@ -9,7 +9,7 @@ use std::path::{Component, Path};
 
 use serde::Serialize;
 
-use crate::{Finding, Report, Severity};
+use crate::{Finding, Place, Report, Severity};
 
 /// The value of `schema` in [`CheckReportV1`].
 const SCHEMA_V1: &str = "rulelink/check-report/v1";
@@ -26,11 +26,14 @@ may add fields and Finding codes: ignore what you do not know.";
 /// ```
 /// use std::path::Path;
 ///
-/// use rulelink_check::{CheckReportV1, Levels, check};
+/// use rulelink_check::{CheckReportV1, Levels, Source, check};
 /// use rulelink_link::LinkIndex;
 /// use rulelink_model::RuleSet;
 ///
-/// let report = check(&RuleSet::empty(), &LinkIndex::new(), &Levels::default());
+/// let rules = RuleSet::empty();
+/// let text = rules.to_canonical();
+/// let source = Source::Rules { rules: &rules, text: &text };
+/// let report = check(source, &LinkIndex::new(), &Levels::default());
 ///
 /// let published = CheckReportV1::new(&report, Path::new("rules/rules.json"));
 ///
@@ -113,16 +116,16 @@ struct FindingV1 {
 impl FindingV1 {
     fn new(finding: &Finding, source_file: &str) -> Self {
         let code = finding.problem.code();
-        let (file, line) = finding.location.as_ref().map_or_else(
-            || (source_file.to_owned(), None),
-            |at| (at.path.clone(), Some(at.line)),
-        );
+        let (file, line) = match &finding.place {
+            Place::Code(at) => (at.path.clone(), Some(at.line)),
+            Place::RulesFile { line } => (source_file.to_owned(), *line),
+        };
         Self {
             code: code.id(),
             name: code.name(),
             severity: finding.severity,
             message: finding.message(),
-            rule: Some(finding.rule.0.clone()),
+            rule: finding.rule.as_ref().map(|id| id.0.clone()),
             file: Some(file),
             line,
         }

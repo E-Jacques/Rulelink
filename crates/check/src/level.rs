@@ -1,7 +1,7 @@
 use std::collections::BTreeMap;
 use std::str::FromStr;
 
-use crate::{Code, UnknownLevel};
+use crate::{Code, FixedLevel, UnknownLevel};
 
 /// How much a Finding weighs.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, serde::Serialize)]
@@ -66,8 +66,24 @@ pub struct Levels(BTreeMap<Code, Level>);
 
 impl Levels {
     /// Sets the level of `code`.
-    pub fn set(&mut self, code: Code, level: Level) {
+    ///
+    /// ```
+    /// use rulelink_check::{Code, Level, Levels};
+    ///
+    /// let mut levels = Levels::default();
+    /// assert!(levels.set(Code::NotCanonical, Level::Error).is_ok());
+    /// assert!(levels.set(Code::DuplicateId, Level::Off).is_err());
+    /// ```
+    ///
+    /// # Errors
+    /// [`FixedLevel`] when lowering or turning off an error in the Source that stops the code
+    /// checks. Nothing changes.
+    pub fn set(&mut self, code: Code, level: Level) -> Result<(), FixedLevel> {
+        if code.is_source_error() && level != Level::Error {
+            return Err(FixedLevel { code });
+        }
         self.0.insert(code, level);
+        Ok(())
     }
 
     /// The level the team set for `code`, if any.

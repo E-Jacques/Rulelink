@@ -87,6 +87,7 @@ impl From<rulelink_adapter_json::Error> for Error {
         match err {
             E::NotFound(_)
             | E::Invalid { .. }
+            | E::WrongShape { .. }
             | E::UnsupportedFormat { .. }
             | E::Unreadable { .. } => Self::Source(err.to_string()),
             E::AlreadyExists | E::Io(_) => Self::Internal(err.to_string()),
