@@ -160,7 +160,7 @@ classDiagram
     class AdapterFamily {
         <<interface>>
         +kind() str
-        +config_schema() JsonSchema
+        +parse_settings(table) ParseResult
         +create_source(cfg) Option~RuleSource~
         +create_importer(cfg) Option~RuleImporter~
         +create_publisher(cfg) Option~RulePublisher~
@@ -191,7 +191,7 @@ classDiagram
 - `AdapterFamily` is the **Abstract Factory**: each family creates consistent products (the Jira importer and source share `JiraClient`).
 - `AdapterRegistry::source()`, `importer()` and `publisher()` are **Factory Methods** parameterised by `kind`.
 - Native families are registered at compile time, each behind a Cargo feature (`adapter-jira`, `adapter-confluence`...). External families are registered from `[adapters.<name>]` in the configuration.
-- `config_schema()` publishes the schema of the adapter's configuration section. `rulelink doctor` and `rulelink config` validate the configuration against it.
+- Each adapter parses and validates its own section: every command, `doctor` included, uses that one parse, so there is no separate configuration schema (a schema may be added later for editor completion only). Today this part exists alone, as the `AdapterConfig` trait of `rulelink-adapter-sdk`: one `Property` type per setting, run through a `TableParser` that collects every problem and refuses unknown keys. `rulelink-config` receives the adapters in an `AdapterCatalog`, so it depends on none of them. The family and the registry come with the second source kind.
 
 ### 5.3 JSON source — **Adapter** + **Memento**
 
@@ -282,7 +282,7 @@ sequenceDiagram
     APP->>PX: importer("notion", cfg)
     PX->>P: starts the declared command
     PX->>P: initialize {protocol: "1.0", rulelink: "0.6.0", config}
-    P-->>PX: {protocol: "1.0", name, version, roles: ["import"], config_schema}
+    P-->>PX: {protocol: "1.0", name, version, roles: ["import"], problems, warnings}
     APP->>PX: fetch(request)
     PX->>P: import/fetch {query, cursor}
     P-->>PX: {items: [...], next_cursor: "abc"}
@@ -298,7 +298,7 @@ sequenceDiagram
 
 | Method                      | Parameters                                                                                  | Result                                                   | Role       |
 | --------------------------- | ------------------------------------------------------------------------------------------- | -------------------------------------------------------- | ---------- |
-| `initialize`                | `protocol`, `rulelink_version`, `config`, `workspace_root`, `secrets` (only those declared) | `protocol`, `name`, `version`, `roles`, `config_schema?` | All        |
+| `initialize`                | `protocol`, `rulelink_version`, `config`, `workspace_root`, `secrets` (only those declared) | `protocol`, `name`, `version`, `roles`, `problems`, `warnings` (about `config`) | All        |
 | `health`                    | —                                                                                           | `{ status: ok\|degraded\|error, details }`               | All        |
 | `source/load`               | —                                                                                           | `{ ruleset, fingerprint, positions? }`                   | Source     |
 | `source/fingerprint`        | —                                                                                           | `{ fingerprint }`                                        | Source     |

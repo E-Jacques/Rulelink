@@ -58,6 +58,7 @@ classDiagram
         +telemetry(args) TelemetryConfig
         +build_context(args, cancel) AppContext
         +run(ctx) Outcome
+        +report_failure(failure)
         +shutdown(ctx, reason)
     }
     class Bootstrap {
@@ -82,6 +83,7 @@ pub trait Entrypoint {
     fn telemetry(&self, args: &Self::Args) -> TelemetryConfig;
     fn build_context(&self, args: &Self::Args, cancel: CancellationToken) -> Result<AppContext, app::Error>;
     fn run(&self, ctx: &AppContext) -> impl Future<Output = Outcome>;
+    fn report_failure(&self, failure: &dyn Display);        // Bootstrap writes nothing itself
     fn shutdown(&self, ctx: &AppContext, reason: ShutdownReason) -> impl Future<Output = ()>;
 }
 

@@ -69,10 +69,15 @@ impl From<rulelink_config::Error> for Error {
     fn from(err: rulelink_config::Error) -> Self {
         use rulelink_config::Error as E;
         match err {
-            E::InvalidIdPrefix(_) | E::NotFound(_) | E::Unreadable { .. } | E::Invalid { .. } => {
-                Self::Config(err.to_string())
-            }
+            E::NotFound(_) | E::Unreadable { .. } | E::Invalid(_) => Self::Config(err.to_string()),
         }
+    }
+}
+
+/// Never the user's mistake: a setting was read that no parser was told about.
+impl From<rulelink_adapter_sdk::UndeclaredProperty> for Error {
+    fn from(err: rulelink_adapter_sdk::UndeclaredProperty) -> Self {
+        Self::Internal(err.to_string())
     }
 }
 

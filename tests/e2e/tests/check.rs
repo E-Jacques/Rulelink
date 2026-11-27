@@ -283,8 +283,11 @@ fn an_unknown_name_level_or_check_key_is_a_configuration_error() {
         ("[check.levels]\norphan-rule = 1", "orphan-rule"),
         ("[check]\nwarnings_as_errors = true", "warnings_as_errors"),
         ("[[check.overrides]]\npaths = [\"legacy/**\"]", "overrides"),
-        ("[check]\nlevels = \"off\"", "levels = "),
-        ("[check.level]\norphan-rule = \"off\"", "[check.level]"),
+        (
+            "[check]\nlevels = \"off\"",
+            "`check.levels` must be a section",
+        ),
+        ("[check.level]\norphan-rule = \"off\"", "`check.level`"),
         (
             "[check.levels]\norphan-rule = \"off\"\norphan-rule = \"error\"",
             "orphan-rule = \"error\"",

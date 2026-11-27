@@ -1,6 +1,7 @@
 //! JSON file adapter.
 
 mod error;
+mod settings;
 
 use std::fs::{self, OpenOptions};
 use std::io::Write;
@@ -9,6 +10,7 @@ use std::path::{Path, PathBuf};
 use rulelink_model::{FORMAT_VERSION, RuleSet};
 
 pub use error::Error;
+pub use settings::{JsonConfig, SourcePath};
 
 /// Creates a Source file holding `rules` in Canonical form.
 ///

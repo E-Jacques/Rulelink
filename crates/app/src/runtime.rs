@@ -95,6 +95,9 @@ pub trait Entrypoint {
     ) -> Result<AppContext, Error>;
     /// Runs the entry point.
     fn run(&self, ctx: &AppContext) -> impl Future<Output = Outcome>;
+    /// Tells the user why the run failed, the way this surface shows errors: the shared
+    /// skeleton writes nothing itself.
+    fn report_failure(&self, failure: &dyn std::fmt::Display);
     /// Releases resources.
     fn shutdown(&self, ctx: &AppContext, reason: ShutdownReason) -> impl Future<Output = ()>;
 }
@@ -112,7 +115,7 @@ impl Bootstrap {
         let args = match entry.parse_args() {
             Ok(args) => args,
             Err(err) => {
-                eprintln!("{}: {err}", entry.name());
+                entry.report_failure(&err);
                 return 2;
             }
         };
@@ -121,7 +124,7 @@ impl Bootstrap {
         let ctx = match entry.build_context(&args, cancel) {
             Ok(ctx) => ctx,
             Err(err) => {
-                eprintln!("{}: {err}", entry.name());
+                entry.report_failure(&err);
                 return err.exit_code();
             }
         };
@@ -131,7 +134,7 @@ impl Bootstrap {
             Outcome::Success => 0,
             Outcome::ChecksFailed => 1,
             Outcome::Failed(err) => {
-                eprintln!("{}: {err}", entry.name());
+                entry.report_failure(&err);
                 err.exit_code()
             }
         }
