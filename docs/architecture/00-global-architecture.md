@@ -153,13 +153,12 @@ flowchart TB
     BUS --> REG & LNK & CHK & IMP & PUB
     REG --> MOD
     LNK --> MOD
-    CHK --> REG & LNK
+    CHK --> MOD & LNK
     IMP --> REG
     PUB --> REG & LNK
     BUS --> SDK
     SDK --> JSON & JIRA & CONF & EXT
     LNK --> SCAN
-    CHK --> GIT
 ```
 
 ## 5. Hexagonal architecture and crate breakdown
@@ -184,8 +183,10 @@ flowchart BT
     registry --> model
     sdk --> model
     link --> model
-    check --> registry
+    check --> model
     check --> link
+    config --> model
+    config --> check
     import --> registry
     import --> sdk
     publish --> registry

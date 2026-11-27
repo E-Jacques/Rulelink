@@ -129,6 +129,11 @@ impl LinkIndex {
         }
     }
 
+    /// The Identifiers that at least one Annotation cites, in no particular order.
+    pub fn cited(&self) -> impl Iterator<Item = &RuleId> {
+        self.by_rule.keys()
+    }
+
     /// The places that cite `id`, sorted by path then line; empty if there are none.
     #[must_use]
     pub fn locations(&self, id: &RuleId) -> Vec<Location> {

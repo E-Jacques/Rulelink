@@ -19,10 +19,10 @@ The command line, `rulelink`.
 - Create, review, search and retire Rules with the [`rulelink rules`](cli/README.md) commands.
 - Keep the Source in its canonical form with [`rulelink rules format`](cli/rules-format.md).
 - List the code that cites a Rule with [`rulelink where`](cli/where.md).
+- Report Findings for the whole project with [`rulelink check`](cli/check.md): an unknown Rule in code, an obsolete Rule still cited, a validated Rule with no code.
 
 ### Next (announced)
 
-- Report Findings for the whole project: an unknown Rule in code, an obsolete Rule still cited, a validated Rule with no code.
 - Help your AI agent read, annotate and propose Rules, with a person approving each one.
 - Propose Rules from an external file.
 - Install with a package manager.

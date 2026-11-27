@@ -23,10 +23,15 @@ const MAX_FILE_BYTES: u64 = 2 * 1024 * 1024;
 /// plus `exclude`, a list of `.gitignore`-style patterns relative to `root`. Skips hidden
 /// files, symbolic links, files over 2 MB, binary files and files that are not UTF-8.
 ///
+/// `rules_file`, relative to `root`, is skipped too: Rule text is data, so an Annotation
+/// quoted in it cites nothing.
+///
 /// # Errors
 /// [`Error::InvalidExclude`] for a pattern that is not a valid glob, [`Error::Unreadable`] for
 /// a directory or file that cannot be read.
-pub fn scan(root: &Path, exclude: &[String]) -> Result<LinkIndex, Error> {
+pub fn scan(root: &Path, exclude: &[String], rules_file: &Path) -> Result<LinkIndex, Error> {
+    // `Path` equality compares components, so `./rules.json` matches the walked `rules.json`.
+    let rules_file = root.join(rules_file);
     let walk = files_to_walk(root, exclude)?;
     let mut index = LinkIndex::new();
     for entry in walk {
@@ -34,7 +39,9 @@ pub fn scan(root: &Path, exclude: &[String]) -> Result<LinkIndex, Error> {
             path: root.to_path_buf(),
             message: e.to_string(),
         })?;
-        index_entry(root, &entry, &mut index)?;
+        if entry.path() != rules_file {
+            index_entry(root, &entry, &mut index)?;
+        }
     }
     Ok(index)
 }
@@ -106,7 +113,7 @@ mod tests {
 
     fn cited(dir: &tempfile::TempDir, exclude: &[&str]) -> Vec<String> {
         let exclude: Vec<String> = exclude.iter().map(|s| (*s).to_owned()).collect();
-        scan(dir.path(), &exclude)
+        scan(dir.path(), &exclude, Path::new("rules.json"))
             .unwrap_or_else(|e| panic!("{e}"))
             .locations(&RuleId("RULE-1".to_owned()))
             .into_iter()
@@ -143,7 +150,8 @@ mod tests {
     #[test]
     fn an_invalid_exclusion_names_the_pattern() {
         let dir = tempfile::tempdir().expect("dir");
-        let err = scan(dir.path(), &["[".to_owned()]).expect_err("refused");
+        let err =
+            scan(dir.path(), &["[".to_owned()], Path::new("rules.json")).expect_err("refused");
         assert!(matches!(err, Error::InvalidExclude { ref pattern, .. } if pattern == "["));
     }
 }

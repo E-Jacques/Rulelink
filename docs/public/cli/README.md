@@ -17,3 +17,4 @@ One page per `rulelink` command.
 - [`rulelink rules obsolete`](rules-obsolete.md)
 - [`rulelink rules format`](rules-format.md)
 - [`rulelink where`](where.md)
+- [`rulelink check`](check.md)

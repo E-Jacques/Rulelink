@@ -447,7 +447,7 @@ name = "rulelink-check"
 version = "0.1.0"
 dependencies = [
  "rulelink-link",
- "rulelink-registry",
+ "rulelink-model",
  "thiserror",
 ]
 
@@ -465,6 +465,7 @@ dependencies = [
 name = "rulelink-config"
 version = "0.1.0"
 dependencies = [
+ "rulelink-check",
  "rulelink-model",
  "serde",
  "thiserror",

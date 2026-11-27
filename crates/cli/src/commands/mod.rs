@@ -1,11 +1,13 @@
 //! Command groups of the CLI. No business logic here: arguments become application commands.
 //!
 //! Adding a command: add a variant to [`Command`] with its own `clap::Args` struct, a handler
-//! function returning `Result<(), Error>`, and one line in [`dispatch`].
+//! function returning `Result<(), Error>`, and one line in [`dispatch`]. A command that can run
+//! to the end and still fail the run, like `check`, returns `Result<Outcome, Error>` instead.
 
 use clap::error::ErrorKind;
 use clap::{Parser, Subcommand};
 
+mod check;
 mod init;
 mod rules_add;
 mod rules_format;
@@ -36,6 +38,10 @@ struct Cli {
 pub enum Command {
     /// Create `rulelink.toml` and an empty rules file in the current directory.
     Init(InitArgs),
+    /// Report the Findings about the links between Rules and code.
+    ///
+    /// Verifies the link between a Rule and the code, not that the code is correct.
+    Check,
     /// List the code locations that cite a Rule.
     Where(WhereArgs),
     /// Create, inspect and change Rules.
@@ -107,10 +113,7 @@ impl Entrypoint for CliEntrypoint {
             Ok(args) => dispatch(args),
             Err(err) => Err(Error::Internal(err.to_string())),
         };
-        match result {
-            Ok(()) => Outcome::Success,
-            Err(err) => Outcome::Failed(err),
-        }
+        result.unwrap_or_else(Outcome::Failed)
     }
 
     async fn shutdown(&self, _ctx: &AppContext, _reason: ShutdownReason) {}
@@ -121,36 +124,43 @@ fn project_root() -> Result<std::path::PathBuf, Error> {
     std::env::current_dir().map_err(|e| Error::Internal(e.to_string()))
 }
 
-/// One line per command: the handlers hold the logic.
-fn dispatch(args: CliArgs) -> Result<(), Error> {
+/// Prints, on stderr, what `rulelink.toml` holds that has no effect.
+fn warn_about_configuration() -> Result<(), Error> {
+    for warning in rulelink_app::configuration::warnings(&project_root()?) {
+        eprintln!("rulelink: warning: {warning}");
+    }
+    Ok(())
+}
+
+/// Runs the command line. Only `check` can run to the end and still fail the run.
+fn dispatch(args: CliArgs) -> Result<Outcome, Error> {
+    // `init` is the one command that does not read an existing configuration.
+    if !matches!(args, CliArgs::Display(_) | CliArgs::Run(Command::Init(_))) {
+        warn_about_configuration()?;
+    }
+    let succeeded = |()| Outcome::Success;
     match args {
         CliArgs::Display(text) => {
             print!("{text}");
-            Ok(())
+            Ok(Outcome::Success)
         }
-        CliArgs::Run(Command::Init(args)) => init::run(&args),
-        CliArgs::Run(Command::Where(args)) => where_cmd::run(&args),
-        CliArgs::Run(Command::Rules {
-            action: RulesAction::Add(args),
-        }) => rules_add::run(&args),
-        CliArgs::Run(Command::Rules {
-            action: RulesAction::Approve(args),
-        }) => rules_lifecycle::approve(&args),
-        CliArgs::Run(Command::Rules {
-            action: RulesAction::Reject(args),
-        }) => rules_lifecycle::reject(&args),
-        CliArgs::Run(Command::Rules {
-            action: RulesAction::Obsolete(args),
-        }) => rules_lifecycle::obsolete(&args),
-        CliArgs::Run(Command::Rules {
-            action: RulesAction::Format,
-        }) => rules_format::run(),
-        CliArgs::Run(Command::Rules {
-            action: RulesAction::List(args),
-        }) => rules_query::list(&args),
-        CliArgs::Run(Command::Rules {
-            action: RulesAction::Search(args),
-        }) => rules_query::search(&args),
+        CliArgs::Run(Command::Check) => check::run(),
+        CliArgs::Run(Command::Init(args)) => init::run(&args).map(succeeded),
+        CliArgs::Run(Command::Where(args)) => where_cmd::run(&args).map(succeeded),
+        CliArgs::Run(Command::Rules { action }) => rules(action).map(succeeded),
+    }
+}
+
+/// One line per `rules` command: the handlers hold the logic.
+fn rules(action: RulesAction) -> Result<(), Error> {
+    match action {
+        RulesAction::Add(args) => rules_add::run(&args),
+        RulesAction::Approve(args) => rules_lifecycle::approve(&args),
+        RulesAction::Reject(args) => rules_lifecycle::reject(&args),
+        RulesAction::Obsolete(args) => rules_lifecycle::obsolete(&args),
+        RulesAction::Format => rules_format::run(),
+        RulesAction::List(args) => rules_query::list(&args),
+        RulesAction::Search(args) => rules_query::search(&args),
     }
 }
 

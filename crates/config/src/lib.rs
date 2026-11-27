@@ -1,13 +1,17 @@
 //! Project discovery and configuration (rulelink.toml).
 
 mod error;
+mod unknown;
 
+use std::collections::BTreeMap;
 use std::path::{Component, Path, PathBuf};
 
+use rulelink_check::{Code, Level, Levels};
 use serde::Deserialize;
 
 pub use error::Error;
 pub use rulelink_model::{DEFAULT_ID_PREFIX, IdPrefix};
+pub use unknown::UnknownKey;
 
 /// Name of the configuration file at the project root.
 pub const CONFIG_FILE: &str = "rulelink.toml";
@@ -39,7 +43,19 @@ pub struct Config {
     pub source_path: PathBuf,
     /// `.gitignore`-style patterns of files the code scan skips (`[scan] exclude`).
     pub scan_exclude: Vec<String>,
+    /// The levels of the Findings that `[check.levels]` sets.
+    pub check_levels: Levels,
+    /// Names that have no effect, probably misspelled: top-level ones, then the keys of
+    /// `[rules]` and `[scan]`, each group in alphabetical order. `x-` names and `adapters`
+    /// are not listed, and `[source]` is not looked into.
+    pub unknown_keys: Vec<UnknownKey>,
 }
+
+// Each list of keys below repeats the fields of the struct under it: change them together,
+// or a setting that is read is also reported as ignored.
+
+/// The top-level names that are read.
+const KNOWN_KEYS: [&str; 5] = ["version", "source", "rules", "scan", "check"];
 
 #[derive(Deserialize)]
 struct RawConfig {
@@ -47,7 +63,18 @@ struct RawConfig {
     source: Option<RawSource>,
     rules: Option<RawRules>,
     scan: Option<RawScan>,
+    check: Option<RawCheck>,
 }
+
+/// Unknown keys are refused: a setting such as a per-path override must not look applied.
+#[derive(Deserialize)]
+#[serde(deny_unknown_fields)]
+struct RawCheck {
+    levels: Option<BTreeMap<String, toml::Value>>,
+}
+
+/// The keys read in `[scan]`.
+const SCAN_KEYS: [&str; 1] = ["exclude"];
 
 #[derive(Deserialize)]
 struct RawScan {
@@ -59,6 +86,9 @@ struct RawSource {
     kind: Option<String>,
     path: Option<String>,
 }
+
+/// The keys read in `[rules]`.
+const RULES_KEYS: [&str; 1] = ["prefix"];
 
 #[derive(Deserialize)]
 struct RawRules {
@@ -87,7 +117,8 @@ impl Config {
     }
 
     fn parse(text: &str) -> Result<Self, Error> {
-        let raw: RawConfig = toml::from_str(text).map_err(|e| invalid(e.message()))?;
+        // The whole error, not only its message: it quotes the line at fault and its number.
+        let raw: RawConfig = toml::from_str(text).map_err(|e| invalid(&e.to_string()))?;
         check_version(raw.version)?;
         let source_path = parse_source(raw.source)?;
         let prefix = raw
@@ -98,6 +129,8 @@ impl Config {
             id_prefix: IdPrefix::parse(&prefix)?,
             source_path,
             scan_exclude: parse_scan_exclude(raw.scan)?,
+            check_levels: parse_check_levels(raw.check)?,
+            unknown_keys: unknown::unknown_keys(text)?,
         })
     }
 }
@@ -149,6 +182,29 @@ fn parse_scan_exclude(scan: Option<RawScan>) -> Result<Vec<String>, Error> {
         )));
     }
     Ok(patterns)
+}
+
+/// Validates `[check.levels]` (none set when the section is absent).
+fn parse_check_levels(check: Option<RawCheck>) -> Result<Levels, Error> {
+    let mut levels = Levels::default();
+    for (name, value) in check.and_then(|c| c.levels).unwrap_or_default() {
+        let refused = |why: &str| invalid(&format!("`check.levels.{name}`: {why}"));
+        let code: Code = name
+            .parse()
+            .map_err(|e: rulelink_check::UnknownFinding| refused(&e.to_string()))?;
+        let level: Level = value
+            .as_str()
+            .ok_or_else(|| {
+                refused(&format!(
+                    "expected `error`, `warning` or `off` in quotes, found {}",
+                    value.type_str()
+                ))
+            })?
+            .parse()
+            .map_err(|e: rulelink_check::UnknownLevel| refused(&e.to_string()))?;
+        levels.set(code, level);
+    }
+    Ok(levels)
 }
 
 fn invalid(message: &str) -> Error {
