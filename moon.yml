@@ -1,16 +1,28 @@
 # Root project: workspace-level tasks (docs/repository/01, section 9.1)
 language: 'rust'
+# The checks with `cache: false` declare no inputs: with the cache on, moon replays an old pass
+# after the files they read have changed. Cargo already skips what it does not need to rebuild.
 tasks:
   schemas:
     command: 'cargo xtask schemas --check'
+    options:
+      cache: false
   arch:
     command: 'cargo xtask arch'
+    options:
+      cache: false
   deny:
     command: 'cargo deny check'
+    options:
+      cache: false
   e2e:
     command: 'cargo nextest run -p rulelink-e2e'
+    options:
+      cache: false
   docs-check:
     command: 'cargo xtask docs-check'
+    options:
+      cache: false
   # Reference of the reusable crates (the application crates are excluded), warnings denied.
   api-docs:
     command: 'cargo doc --no-deps -p rulelink-model -p rulelink-registry -p rulelink-link -p rulelink-check -p rulelink-import -p rulelink-config -p rulelink-adapter-sdk'
@@ -33,8 +45,12 @@ tasks:
       runInCI: false
   skills-lint:
     command: 'cargo xtask skills-lint'
+    options:
+      cache: false
   release-plan:
     command: 'dist plan'
+    options:
+      cache: false
   # Regenerates the Release notes from the commit history before a site upload.
   # Not a CI check: the output changes with every merged commit.
   release-notes:
