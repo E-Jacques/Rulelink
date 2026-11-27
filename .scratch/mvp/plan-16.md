@@ -55,7 +55,7 @@ The one new input is `--format`.
 | Errors | usage error, exit 2, names the option and the accepted values |
 | Tests | `tests/e2e/tests/check_json.rs` |
 
-Output is a boundary too: Rule text is not in the report. The JSON serialiser escapes paths and Identifiers below U+0020 only; the CLI also escapes DEL and U+0080 to U+009F (added after review). #20 prints Rule text as JSON and needs the same escaping.
+Output is a boundary too: Rule text is not in the report. The JSON serialiser escapes only the control characters below U+0020. The CLI also escapes DEL and U+0080 to U+009F anywhere in the report (added after review). #20 prints Rule text as JSON and needs the same escaping.
 
 ## Reuse
 
@@ -65,7 +65,7 @@ Looked for existing JSON output (none in the CLI), schema generation (`xtask sch
 
 | Ticket | Reuses | Missing |
 |---|---|---|
-| #20 `context` JSON | ADR-0006, the `schema` field, `xtask schemas`, the closed-schema test technique, `--format` value enum | its own report types, outside `rulelink-check`'s Findings |
+| #20 `context` JSON | ADR-0006, the `schema` field, `xtask schemas`, the closed-schema test technique, `--format` value enum | its own report types, outside `rulelink-check`'s Findings; the control-character escaping, private to `check` today, to share before a second JSON output; its formats in the schema, as `written` removes every `format`, not only the integer ones |
 | #22 skills | the schema and the `check` page as report reference | nothing for `check` |
 | #15 (not blocked, follows) | `CheckReportV1` | it makes `Finding::rule` optional and maps it to the already optional `rule`; it may need a `line` in the rules file, already optional |
 
