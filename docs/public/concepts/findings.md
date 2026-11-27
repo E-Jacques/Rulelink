@@ -35,6 +35,6 @@ orphan-rule = "error"
 unvalidated-reference = "off"
 ```
 
-A level is `error`, `warning` or `off`. `off` hides the Finding. A name or a level that is not listed here is a configuration error, and so is any other key under `[check]`. A misspelled `[check]` itself only gives a [warning](configuration.md#misspelled-sections-and-keys). There is no other way to set a level: not per folder, and not on the command line.
+A level is `error`, `warning` or `off`. `off` hides the Finding. A name or a level that is not listed here is a configuration error. So is an [unknown section or key](configuration.md#unknown-sections-and-keys), such as another key under `[check]` or a misspelled `[check]` itself. There is no other way to set a level: not per folder, and not on the command line.
 
 To keep some files out of the check, for example documentation that shows Annotations, see [which files are scanned](specify-rules-in-code.md#which-files-are-scanned).

@@ -433,12 +433,14 @@ dependencies = [
  "rulelink-adapter-git",
  "rulelink-adapter-json",
  "rulelink-adapter-scan-fs",
+ "rulelink-adapter-sdk",
  "rulelink-check",
  "rulelink-config",
  "rulelink-import",
  "rulelink-link",
  "rulelink-model",
  "rulelink-publish",
+ "tempfile",
  "thiserror",
 ]
 
@@ -465,9 +467,9 @@ dependencies = [
 name = "rulelink-config"
 version = "0.1.0"
 dependencies = [
+ "rulelink-adapter-sdk",
  "rulelink-check",
  "rulelink-model",
- "serde",
  "thiserror",
  "toml",
 ]

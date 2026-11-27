@@ -187,6 +187,7 @@ flowchart BT
     check --> link
     config --> model
     config --> check
+    config --> sdk
     import --> registry
     import --> sdk
     publish --> registry

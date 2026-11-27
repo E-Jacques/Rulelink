@@ -38,8 +38,9 @@
 ## 3. Technical constraints
 
 - TOML format (`toml_edit` for writes: comments and ordering are preserved when `config set` changes the file).
-- The configuration is described by Rust types, from which a JSON Schema is generated (`rulelink schema config`), usable in editors through Taplo or `#:schema`.
-- Unknown keys are errors (with a suggestion of the closest key), except under `[adapters.*]` and `x-*`. In the MVP this holds only under `[check]`: an unknown top-level section or key, or an unknown key in `[rules]` or `[scan]`, gives a warning and is ignored, with no suggestion. Unknown keys in `[source]` are ignored silently, until it is decided which of its keys belong to the adapter.
+- The configuration is described by Rust types, from which a JSON Schema is generated (`rulelink schema config`), usable in editors through Taplo or `#:schema`. It does not cover adapter settings for now, and it is never used to validate (see [02](02-sources-of-truth.md), section 5.2).
+- Unknown keys are errors (with a suggestion of the closest key), except under `[adapters.*]` and `x-*`.
+- Each setting is a type that parses itself. `[source]` apart from `kind` belongs to the source adapter, and `[scan]` to the scanning adapter. All independent problems are reported together; invalid TOML and an unsupported `version` are reported alone, and an unknown `source.kind` leaves the other `[source]` keys unchecked. Parsing returns a map read by setting type, with warnings; a failed parse carries problems only. `Workspace::open` is how use cases get it, and only a surface (CLI, LSP) writes what it says.
 - No plain-text secret is accepted: a `token`, `password` or `secret` key whose value is not a reference (`${env:...}`, `${keyring:...}`) makes loading fail.
 - The CLI detects CI (`CI=true` and provider-specific variables): no interactive prompts, no colour by default, and `github` format added automatically under GitHub Actions if no format is requested.
 

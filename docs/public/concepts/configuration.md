@@ -1,6 +1,6 @@
 ---
 title: Configuration
-description: Learn what you can set in rulelink.toml and what happens when a name is misspelled.
+description: Learn what you can set in rulelink.toml and what happens when something in it is wrong.
 ---
 
 # Configuration
@@ -27,29 +27,34 @@ orphan-rule = "error"
 ```
 
 - `version`, `[source]` and `[rules]` are required.
+- The keys of `[source]` other than `kind` depend on the kind. With `kind = "json"`, `path` is required: a relative path inside the project, without `..`.
 - `[scan]` is optional. `exclude` lists files the code scan skips, in `.gitignore` syntax. See [which files are scanned](specify-rules-in-code.md#which-files-are-scanned).
 - `[check]` is optional. See [how to change a level](findings.md#change-a-level).
 
-## Misspelled sections and keys
+## Mistakes in rulelink.toml
 
-A section that Rulelink does not know, such as `[checks.levels]` instead of `[check.levels]`, has no effect. The command still runs and keeps the same exit code, but prints a warning:
+Every command that reads `rulelink.toml` checks all of it first, even the settings it does not use. If something is wrong, the command changes nothing, prints the problem on the error output and exits with code 2.
 
-```text
-rulelink: warning: rulelink.toml: unknown section or key `checks` is ignored; check its spelling
-```
+## Unknown sections and keys
 
-The same applies to an unknown key inside `[rules]` or `[scan]`. If you write `excludes` instead of `exclude`, nothing is excluded, and the warning names the key with its section:
+A section or key that Rulelink does not know is an error. If you write `excludes` instead of `exclude`, the message names the key with its section, and suggests the closest known one:
 
 ```text
-rulelink: warning: rulelink.toml: unknown section or key `scan.excludes` is ignored; check its spelling
+rulelink: configuration error: invalid rulelink.toml: unknown section or key `scan.excludes`; did you mean `scan.exclude`?
 ```
 
 A top-level name that itself contains a dot is shown in double quotes, so that you can tell it from a key of a section.
 
-The warning goes to the error output, so it does not mix with the result of the command. It is not a Finding: it is not counted in the totals of `check`.
+Names that start with `x-`, and the `[adapters]` section, are accepted. Use an `x-` name for your own notes or for other tools.
 
-Names that start with `x-`, and the `[adapters]` section, give no warning. Use an `x-` name for your own notes or for other tools.
+## Several problems at once
 
-If you misspell a required section or key, such as `[sources]` instead of `[source]`, the command fails and names what is missing. It prints no warning when the configuration is invalid.
+The message lists every problem found. For example, if you write `prefx` instead of `prefix` under `[rules]`:
 
-Two sections behave differently. Inside `[check]`, a name that Rulelink does not know is a configuration error. Inside `[source]`, it is ignored without a warning.
+```text
+rulelink: configuration error: invalid rulelink.toml:
+  - missing `rules.prefix`
+  - unknown section or key `rules.prefx`; did you mean `rules.prefix`?
+```
+
+Two mistakes hide the others until you fix them: a file that is not valid TOML, and a missing or unsupported `version`. If `source.kind` is wrong, the other keys of `[source]` are not checked. When `version` or `source.kind` is missing because it is misspelled, the message names the misspelled key too.

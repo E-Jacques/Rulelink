@@ -1,6 +1,11 @@
 # Configuration parsing and output: target architecture
 
-Design only, nothing is implemented. Signatures are proposals. **D1** to **D6** are decided, and the diagrams show them. Checked against `main` at `3519619`.
+**D1** to **D6** are decided, and the diagrams show them. Designed against `main` at `3519619`, and implemented as described, with these differences from the signatures below:
+
+- `TableParser` also has `section` and `reserved`; `combine` joins two parses.
+- `Problem::verbatim` keeps the lines of the TOML parser's report. Every other problem and warning escapes control characters.
+- A typo of a missing `version` or `source.kind` is reported with it.
+- `property` stops a debug build if the key names another section.
 
 ## Goals
 
@@ -229,13 +234,13 @@ sequenceDiagram
     CFG-->>WS: ParseResult of ConfigMap
     alt configuration refused
         WS-->>CLI: Err with problems
-        CLI->>OUT: failure(error)
+        CLI->>OUT: error(failure)
     else configuration accepted
         WS-->>CLI: Parsed Workspace with warnings
-        CLI->>OUT: warnings(list)
+        CLI->>OUT: warn(each warning)
         CLI->>WS: run the use case on the Workspace
         WS-->>CLI: typed result or app Error
-        CLI->>OUT: result or failure
+        CLI->>OUT: log(result) or error(failure)
     end
 ```
 
@@ -257,7 +262,7 @@ flowchart LR
 
 - **User-facing output is returned data.** The app has no `Printer` or `Logger` trait: the surfaces differ in what they do with the data, so returning it is enough.
 - **Debug logs use `tracing`**, as already documented (00 §9.4). They never carry something the user must see.
-- **CLI `Presenter`** receives its two writers (`impl Write`), so tests read what it wrote without starting a process.
+- **CLI `Presenter`** offers `log`, `warn` and `error`, so a command says what kind of message it has and only the presenter knows where it goes. It receives its two writers (`impl Write`), so tests read what it wrote without starting a process.
 - **`Bootstrap`** stops printing: `Entrypoint` gains a `report_failure(error)` hook that each surface implements.
 
 ## Behaviour changes to expect

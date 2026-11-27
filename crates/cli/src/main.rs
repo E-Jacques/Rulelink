@@ -3,6 +3,7 @@
 #![allow(clippy::unused_async, clippy::unused_async_trait_impl)] // skeleton: hooks become truly async later
 
 mod commands;
+mod presenter;
 
 use rulelink_app::runtime::Bootstrap;
 

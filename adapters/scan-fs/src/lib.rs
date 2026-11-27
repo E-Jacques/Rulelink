@@ -1,14 +1,16 @@
 //! Filesystem code scanning adapter: walks the project and indexes its Annotations.
 
 mod error;
+mod settings;
 
 use std::path::Path;
 
 use ignore::WalkBuilder;
-use ignore::overrides::OverrideBuilder;
+use ignore::overrides::{Override, OverrideBuilder};
 use rulelink_link::LinkIndex;
 
 pub use error::Error;
+pub use settings::{ScanExclude, ScanFsConfig};
 
 /// Name of the Rulelink-specific ignore file, in `.gitignore` syntax.
 const IGNORE_FILE: &str = ".rulelinkignore";
@@ -27,12 +29,12 @@ const MAX_FILE_BYTES: u64 = 2 * 1024 * 1024;
 /// quoted in it cites nothing.
 ///
 /// # Errors
-/// [`Error::InvalidExclude`] for a pattern that is not a valid glob, [`Error::Unreadable`] for
-/// a directory or file that cannot be read.
-pub fn scan(root: &Path, exclude: &[String], rules_file: &Path) -> Result<LinkIndex, Error> {
+/// [`Error::InvalidExclude`] if the patterns cannot be combined (each one was checked when
+/// parsed), [`Error::Unreadable`] for a directory or file that cannot be read.
+pub fn scan(root: &Path, exclude: &ScanExclude, rules_file: &Path) -> Result<LinkIndex, Error> {
     // `Path` equality compares components, so `./rules.json` matches the walked `rules.json`.
     let rules_file = root.join(rules_file);
-    let walk = files_to_walk(root, exclude)?;
+    let walk = files_to_walk(root, exclude.patterns())?;
     let mut index = LinkIndex::new();
     for entry in walk {
         let entry = entry.map_err(|e| Error::Unreadable {
@@ -48,25 +50,36 @@ pub fn scan(root: &Path, exclude: &[String], rules_file: &Path) -> Result<LinkIn
 
 /// The walk over `root`: ignore files and `exclude` patterns applied, nothing read yet.
 fn files_to_walk(root: &Path, exclude: &[String]) -> Result<ignore::Walk, Error> {
-    let invalid = |pattern: String, e: ignore::Error| Error::InvalidExclude {
-        pattern,
-        message: e.to_string(),
-    };
-    let mut overrides = OverrideBuilder::new(root);
-    for pattern in exclude {
-        // In an override, a leading `!` means "ignore".
-        overrides
-            .add(&format!("!{pattern}"))
-            .map_err(|e| invalid(pattern.clone(), e))?;
-    }
-    let overrides = overrides
-        .build()
-        .map_err(|e| invalid(exclude.join(", "), e))?;
+    let overrides = overrides(root, exclude)
+        .map_err(|(pattern, message)| Error::InvalidExclude { pattern, message })?;
     Ok(WalkBuilder::new(root)
         .require_git(false)
         .add_custom_ignore_filename(IGNORE_FILE)
         .overrides(overrides)
         .build())
+}
+
+/// Compiles `exclude`, as the walk applies it; parsing the settings does the same, so that
+/// what it accepts can be scanned with.
+///
+/// On failure, returns the pattern at fault (all of them if they only fail together) and why.
+fn overrides(root: &Path, exclude: &[String]) -> Result<Override, (String, String)> {
+    let mut builder = OverrideBuilder::new(root);
+    for pattern in exclude {
+        // In an override, a leading `!` means "ignore".
+        builder
+            .add(&format!("!{pattern}"))
+            .map_err(|e| (pattern.clone(), cause(&e)))?;
+    }
+    builder.build().map_err(|e| (exclude.join(", "), cause(&e)))
+}
+
+/// Why a pattern is refused, without the pattern as rewritten for the override.
+fn cause(error: &ignore::Error) -> String {
+    match error {
+        ignore::Error::Glob { err, .. } => err.clone(),
+        other => other.to_string(),
+    }
 }
 
 /// Adds the Annotations of one walk entry to `index`, skipping what is not hand-written text.
@@ -111,9 +124,19 @@ mod tests {
     use super::*;
     use rulelink_model::RuleId;
 
+    fn exclusions(patterns: &[&str]) -> ScanExclude {
+        use rulelink_adapter_sdk::{Property, RawValue};
+        let raw = patterns
+            .iter()
+            .map(|p| RawValue::String((*p).to_owned()))
+            .collect();
+        ScanExclude::parse(Some(&RawValue::Array(raw)))
+            .unwrap_or_else(|e| panic!("{e}"))
+            .configuration
+    }
+
     fn cited(dir: &tempfile::TempDir, exclude: &[&str]) -> Vec<String> {
-        let exclude: Vec<String> = exclude.iter().map(|s| (*s).to_owned()).collect();
-        scan(dir.path(), &exclude, Path::new("rules.json"))
+        scan(dir.path(), &exclusions(exclude), Path::new("rules.json"))
             .unwrap_or_else(|e| panic!("{e}"))
             .locations(&RuleId("RULE-1".to_owned()))
             .into_iter()
@@ -145,13 +168,5 @@ mod tests {
         write(&dir, "a/b/c.rs", b"// @rule RULE-1\n");
         write(&dir, "gen/x.rs", b"// @rule RULE-1\n");
         assert_eq!(cited(&dir, &["gen/"]), ["a/b/c.rs:1"]);
-    }
-
-    #[test]
-    fn an_invalid_exclusion_names_the_pattern() {
-        let dir = tempfile::tempdir().expect("dir");
-        let err =
-            scan(dir.path(), &["[".to_owned()], Path::new("rules.json")).expect_err("refused");
-        assert!(matches!(err, Error::InvalidExclude { ref pattern, .. } if pattern == "["));
     }
 }
