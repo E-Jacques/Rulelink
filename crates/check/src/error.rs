@@ -15,7 +15,8 @@ fn names() -> String {
 /// An attempt to lower or turn off a Finding that is always an error.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, thiserror::Error)]
 #[error(
-    "{} ({}) is an error in the rules file: its level cannot be lowered or turned off",
+    "{} ({}) is an error in the rules file: its level cannot be lowered or turned off; \
+     remove the line or set it to `error`",
     .code.name(),
     .code.id()
 )]

@@ -42,35 +42,40 @@ fn duplicates(rules: &RuleSet) -> impl Iterator<Item = Raw> {
         })
 }
 
+/// The entries of one list, without repeats: written twice, an entry is one problem.
+fn distinct(ids: &[RuleId]) -> impl Iterator<Item = &RuleId> {
+    let mut seen = HashSet::new();
+    ids.iter().filter(move |id| seen.insert(*id))
+}
+
 /// Every place of the Source that holds a malformed Identifier. A blank `id` is a missing
 /// required field, reported as empty instead.
 fn invalid_identifiers(rules: &RuleSet) -> impl Iterator<Item = Raw> + '_ {
-    let retired = rules.retired.iter().map(|id| (id, IdentifierAt::Retired));
+    let retired = distinct(&rules.retired).map(|id| (None, id, IdentifierAt::Retired));
     rules
         .rules
         .iter()
         .flat_map(identifiers_of)
         .chain(retired)
-        .filter(|(id, _)| !id.is_well_formed())
-        .map(|(id, at)| {
+        .filter(|(_, id, _)| !id.is_well_formed())
+        .map(|(holder, id, at)| {
             let value = id.0.clone();
-            Raw::in_rules_file(named(id), Problem::InvalidIdentifier { value, at })
+            Raw::in_rules_file(holder, Problem::InvalidIdentifier { value, at })
         })
 }
 
-/// The Identifiers one Rule holds, with where it holds them.
-fn identifiers_of(rule: &Rule) -> impl Iterator<Item = (&RuleId, IdentifierAt)> {
-    let holder = named(&rule.id);
-    let own = holder.is_some().then_some((&rule.id, IdentifierAt::Id));
-    let related = rule.related.iter().map({
-        let holder = holder.clone();
-        move |id| (id, IdentifierAt::Related(holder.clone()))
-    });
+/// The Identifiers one Rule holds, with the Rule's own and where each is written.
+fn identifiers_of(rule: &Rule) -> impl Iterator<Item = (Option<RuleId>, &RuleId, IdentifierAt)> {
+    let own = named(&rule.id).map(|_| (&rule.id, IdentifierAt::Id));
+    let related = distinct(&rule.related).map(|id| (id, IdentifierAt::Related));
     let replacement = rule
         .superseded_by
         .iter()
-        .map(move |id| (id, IdentifierAt::SupersededBy(holder.clone())));
-    own.into_iter().chain(related).chain(replacement)
+        .map(|id| (id, IdentifierAt::SupersededBy));
+    own.into_iter()
+        .chain(related)
+        .chain(replacement)
+        .map(|(id, at)| (named(&rule.id), id, at))
 }
 
 /// The Rules in use whose Identifier is retired.
@@ -93,7 +98,7 @@ fn unknown_related(rules: &RuleSet) -> impl Iterator<Item = Raw> + '_ {
     rules
         .rules
         .iter()
-        .flat_map(|rule| rule.related.iter().map(move |related| (rule, related)))
+        .flat_map(|rule| distinct(&rule.related).map(move |related| (rule, related)))
         .filter(move |(_, related)| !is_blank(&related.0) && !known.contains(related))
         .map(|(rule, related)| {
             let problem = Problem::UnknownRelated {
@@ -105,7 +110,7 @@ fn unknown_related(rules: &RuleSet) -> impl Iterator<Item = Raw> + '_ {
 
 /// The required fields that hold nothing.
 fn empty_fields(rules: &RuleSet) -> impl Iterator<Item = Raw> + '_ {
-    rules.rules.iter().flat_map(|rule| {
+    rules.rules.iter().enumerate().flat_map(|(index, rule)| {
         let kind = rule.origin.as_ref().map(|origin| origin.kind.as_str());
         [
             ("id", Some(rule.id.0.as_str())),
@@ -115,9 +120,13 @@ fn empty_fields(rules: &RuleSet) -> impl Iterator<Item = Raw> + '_ {
         ]
         .into_iter()
         .filter(|(_, value)| value.is_some_and(is_blank))
-        .map(|(field, _)| {
-            let title = (!is_blank(&rule.title)).then(|| rule.title.clone());
-            Raw::in_rules_file(named(&rule.id), Problem::EmptyField { field, title })
+        .map(move |(field, _)| {
+            let problem = Problem::EmptyField {
+                field,
+                title: (!is_blank(&rule.title)).then(|| rule.title.clone()),
+                index,
+            };
+            Raw::in_rules_file(named(&rule.id), problem)
         })
     })
 }

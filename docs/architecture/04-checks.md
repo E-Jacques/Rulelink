@@ -67,6 +67,8 @@ This sentence appears in the command help, at the end of every text report and i
 | `RL105`         | `empty-field`           | A required field (`id`, `title`, `statement`, `origin.kind`) is empty                                                               | Error         | MVP      |
 | `RL106`         | `not-canonical`         | The Source is not in Canonical form                                                                                                 | Warning       | MVP      |
 
+Known limits: `RL100` reports one problem only, and has no line when an array or a map stands where an object or a status belongs. A rule deleted and added again by hand under the same identifier, not listed in `retired`, is not detected.
+
 `RL003`, `RL100`, `RL101`, `RL102` and `RL105` are errors in the Source: their level cannot be lowered or turned off, and while one stands `check` does not compare the Rules with the code. `RL103` and `RL106` can be raised or turned off, and never stop the code checks.
 
 While the Source has no Rules (as right after `init`), `check` says so and still scans the code. `RL001` is then a warning by default; a level set in `[check.levels]` applies as set. A Source that is missing, unreadable, not JSON or of an unsupported `format` is not a Finding: `check` fails with exit code 3.

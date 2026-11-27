@@ -66,7 +66,7 @@ No ticket is declared as blocked by #15.
 | Ticket | Reuses | Missing |
 | --- | --- | --- |
 | #63 property reference | the names of `[check.levels]` | nothing |
-| #60 `doctor` | `check`, `inspect_source` | nothing known |
+| #60 `doctor` | `read_source`, which refuses a wrong shape | nothing known |
 | #59 `rules edit` | `RuleId::is_well_formed` | nothing |
 
 ## Input boundaries

@@ -223,6 +223,20 @@ mod tests {
     use super::*;
 
     #[test]
+    fn the_grammar_of_an_identifier() {
+        let well_formed = |raw: &str| RuleId(raw.to_owned()).is_well_formed();
+        for raw in ["RULE-042", "BR-7", "PRICING_V2-A1", "R-_"] {
+            assert!(well_formed(raw), "{raw}");
+        }
+        for raw in [
+            "", "rule-042", "RULE042", "RULE-", "-1", "1RULE-1", "_A-1", "RULE-04a", "A-B-1",
+            " RULE-1", "RULE-1\n", "RÉGLE-1",
+        ] {
+            assert!(!well_formed(raw), "{raw:?}");
+        }
+    }
+
+    #[test]
     fn a_status_reads_back_what_it_displays() {
         for status in RuleStatus::ALL {
             assert_eq!(status.to_string().parse(), Ok(status));

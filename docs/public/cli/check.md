@@ -24,7 +24,7 @@ warning RL004: RULE-005 is validated but no code cites it (rules/rules.json)
 check verifies the link between a Rule and the code, not that the code is correct.
 ```
 
-Errors come first, then Findings are ordered by code, Identifier, file and line. The location is the `file:line` of the Annotation. A Finding about a Rule that no code cites, or about the rules file, names the rules file, with a line when one is known.
+Errors come first, then Findings are ordered by code, Identifier, file and line, those with no Identifier first. The location is the `file:line` of the Annotation. A Finding about a Rule that no code cites, or about the rules file, names the rules file, with a line when one is known.
 
 While the rules file has no Rules, the first line says so and the code is still scanned. An Annotation citing an unknown Identifier (`RL001`) is then a warning by default:
 

@@ -88,9 +88,9 @@ impl Code {
         }
     }
 
-    /// Whether the Rules cannot be trusted while such a Finding stands. It is then always an
-    /// error, whatever a team sets, and the code is not checked.
-    pub(crate) fn is_source_error(self) -> bool {
+    /// Whether the Rules cannot be trusted while such a Finding stands: the code is then not
+    /// checked, and the Finding is always an error, whatever a team sets.
+    pub(crate) fn stops_code_check(self) -> bool {
         match self {
             Self::DuplicateId
             | Self::InvalidShape
@@ -122,17 +122,17 @@ impl FromStr for Code {
     }
 }
 
-/// Where the Source holds an Identifier, with the Rule that holds it if it has one.
-#[derive(Debug, Clone, PartialEq, Eq)]
+/// Where the Source holds an Identifier.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum IdentifierAt {
     /// The `id` of a Rule.
     Id,
     /// The `retired` list.
     Retired,
     /// The `related` list of a Rule.
-    Related(Option<RuleId>),
+    Related,
     /// The `superseded_by` of a Rule.
-    SupersededBy(Option<RuleId>),
+    SupersededBy,
 }
 
 /// What is wrong, with what is needed to say it.
@@ -186,6 +186,9 @@ pub enum Problem {
         field: &'static str,
         /// The title of the Rule, if it has one: it identifies a Rule with no Identifier.
         title: Option<String>,
+        /// The position of the Rule in `rules` as written, from 0: it identifies a Rule
+        /// with neither.
+        index: usize,
     },
     /// The Source is not written in Canonical form.
     NotCanonical,
@@ -229,7 +232,8 @@ pub enum Place {
 pub struct Finding {
     /// How much it weighs, after the team's levels.
     pub severity: Severity,
-    /// The Identifier it is about; `None` if there is none to name.
+    /// The cited Identifier, or the Rule of the Source at fault; `None` if there is none to
+    /// name.
     pub rule: Option<RuleId>,
     /// What is wrong.
     pub problem: Problem,
@@ -260,17 +264,18 @@ impl Finding {
             Problem::WrongShape { detail } => {
                 format!("the rules file has the wrong shape: {detail}")
             }
-            Problem::InvalidIdentifier { value, at } => invalid_identifier(value, at),
+            Problem::InvalidIdentifier { value, at } => invalid_identifier(&id, value, *at),
             Problem::ReusedRetiredId { status } => {
                 format!("{id} is retired but its Rule is {status}")
             }
             Problem::UnknownRelated { related } => {
                 format!("{id} is related to {related}, which is not a Rule of this project")
             }
-            Problem::EmptyField { field, title } => match (&self.rule, title) {
-                (None, Some(title)) => format!("the Rule titled `{title}` has an empty `{field}`"),
-                _ => format!("{id} has an empty `{field}`"),
-            },
+            Problem::EmptyField {
+                field,
+                title,
+                index,
+            } => empty_field(self.rule.as_ref(), field, title.as_deref(), *index),
             Problem::NotCanonical => {
                 "the rules file is not in Canonical form: run `rulelink rules format`".to_owned()
             }
@@ -283,14 +288,23 @@ fn subject(rule: Option<&RuleId>) -> String {
     rule.map_or_else(|| "a Rule with no Identifier".to_owned(), RuleId::to_string)
 }
 
-fn invalid_identifier(value: &str, at: &IdentifierAt) -> String {
+/// Names the Rule by the best it has: its Identifier, its title or its position.
+fn empty_field(rule: Option<&RuleId>, field: &str, title: Option<&str>, index: usize) -> String {
+    let rule = match (rule, title) {
+        (Some(id), _) => id.to_string(),
+        (None, Some(title)) => format!("the Rule titled `{title}`"),
+        (None, None) => format!("the Rule at `rules[{index}]`"),
+    };
+    format!("{rule} has an empty `{field}`")
+}
+
+/// `holder` names the Rule that holds the Identifier, where one does.
+fn invalid_identifier(holder: &str, value: &str, at: IdentifierAt) -> String {
     let place = match at {
         IdentifierAt::Id => "`id`".to_owned(),
         IdentifierAt::Retired => "`retired`".to_owned(),
-        IdentifierAt::Related(holder) => format!("`related` of {}", subject(holder.as_ref())),
-        IdentifierAt::SupersededBy(holder) => {
-            format!("`superseded_by` of {}", subject(holder.as_ref()))
-        }
+        IdentifierAt::Related => format!("`related` of {holder}"),
+        IdentifierAt::SupersededBy => format!("`superseded_by` of {holder}"),
     };
     format!("`{value}`, in {place}, is not a valid Identifier")
 }

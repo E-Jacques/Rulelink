@@ -98,7 +98,7 @@ pub fn check(source: Source<'_>, links: &LinkIndex, levels: &Levels) -> Report {
         Source::Rules { rules, text } => (source::findings(rules, text), Some(rules)),
         Source::WrongShape { detail, line } => (vec![Raw::wrong_shape(detail, line)], None),
     };
-    let trusted = rules.filter(|_| !raw.iter().any(|r| r.problem.code().is_source_error()));
+    let trusted = rules.filter(|_| !raw.iter().any(|r| r.problem.code().stops_code_check()));
     let code_check = match trusted {
         None => CodeCheck::Stopped,
         Some(rules) if rules.rules.is_empty() => CodeCheck::RunWithoutRules,
@@ -130,9 +130,8 @@ fn weighed(raw: Vec<Raw>, levels: &Levels, code_check: CodeCheck) -> Vec<Finding
             })
         })
         .collect();
+    // Stable: Findings that are equal here keep the order of the Source.
     findings.sort_by(report_order);
-    // An entry written twice in the Source is one problem.
-    findings.dedup();
     findings
 }
 
@@ -141,8 +140,6 @@ fn report_order(a: &Finding, b: &Finding) -> Ordering {
         .cmp(&(b.severity, b.problem.code()))
         .then_with(|| identifier_order(a.rule.as_ref(), b.rule.as_ref()))
         .then_with(|| a.place.cmp(&b.place))
-        // Equal so far, as two `related` entries of one Rule: repeats must end up together.
-        .then_with(|| a.message().cmp(&b.message()))
 }
 
 /// Findings that name no Identifier come first.

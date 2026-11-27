@@ -27,7 +27,7 @@ An Identifier listed as retired whose Rule is no longer in the Source gives `RL0
 
 | Code    | Name                 | What it means                                                           | Default level | How to fix it                                          |
 | ------- | -------------------- | ----------------------------------------------------------------------- | ------------- | ------------------------------------------------------ |
-| `RL003` | `duplicate-id`       | Two or more Rules share an Identifier.                                  | `error`       | Give the newer Rule an Identifier never used before.   |
+| `RL003` | `duplicate-id`       | Two or more Rules share an Identifier.                                  | `error`       | Give the newer Rule a new one, and fix its citations.  |
 | `RL100` | `invalid-shape`      | The file is valid JSON of the wrong shape.                              | `error`       | Fix the key or value the message names.                |
 | `RL101` | `invalid-identifier` | An Identifier does not follow [the grammar](rule-format.md#identifier). | `error`       | Correct the Identifier.                                |
 | `RL102` | `reused-retired-id`  | A `proposed` or `validated` Rule has an Identifier listed as retired.   | `error`       | Give the Rule an Identifier never used before.         |
@@ -35,10 +35,10 @@ An Identifier listed as retired whose Rule is no longer in the Source gives `RL0
 | `RL105` | `empty-field`        | A required field is empty or holds only spaces.                         | `error`       | Fill the field in.                                     |
 | `RL106` | `not-canonical`      | The file is not in [Canonical form](rule-format.md#source-file).        | `warning`     | Run [`rulelink rules format`](../cli/rules-format.md). |
 
-- **Wrong shape** means an unknown key, a missing field, a value of the wrong type or an unknown status. `check` reports the first such problem with its line, and no other Finding. Fix it and run `check` again to see the rest.
+- **Wrong shape** means an unknown or repeated key (including a prefix given twice in `sequences`), a missing field, a value of the wrong type or an unknown status. `check` reports one such problem, with its line when it is known, and no other Finding. Fix it and run `check` again to see the rest.
 - **Required fields** are `id`, `title`, `statement` and, when a Rule has an `origin`, `origin.kind`.
-- **Identifiers** are checked wherever the file holds one: `id`, `retired`, `related` and `superseded_by`. The grammar applies whatever [prefix you configured](configuration.md). A mistyped `related` entry gives both `RL101` and `RL103`.
-- You get one `RL003` per duplicated Identifier, and one `RL103` per Rule and unknown Identifier.
+- **Identifiers** are checked wherever the file holds one: `id`, `retired`, `related` and `superseded_by`. The grammar applies whatever [prefix you configured](configuration.md). A mistyped `related` entry gives both `RL101` and `RL103`; a blank one gives only `RL101`. In JSON, the `rule` of an `RL101` is the Rule that holds the Identifier, and an entry of `retired` has none.
+- You get one `RL003` per duplicated Identifier. An entry written twice in `retired`, or in the `related` of one Rule, is reported once.
 
 `check` cannot tell that you deleted a Rule and wrote a new one by hand under the same Identifier, unless the Identifier is listed as retired.
 

@@ -79,7 +79,7 @@ impl Levels {
     /// [`FixedLevel`] when lowering or turning off an error in the Source that stops the code
     /// checks. Nothing changes.
     pub fn set(&mut self, code: Code, level: Level) -> Result<(), FixedLevel> {
-        if code.is_source_error() && level != Level::Error {
+        if code.stops_code_check() && level != Level::Error {
             return Err(FixedLevel { code });
         }
         self.0.insert(code, level);

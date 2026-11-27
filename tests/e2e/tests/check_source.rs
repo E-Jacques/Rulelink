@@ -145,10 +145,10 @@ fn rl101_a_malformed_identifier_wherever_the_file_holds_one() {
         1,
         &[
             NOT_CHECKED,
-            "error RL101: `RULE 2`, in `related` of rule-1, is not a valid Identifier (rules/rules.json)",
-            "error RL101: `RULE-`, in `superseded_by` of rule-1, is not a valid Identifier (rules/rules.json)",
             "error RL101: `RULE-04a`, in `retired`, is not a valid Identifier (rules/rules.json)",
             "error RL101: `rule-1`, in `id`, is not a valid Identifier (rules/rules.json)",
+            "error RL101: `RULE 2`, in `related` of rule-1, is not a valid Identifier (rules/rules.json)",
+            "error RL101: `RULE-`, in `superseded_by` of rule-1, is not a valid Identifier (rules/rules.json)",
             "warning RL103: rule-1 is related to RULE 2, which is not a Rule of this project (rules/rules.json)",
             "4 errors, 1 warning",
         ],
@@ -307,6 +307,44 @@ fn a_source_error_cannot_be_lowered_or_turned_off() {
     }
 }
 
+/// As after a bad merge: keeping one of the two would let `rules format` lower the counter,
+/// and the Identifier of a deleted Rule be allocated again.
+#[test]
+fn a_repeated_sequence_is_a_wrong_shape_that_rules_format_leaves_alone() {
+    let text = "{\"format\":1,\"sequences\":{\"RULE\":9,\"RULE\":1}}";
+    let repo = project(text);
+    let run = repo.run(&["check"]);
+    assert!(run.stdout.contains("error RL100: "), "{}", run.stdout);
+    assert!(run.stdout.contains("`RULE`"), "{}", run.stdout);
+    assert_eq!(repo.run(&["rules", "format"]).code, 3);
+    assert_eq!(repo.read("rules/rules.json").as_deref(), Some(text));
+}
+
+#[test]
+fn rules_that_cannot_be_told_apart_are_each_counted() {
+    let unnamed = with(rule("", "proposed"), "title", json!(""));
+    assert_stops(
+        &canonical(&[unnamed.clone(), unnamed], &[]),
+        &[
+            "error RL105: the Rule at `rules[0]` has an empty `id` (rules/rules.json)",
+            "error RL105: the Rule at `rules[0]` has an empty `title` (rules/rules.json)",
+            "error RL105: the Rule at `rules[1]` has an empty `id` (rules/rules.json)",
+            "error RL105: the Rule at `rules[1]` has an empty `title` (rules/rules.json)",
+        ],
+    );
+}
+
+#[test]
+fn an_entry_repeated_in_one_list_is_reported_once() {
+    let related = with(
+        rule("RULE-001", "proposed"),
+        "related",
+        json!(["rule 2", "rule 2"]),
+    );
+    let run = canonical(&[related], &["bad", "bad"]).run(&["check"]);
+    assert!(run.stdout.contains("2 errors, 1 warning"), "{}", run.stdout);
+}
+
 #[test]
 fn what_is_not_a_finding_exits_3() {
     for text in [
@@ -315,9 +353,11 @@ fn what_is_not_a_finding_exits_3() {
         "{\"format\":2,\"mine\":1}",
         "",
     ] {
-        let run = project(text).run(&["check"]);
+        let repo = project(text);
+        let run = repo.run(&["check"]);
         assert_eq!((run.code, run.stdout.as_str()), (3, ""), "{text}");
         assert!(run.stderr.contains("rules.json"), "{}", run.stderr);
+        assert_eq!(repo.read("rules/rules.json").as_deref(), Some(text));
     }
 }
 

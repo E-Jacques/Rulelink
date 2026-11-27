@@ -15,7 +15,7 @@ pub struct RuleSet {
     /// Source format version.
     pub format: u32,
     /// Highest number allocated per Identifier prefix.
-    #[serde(default)]
+    #[serde(default, deserialize_with = "crate::sequences::deserialize")]
     pub sequences: BTreeMap<String, u64>,
     /// Retired Identifiers, never allocated again.
     #[serde(default)]
