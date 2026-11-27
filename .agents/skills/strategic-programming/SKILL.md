@@ -34,6 +34,8 @@ Then check the design against this smell list and say which smells you found and
 - **Domain logic in `app` or `cli`**: parsing or rules that another command will need.
 - **Wrong error class**: user input reported as a configuration error, or the reverse.
 - **Catch-all error**: one enum for unrelated causes, `#[non_exhaustive]` on a workspace error, a `_ =>` arm or a blanket `From` that files every variant under one class, or a variant whose name is narrower than what it wraps. Split the type by cause and match every variant.
+- **Policy on a data type**: a method needs a fact its type doesn't hold to make a decision. Put the decision in the operation that has that fact.
+- **Display text in the core**: a domain crate defines text that only one output displays. Keep it with that output. Move it to the core when a second output, existing or ticketed, needs it.
 
 Read `codebase-design` for the vocabulary (deep module, seam, interface) whenever you add or change a function that other code will call, not only for new modules.
 
