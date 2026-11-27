@@ -80,7 +80,7 @@ impl CheckReportV1 {
 #[derive(Debug, Clone, PartialEq, Eq, Serialize)]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[cfg_attr(feature = "schema", schemars(rename = "Finding"))]
-pub struct FindingV1 {
+struct FindingV1 {
     /// The code, such as `RL001`. Rely on `severity` and `message` for an unknown one.
     #[cfg_attr(feature = "schema", schemars(regex(pattern = r"^RL[0-9]{3}$")))]
     code: &'static str,
@@ -131,7 +131,7 @@ impl FindingV1 {
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize)]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[cfg_attr(feature = "schema", schemars(rename = "Totals"))]
-pub struct TotalsV1 {
+struct TotalsV1 {
     /// The number of errors.
     errors: usize,
     /// The number of warnings.

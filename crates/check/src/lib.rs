@@ -14,7 +14,7 @@ use rulelink_model::{Rule, RuleId, RuleSet, RuleStatus};
 pub use error::{UnknownFinding, UnknownLevel};
 pub use finding::{Code, Finding, Problem};
 pub use level::{Level, Levels, Severity};
-pub use report::{CheckReportV1, FindingV1, TotalsV1};
+pub use report::CheckReportV1;
 
 /// The result of [`check`].
 #[derive(Debug, Clone, PartialEq, Eq)]
