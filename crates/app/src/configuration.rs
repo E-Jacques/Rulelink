@@ -16,7 +16,7 @@ pub fn warnings(root: &Path) -> Vec<String> {
         // A quoted TOML name may hold a line break: it must not add lines to the output.
         .map(|name| {
             format!(
-                "{CONFIG_FILE}: unknown section or key `{}` is ignored",
+                "{CONFIG_FILE}: unknown section or key `{}` is ignored; check its spelling",
                 name.escape_debug()
             )
         })

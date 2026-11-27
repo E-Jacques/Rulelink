@@ -3,7 +3,9 @@
 use rulelink_e2e::Repo;
 
 fn warning(name: &str) -> String {
-    format!("rulelink: warning: rulelink.toml: unknown section or key `{name}` is ignored\n")
+    format!(
+        "rulelink: warning: rulelink.toml: unknown section or key `{name}` is ignored; check its spelling\n"
+    )
 }
 
 /// An initialised project with `before` added above the configuration and `after` below it.
@@ -61,7 +63,10 @@ fn each_unknown_name_has_its_own_line_and_cannot_add_lines() {
 #[test]
 fn known_extension_and_adapter_names_do_not_warn() {
     let all = "[scan]\nexclude = [\"vendor/\"]\n[check.levels]\norphan-rule = \"off\"\n[x-team]\nowner = \"a\"\n[adapters.notion]\ndb = \"d\"";
-    for repo in [project("x-note = 1", all), project("", "")] {
+    for repo in [
+        project("x-note = 1\nx-big = 99999999999999999999", all),
+        project("", ""),
+    ] {
         let run = repo.run(&["check"]);
         assert_eq!((run.code, run.stderr.as_str()), (0, ""));
     }

@@ -7,6 +7,7 @@ use std::path::{Component, Path, PathBuf};
 
 use rulelink_check::{Code, Level, Levels};
 use serde::Deserialize;
+use serde::de::IgnoredAny;
 
 pub use error::Error;
 pub use rulelink_model::{DEFAULT_ID_PREFIX, IdPrefix};
@@ -129,7 +130,11 @@ impl Config {
 /// The top-level names of `text` that nothing reads. Parsed apart from [`RawConfig`], as
 /// collecting them there (`serde(flatten)`) would lose the line numbers of its errors.
 fn unknown_keys(text: &str) -> Result<Vec<String>, Error> {
-    let table: toml::Table = toml::from_str(text).map_err(|e| invalid(&e.to_string()))?;
+    // Only the names: reading the values would refuse some that nothing uses, such as an
+    // oversized integer under `x-`.
+    #[allow(clippy::zero_sized_map_values)] // a table is read as a map, not as a set
+    let table: BTreeMap<String, IgnoredAny> =
+        toml::from_str(text).map_err(|e| invalid(&e.to_string()))?;
     let unknown = |key: &String| {
         !KNOWN_KEYS.contains(&key.as_str())
             && key != ADAPTERS_KEY
