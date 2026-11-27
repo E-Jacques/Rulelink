@@ -4,6 +4,17 @@ use rulelink_e2e::Repo;
 
 const PAGE: &str = include_str!("../../../docs/public/concepts/configuration.md");
 
+/// Git may check text files out with Windows line endings, which reach the page above and
+/// the configuration template built into the binary.
+fn unix_lines(text: &str) -> String {
+    text.replace("\r\n", "\n")
+}
+
+/// Whether the documentation shows `output`.
+fn page_shows(output: &str) -> bool {
+    unix_lines(PAGE).contains(output.trim_end())
+}
+
 /// What a command prints when the configuration has exactly one problem.
 fn one(problem: &str) -> String {
     format!("rulelink: configuration error: invalid rulelink.toml: {problem}\n")
@@ -34,7 +45,7 @@ fn project(before: &str, after: &str) -> Repo {
 /// An initialised project with `from` replaced by `to` in its configuration.
 fn edited(from: &str, to: &str) -> Repo {
     let repo = initialised();
-    let config = repo.read("rulelink.toml").expect("config");
+    let config = unix_lines(&repo.read("rulelink.toml").expect("config"));
     assert!(config.contains(from), "{config}");
     repo.write("rulelink.toml", &config.replace(from, to));
     repo
@@ -52,7 +63,7 @@ fn a_misspelled_key_is_refused_with_the_closest_known_key() {
     let repo = project("", "[scan]\nexcludes = [\"vendor/\"]");
     let expected = one("unknown section or key `scan.excludes`; did you mean `scan.exclude`?");
     assert_eq!(check(&repo), (2, expected.clone()));
-    assert!(PAGE.contains(expected.trim_end()), "the page shows it");
+    assert!(page_shows(&expected), "the page shows it");
 }
 
 /// The second example of the page.
@@ -64,7 +75,7 @@ fn every_problem_is_listed_at_once() {
         "unknown section or key `rules.prefx`; did you mean `rules.prefix`?",
     ]);
     assert_eq!(check(&repo), (2, expected.clone()));
-    assert!(PAGE.contains(expected.trim_end()), "the page shows it");
+    assert!(page_shows(&expected), "the page shows it");
 }
 
 #[test]
