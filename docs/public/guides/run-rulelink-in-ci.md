@@ -5,7 +5,7 @@ description: Learn how to make your CI fail on error Findings or a badly laid ou
 
 # Run Rulelink in CI
 
-You can run `rulelink` in your CI workflow, like any other command. The build fails when the command exits with a code other than `0`. This guide shows a job that checks the links between your Rules and your code, and keeps the rules file in Canonical form so independent edits do not collide.
+You can run `rulelink` in your CI workflow, like any other command. The build fails when the command exits with a code other than `0`. This guide shows a job that checks your Rules and their links to your code, and keeps the rules file in Canonical form so independent edits do not collide.
 
 ## Before you start
 
@@ -14,15 +14,15 @@ You can run `rulelink` in your CI workflow, like any other command. The build fa
 
 ## Read the exit code
 
-Every `rulelink` command ends with an exit code. `0` means it succeeded. `2` means a value or the configuration is invalid. `3` means the rules file is missing, unreadable or invalid. `10` is an unexpected error. A CI system stops the job on any code other than `0`, so a missing rules file already fails the build.
+Every `rulelink` command ends with an exit code. `0` means it succeeded. `2` means a value or the configuration is invalid. `3` means the rules file is missing, unreadable or invalid. For `check`, a rules file of the wrong shape is a Finding instead, with exit code `1`. `10` is an unexpected error. A CI system stops the job on any code other than `0`, so a missing rules file already fails the build.
 
 ```bash
 rulelink rules list
 ```
 
-## Check the links between Rules and code
+## Check your Rules and your code
 
-[`rulelink check`](../cli/check.md) scans the whole project. It exits with `1` when there is at least one error Finding, so the job fails. Warnings do not fail it.
+[`rulelink check`](../cli/check.md) checks the rules file, then scans the whole project. It exits with `1` when there is at least one error Finding, so the job fails. Warnings do not fail it.
 
 ```bash
 rulelink check
@@ -32,19 +32,24 @@ To fail the build on a warning too, raise its level in `rulelink.toml`. See [Fin
 
 ## Fail when the rules file is not in Canonical form
 
-[`rulelink rules format`](../cli/rules-format.md) rewrites the rules file into Canonical form. It exits with `0` whether it changed the file or not, so compare the file before and after.
+When the rules file stays in [Canonical form](../concepts/rule-format.md#source-file), two people can edit different Rules without a Git conflict. `check` reports a file that is not in it as a warning, `RL106`. To fail the job, raise it to `error` in `rulelink.toml`:
 
-```bash
-cp rules/rules.json "$RUNNER_TEMP/rules.before.json"
-rulelink rules format
-diff "$RUNNER_TEMP/rules.before.json" rules/rules.json
+```toml
+[check.levels]
+not-canonical = "error"
 ```
 
-`diff` exits with `1` when the file changed. The job fails, and the log shows the lines that differ. Run `rulelink rules format` on your machine and commit the result to fix it.
+When the job fails on `RL106`, run [`rulelink rules format`](../cli/rules-format.md) on your machine and commit the result.
+
+Canonical form uses LF line endings. If Git converts them to CRLF when it checks out the project, as it often does on Windows, add this line to `.gitattributes`, with the path of your rules file:
+
+```text
+rules/rules.json text eol=lf
+```
 
 ## Put it in a GitHub Actions workflow
 
-This job runs the steps above. Add the step that installs `rulelink` where marked by the comment line, using the method that suits your runner.
+This job runs `rulelink check`. Add the step that installs `rulelink` where marked by the comment line, using the method that suits your runner.
 
 ```yaml
 name: rules
@@ -56,13 +61,8 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       # Install the rulelink command here.
-      - name: Rules are linked to the code
+      - name: Check the Rules and the code
         run: rulelink check
-      - name: Rules file is in Canonical form
-        run: |
-          cp rules/rules.json "$RUNNER_TEMP/rules.before.json"
-          rulelink rules format
-          diff "$RUNNER_TEMP/rules.before.json" rules/rules.json
 ```
 
 ## Next steps
