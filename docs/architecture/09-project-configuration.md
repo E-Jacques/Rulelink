@@ -58,7 +58,6 @@ kind = "json"                       # json | json-dir (V1) | jira (V2) | externa
 path = "rules/rules.json"
 
 [rules]
-id_pattern = "RULE-[A-Z0-9_]+"
 id_policy = { kind = "sequential", prefix = "RULE", width = 3 }
 revalidate_on_change = true          # V1
 

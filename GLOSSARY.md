@@ -55,7 +55,7 @@ A `@rule <ID>` comment in code that states which Rule the nearby code implements
 _Avoid_: Tag, link (as a noun for the comment)
 
 **Finding**:
-One result of `check`, with a severity, about a Rule or an Annotation.
+One result of `check`, with a severity, about a Rule, an Annotation or the Source.
 _Avoid_: Error, violation, issue
 
 ## Documentation

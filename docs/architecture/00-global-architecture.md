@@ -383,7 +383,7 @@ Binary name: `rulelink`. Noun or verb tree, in the style of `cargo` and `gh`.
 | Group    | Commands                                                                                                                                                | Release                |
 | -------- | ------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------- |
 | Project  | `init`, `config`, `doctor`, `migrate`, `completions`, `version`, `schema`                                                                               | MVP                    |
-| Rules    | `rules list`, `rules show`, `rules search`, `rules add`, `rules edit`, `rules approve`, `rules obsolete`, `rules reject`, `rules next-id`, `rules lint` | MVP                    |
+| Rules    | `rules list`, `rules show`, `rules search`, `rules add`, `rules edit`, `rules approve`, `rules obsolete`, `rules reject`, `rules next-id`                 | MVP                    |
 | Labels   | `labels list`, `labels add`, `labels remove`                                                                                                            | V1                     |
 | Code     | `explain`, `where`, `annotate`, `scan`                                                                                                                  | MVP                    |
 | Checks   | `check`, `status`, `baseline`                                                                                                                           | MVP (`baseline` in V1) |
